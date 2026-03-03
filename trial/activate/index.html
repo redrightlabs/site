@@ -1,6 +1,5 @@
 <!doctype html>
-<html lang="en">
-<head>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Activate Trial · RedRight</title>
@@ -94,23 +93,7 @@ input::placeholder{
       background: rgba(255,255,255,.06);
     }
 
-    .cf-wrap{
-      display:flex;
-      justify-content:center;
-      width: 100%;
-
-      /* Turnstile iframe keeps its *layout* width (~300px) even when scaled.
-         Constrain + clip THIS wrapper so it can never create horizontal scroll on iOS. */
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-      overflow: hidden;
-      contain: layout paint;
-
-      /* keep the widget low on the page, closer to the footer */
-      margin-top: clamp(44px, 10vh, 140px);
-      padding-bottom: 6px;
-    }
+    
 
     button{
   margin-top:10px;
@@ -162,8 +145,25 @@ input::placeholder{
   html{ overscroll-behavior-x: none; }
   body{ overscroll-behavior-x: none; }
 }
+/* Turnstile wrapper: clamp width + clip overflow to prevent iOS side-scroll */
+.cf-wrap{
+  display:flex;
+  justify-content:center;
+  width:100%;
+  max-width:300px;       /* Turnstile iframe layout width */
+  margin: 18px auto 0;   /* sits under the button */
+  overflow:hidden;       /* prevents iOS wobble */
+  contain: layout paint;
+}
 
-  
+.cf-wrap .cf-turnstile{
+  width:300px;           /* keep iframe layout box constrained */
+  max-width:100%;
+  transform-origin: top center;
+  transform: scale(.78); /* smaller / less perceivable */
+  opacity: .42;
+  filter: brightness(.85) contrast(.95) saturate(.92);
+}
 
   </style>
 </head>

@@ -182,10 +182,15 @@
       ];
     }
 
+    function apiUrl(path){
+  const base = (API_BASE || "").trim();
+  if (!base) return path; // same-origin
+  return new URL(path, base).toString(); // handles slashes safely
+}
+
     async function apiGet(path, params) {
-      const u = new URL(API_BASE + path, location.origin);
-      Object.entries(params || {}).forEach(([k,v]) => u.searchParams.set(k, v));
-      const res = await fetch(u.toString(), { method: "GET", credentials: "include" });
+      const u = new URL(apiUrl(path), window.location.origin);      Object.entries(params || {}).forEach(([k,v]) => u.searchParams.set(k, v));
+      const res = await fetch(u.toString(), { method: "GET", credentials: "omit" });
       const text = await res.text();
       let data = null;
       try { data = text ? JSON.parse(text) : null; } catch { data = { ok:false, error:"bad_json" }; }
@@ -194,9 +199,9 @@
     }
 
     async function apiPost(path, body) {
-      const res = await fetch(API_BASE + path, {
+        const res = await fetch(apiUrl(path), {
         method: "POST",
-        credentials: "include",
+        credentials: "omit",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body || {})
       });
