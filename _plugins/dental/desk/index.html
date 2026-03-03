@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dental Desk Plugin — RedRight</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root { --border: rgba(0,0,0,.12); --muted: rgba(0,0,0,.62); }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#fff; color:#111; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 14px 14px 24px; }
+    .top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding: 10px 0 14px; border-bottom:1px solid var(--border); }
+    .brand { display:flex; flex-direction:column; gap:4px; }
+    .brand h1 { font-size: 16px; margin:0; letter-spacing:.2px; }
+    .brand .sub { font-size: 12px; color: var(--muted); }
+    .pill { font-size: 11px; border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; color: var(--muted); white-space: nowrap; }
+    .section { padding: 14px 0; }
+    .h { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 0 0 8px; }
+    .card { border:1px solid var(--border); border-radius: 12px; padding: 10px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 10px 0; border-top:1px solid var(--border); }
+    .row:first-child { border-top:0; padding-top: 0; }
+    .row:last-child { padding-bottom: 0; }
+    .left { display:flex; flex-direction:column; gap:3px; min-width: 0; }
+    .name { font-size: 14px; margin:0; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+    .meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+    .right { display:flex; align-items:center; gap:8px; flex-wrap: wrap; justify-content:flex-end; }
+    button { appearance:none; border:1px solid var(--border); background:#fff; border-radius: 10px; padding: 10px 12px; font-size: 13px; cursor:pointer; }
+    button[disabled] { opacity:.45; cursor:not-allowed; }
+    .icon { width: 10px; height: 10px; border-radius: 999px; border:1px solid var(--border); }
+    .icon.arrived { background:#111; border-color:#111; }
+    .inline { font-size: 12px; color: var(--muted); margin-left: 6px; }
+    .line { height:1px; background: var(--border); margin: 14px 0; }
+    .small { font-size: 12px; color: var(--muted); margin: 0; }
+    .hidden { display:none !important; }
+
+    /* Schedule panel (still “button-only”: this is a constrained enum form, no free text) */
+    .panel { border:1px solid var(--border); border-radius: 12px; padding: 10px; }
+    .grid { display:grid; grid-template-columns: 1fr; gap:10px; }
+    label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
+    select { width:100%; padding: 10px 12px; border-radius: 10px; border:1px solid var(--border); background:#fff; font-size: 14px; }
+    .actions { display:flex; gap:10px; justify-content:flex-end; }
+    @media (min-width: 540px) { .grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+
+<body>
+  <!--
+    DENTAL_DESK_PLUGIN_MVP_v1.html
+    Governed by:
+      - DENTAL_DESK_PLUGIN_UI_AUTHORITY_v1.md
+      - DENTAL_FRONT_DESK_ARRIVAL_ADAPTER_AUTHORITY_v1.md
+      - SCENE_4_BLOCK_DECOMPOSITION_v1.0.md
+      - REDRIGHT_BLOCK_FACTORY_AUTHORITY.md
+
+    UI Authority constraints enforced here:
+      - No chat. No threads. No reminders. No badges. No dashboards.
+      - Two actions max: Mark Arrived, Schedule Follow-Up.
+      - Silence semantics: no success toasts; UI only reflects state changes.
+      - Enum-only scheduling context. No free text. No symptoms/diagnosis.
+  -->
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1 id="title">Dental Desk</h1>
+        <div class="sub" id="subtitle">Operational surface</div>
+      </div>
+      <div class="pill" id="rolePill">role: —</div>
+    </div>
+
+    <div class="section" id="authSection">
+      <p class="small" id="authMsg">Initializing…</p>
+    </div>
+
+    <div class="section hidden" id="appointmentsSection">
+      <div class="h">Today</div>
+      <div class="card" id="apptList"></div>
+    </div>
+
+    <div class="line hidden" id="divider"></div>
+
+    <div class="section hidden" id="scheduleSection">
+      <div class="h">Schedule Follow-Up</div>
+      <div class="panel">
+        <div class="grid">
+          <div>
+            <label for="sf_appt">Appointment</label>
+            <select id="sf_appt"></select>
+          </div>
+
+          <div>
+            <label for="sf_patient_status">Patient Status</label>
+            <select id="sf_patient_status">
+              <option value="new">new</option>
+              <option value="existing">existing</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sf_category">Appointment Category</label>
+            <select id="sf_category">
+              <option value="cleaning">cleaning</option>
+              <option value="exam">exam</option>
+              <option value="consultation">consultation</option>
+              <option value="ortho_consult">ortho_consult</option>
+              <option value="follow_up">follow_up</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sf_duration">Duration</label>
+            <select id="sf_duration">
+              <option value="15m">15m</option>
+              <option value="30m">30m</option>
+              <option value="45m">45m</option>
+              <option value="60m">60m</option>
+              <option value="90m">90m</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sf_reason">Scheduling Reason</label>
+            <select id="sf_reason">
+              <option value="routine_next_visit">routine_next_visit</option>
+              <option value="post_visit_follow_up">post_visit_follow_up</option>
+              <option value="treatment_progress_check">treatment_progress_check</option>
+              <option value="missed_visit_rebook">missed_visit_rebook</option>
+              <option value="provider_requested">provider_requested</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sf_preferred_time">Preferred Time (optional)</label>
+            <select id="sf_preferred_time">
+              <option value="">—</option>
+              <option value="morning">morning</option>
+              <option value="afternoon">afternoon</option>
+              <option value="any">any</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="actions">
+          <button id="sf_submit" type="button">Send to Isla</button>
+        </div>
+
+        <p class="small" id="sf_inline" style="margin-top:10px"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIG (edit these two only) =====
+    const API_BASE = ""; // e.g. "https://yourdomain.com" (leave empty if same origin)
+    const ENDPOINTS = {
+      session: "/api/dental/desk/session",          // GET  ?token=...
+      markArrived: "/api/dental/desk/mark_arrived", // POST { token, appointment_id }
+      scheduleFollowUp: "/api/dental/desk/schedule_followup" // POST { token, appointment_id, ...enums }
+    };
+
+    // ===== Utilities =====
+    const $ = (id) => document.getElementById(id);
+    function qs(name) { return new URLSearchParams(location.search).get(name) || ""; }
+
+    // ===== Local Preview (Mock Mode) =====
+    // Enable via `?mock=1` (recommended) OR when opened as a local file (`file://`).
+    // Mock mode is UI-only: it never calls backend endpoints.
+    const MOCK_MODE = (qs("mock") === "1") || (location.protocol === "file:");
+
+    function seedMockState() {
+      state.token = "mock-token";
+      state.role = qs("role") || "desk"; // optional override: desk|clinical|provider
+      state.shop_name = "Demo Dental";
+      state.tz = "America/New_York";
+      state.appointments = [
+        { appointment_id: "apt_001", time_label: "9:00 AM", patient_label: "Morgan R.", category_label: "cleaning", provider_label: "Hygienist", arrived: false },
+        { appointment_id: "apt_002", time_label: "10:30 AM", patient_label: "Jamie K.", category_label: "exam", provider_label: "Dr.", arrived: false },
+        { appointment_id: "apt_003", time_label: "1:15 PM", patient_label: "Taylor S.", category_label: "ortho_consult", provider_label: "Ortho", arrived: true }
+      ];
+    }
+
+    async function apiGet(path, params) {
+      const u = new URL(API_BASE + path, location.origin);
+      Object.entries(params || {}).forEach(([k,v]) => u.searchParams.set(k, v));
+      const res = await fetch(u.toString(), { method: "GET", credentials: "include" });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = { ok:false, error:"bad_json" }; }
+      if (!res.ok) throw Object.assign(new Error("GET failed"), { status: res.status, data });
+      return data;
+    }
+
+    async function apiPost(path, body) {
+      const res = await fetch(API_BASE + path, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {})
+      });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = { ok:false, error:"bad_json" }; }
+      if (!res.ok) throw Object.assign(new Error("POST failed"), { status: res.status, data });
+      return data;
+    }
+
+    function setText(id, txt) { $(id).textContent = txt; }
+    function show(id) { $(id).classList.remove("hidden"); }
+    function hide(id) { $(id).classList.add("hidden"); }
+
+    // ===== State =====
+    const state = {
+      token: "",
+      role: "",
+      shop_name: "",
+      tz: "",
+      appointments: [] // { appointment_id, time_label, patient_label, category_label, provider_label, arrived }
+    };
+
+    function renderHeader() {
+      setText("title", state.shop_name ? `${state.shop_name} — Dental Desk` : "Dental Desk");
+      setText("subtitle", state.tz ? `Timezone: ${state.tz}` : "Operational surface");
+      setText("rolePill", state.role ? `role: ${state.role}` : "role: —");
+    }
+
+    function minimalInlineError(el, msg) {
+      // One-line inline reason only. No alerts/toasts.
+      el.textContent = msg || "";
+    }
+
+    function renderAppointments() {
+      const list = $("apptList");
+      list.innerHTML = "";
+
+      if (!state.appointments.length) {
+        const p = document.createElement("p");
+        p.className = "small";
+        p.textContent = "No appointments loaded.";
+        list.appendChild(p);
+        return;
+      }
+
+      state.appointments.forEach((a) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const left = document.createElement("div");
+        left.className = "left";
+
+        const name = document.createElement("p");
+        name.className = "name";
+        name.textContent = a.patient_label || "Patient";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = [a.time_label, a.category_label, a.provider_label].filter(Boolean).join(" · ");
+
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const right = document.createElement("div");
+        right.className = "right";
+
+        const dot = document.createElement("div");
+        dot.className = "icon" + (a.arrived ? " arrived" : "");
+        dot.title = a.arrived ? "arrived" : "not arrived";
+
+        const inline = document.createElement("span");
+        inline.className = "inline";
+        inline.textContent = ""; // inline reason slot
+
+        const btnArrived = document.createElement("button");
+        btnArrived.type = "button";
+        btnArrived.textContent = "Mark Arrived";
+        btnArrived.disabled = (state.role !== "desk") || !!a.arrived;
+
+        btnArrived.addEventListener("click", async () => {
+          // silence semantics: no modal, no toast
+          minimalInlineError(inline, "");
+          btnArrived.disabled = true;
+
+          try {
+            const resp = await apiPost(ENDPOINTS.markArrived, {
+              token: state.token,
+              appointment_id: a.appointment_id
+            });
+
+            // Expected server response:
+            // { ok:true, outcome:"accepted"|"no_op"|"blocked", reason?:string, arrived?:bool }
+            if (!resp || !resp.ok) {
+              minimalInlineError(inline, resp?.reason || "not eligible");
+              btnArrived.disabled = (state.role !== "desk") || !!a.arrived;
+              return;
+            }
+
+            if (resp.outcome === "accepted") {
+              a.arrived = true;
+              dot.className = "icon arrived";
+              // no success message (silence)
+            } else {
+              // blocked / no_op => one-line reason only
+              minimalInlineError(inline, resp.reason || "no-op");
+              btnArrived.disabled = (state.role !== "desk") || !!a.arrived;
+            }
+          } catch (e) {
+            minimalInlineError(inline, "not eligible");
+            btnArrived.disabled = (state.role !== "desk") || !!a.arrived;
+          }
+        });
+
+        right.appendChild(dot);
+        right.appendChild(btnArrived);
+        right.appendChild(inline);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        list.appendChild(row);
+      });
+    }
+
+    function renderScheduleOptions() {
+      const sel = $("sf_appt");
+      sel.innerHTML = "";
+
+      state.appointments.forEach((a) => {
+        const opt = document.createElement("option");
+        opt.value = a.appointment_id;
+        opt.textContent = `${a.time_label || ""} — ${a.patient_label || "Patient"}`.trim();
+        sel.appendChild(opt);
+      });
+
+      // Show schedule surface only for authorized roles
+      const allowed = ["desk", "clinical", "provider"].includes(state.role);
+      if (allowed) {
+        show("divider");
+        show("scheduleSection");
+      } else {
+        hide("divider");
+        hide("scheduleSection");
+      }
+    }
+
+    async function init() {
+      if (MOCK_MODE) {
+        seedMockState();
+        renderHeader();
+        hide("authSection");
+        show("appointmentsSection");
+        renderAppointments();
+        renderScheduleOptions();
+        return;
+      }
+
+      state.token = qs("token");
+
+      if (!state.token) {
+        setText("authMsg", "Link required.");
+        return;
+      }
+
+      try {
+        // Expected response:
+        // {
+        //   ok:true,
+        //   role:"desk"|"clinical"|"provider",
+        //   shop_name:"...",
+        //   timezone:"America/New_York",
+        //   appointments:[{ appointment_id, time_label, patient_label, category_label, provider_label, arrived }]
+        // }
+        const session = await apiGet(ENDPOINTS.session, { token: state.token });
+
+        if (!session || !session.ok) {
+          setText("authMsg", "Link invalid.");
+          return;
+        }
+
+        state.role = session.role || "";
+        state.shop_name = session.shop_name || "";
+        state.tz = session.timezone || "";
+        state.appointments = Array.isArray(session.appointments) ? session.appointments : [];
+
+        renderHeader();
+        hide("authSection");
+        show("appointmentsSection");
+        renderAppointments();
+        renderScheduleOptions();
+
+        // Provide minimal surface hint (no instruction/CTA)
+        // (Silence semantics maintained by not prompting actions.)
+      } catch (e) {
+        setText("authMsg", "Unavailable.");
+      }
+    }
+
+    $("sf_submit").addEventListener("click", async () => {
+      const inline = $("sf_inline");
+      minimalInlineError(inline, "");
+
+      const payload = {
+        token: state.token,
+        appointment_id: $("sf_appt").value,
+        appointment_category: $("sf_category").value,
+        duration: $("sf_duration").value,
+        scheduling_reason: $("sf_reason").value,
+        patient_status: $("sf_patient_status").value,
+        preferred_time: $("sf_preferred_time").value || null
+      };
+
+      // UI authority: no success toast; only inline reason if blocked.
+      $("sf_submit").disabled = true;
+
+      try {
+        // Expected server response:
+        // { ok:true, outcome:"accepted"|"blocked"|"no_op", reason?:string }
+        const resp = await apiPost(ENDPOINTS.scheduleFollowUp, payload);
+
+        if (!resp || !resp.ok) {
+          minimalInlineError(inline, resp?.reason || "not eligible");
+          $("sf_submit").disabled = false;
+          return;
+        }
+
+        if (resp.outcome === "accepted") {
+          // silence: do nothing
+          minimalInlineError(inline, "");
+        } else {
+          minimalInlineError(inline, resp.reason || "no-op");
+          $("sf_submit").disabled = false;
+        }
+      } catch (e) {
+        minimalInlineError(inline, "unavailable");
+        $("sf_submit").disabled = false;
+      }
+    });
+
+    init();
+    
+  </script>
+</body>
+</html>

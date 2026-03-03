@@ -1,0 +1,1209 @@
+<!--
+REDRIGHT DEMO SURFACE
+STATUS: FROZEN
+MODIFICATIONS REQUIRE FOUNDER APPROVAL
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RedRight Demo">
+<link rel="apple-touch-icon" href="/assets/redright-logo.png">
+  <!-- PWA manifest for Home Screen mode -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#020304">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>RedRight — Live Demo Surface</title>
+
+  <style>
+    :root{
+      --bg0:#020304;
+      --ink:#070b10;
+
+      --text:#e9eef6;
+      --muted:rgba(233,238,246,.70);
+      --line:rgba(255,255,255,.10);
+
+      --red:#ff2b2b;
+
+      --radius:18px;
+      --shadow:0 30px 90px rgba(0,0,0,.62);
+
+      --pad:18px;
+      --maxw:1180px;
+      --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+      --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      padding:0;
+      height:100%;
+      background: var(--bg0);
+      color: var(--text);
+      font-family: var(--serif);
+      overflow:hidden; /* iPad: no page scroll */
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* RedRight typography: keep operator chrome in RedRight serif (no SaaS-sans) */
+    .helper, .livePill, .heroSub, .label, .chip{
+      font-family: var(--serif);
+    }
+
+    /* ===== WORLD (quiet, cinematic) ===== */
+    .world{
+      position:fixed; inset:0; z-index:0;
+      background:
+        radial-gradient(1200px 900px at 18% 10%, rgba(255,43,43,.10), transparent 62%),
+        radial-gradient(1100px 800px at 82% 26%, rgba(255,255,255,.05), transparent 62%),
+        radial-gradient(1400px 900px at 50% 118%, rgba(255,43,43,.06), transparent 70%),
+        linear-gradient(180deg, #010203, var(--ink) 62%, #010203);
+      transform: translateZ(0);
+    }
+    .vignette{
+      position:fixed; inset:0; z-index:1;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 900px at 50% 40%, transparent 44%, rgba(0,0,0,.78) 100%),
+        radial-gradient(900px 700px at 12% 18%, rgba(0,0,0,.52), transparent 62%),
+        radial-gradient(900px 700px at 88% 18%, rgba(0,0,0,.52), transparent 62%);
+      opacity:.92;
+      transform: translateZ(0);
+    }
+
+    main{
+      position:relative;
+      z-index:3;
+      width:min(var(--maxw), calc(100% - 2*var(--pad)));
+      margin:0 auto;
+      height: 100dvh;
+      height: 100vh; /* fallback */
+      min-height: 100vh;
+      padding: 16px 0 calc(18px + env(safe-area-inset-bottom));
+      display:flex;
+    }
+
+    .panel{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.010));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    /* ===== HERO (THE POINT) ===== */
+    .hero{
+      padding: 20px 22px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:10px;
+
+      /* RedRight: subtle beacon wash behind the header */
+      background:
+        radial-gradient(980px 220px at 50% 0%, rgba(255,43,43,.18), rgba(255,43,43,0) 66%),
+        linear-gradient(180deg, rgba(255,255,255,.012), rgba(0,0,0,0));
+    }
+
+    /* ===== FOOTER BRAND (bottom mark) ===== */
+    .demoFooter{
+      padding: 14px 22px 18px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      opacity:.88;
+      user-select:none;
+      background:
+        radial-gradient(980px 220px at 50% 120%, rgba(255,43,43,.14), rgba(255,43,43,0) 66%),
+        linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.10));
+    }
+    .demoFooter img{
+      height: 28px;
+      width:auto;
+      display:block;
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,.55));
+    }
+    .demoFooter .tag{
+      font-size: 10px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.44);
+      font-weight: 700;
+      text-align:center;
+      margin:0;
+    }
+    .demoFooter .legal-mark{
+      margin: 0;
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.34);
+      font-weight: 800;
+}
+.footerOps{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  max-width: 560px;
+}
+
+.footerLink{
+  border:0;
+  background: transparent;
+  color: rgba(233,238,246,.40);
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  cursor:pointer;
+  padding: 6px 6px;
+  border-radius: 10px;
+  user-select:none;
+  transition: color .12s ease, background .12s ease, box-shadow .12s ease;
+}
+.footerLink:hover{
+  color: rgba(233,238,246,.70);
+  background: rgba(255,255,255,.03);
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+}
+.footerLink:focus-visible{
+  outline:none;
+  color: rgba(233,238,246,.78);
+  box-shadow: 0 0 0 4px rgba(255,43,43,.16), 0 18px 40px rgba(0,0,0,.55);
+}
+
+.footerLink:disabled{ opacity:.45; cursor:not-allowed; }
+
+/* ===== PRICING FAB (ghost $ button) ===== */
+  .priceFab{
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.10), rgba(255,43,43,0) 70%),
+    rgba(0,0,0,.22);
+
+  color: rgba(233,238,246,.82);
+  font-family: var(--serif);
+  font-weight: 950;
+  font-size: 18px;
+  letter-spacing: .06em;
+
+  box-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 5px rgba(255,43,43,.06), 0 0 90px rgba(255,43,43,.10);
+  cursor: pointer;
+  user-select: none;
+
+  z-index: 50; /* above panel */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  transition: transform .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.priceFab:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,43,43,.34);
+  color: rgba(233,238,246,.94);
+  background:
+    radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.16), rgba(255,43,43,0) 70%),
+    rgba(255,43,43,.06);
+  box-shadow: 0 22px 54px rgba(0,0,0,.62), 0 0 0 6px rgba(255,43,43,.10), 0 0 110px rgba(255,43,43,.14);
+}
+.priceFab:active{ transform: translateY(0px) scale(.98); }
+.priceFab:focus-visible{
+  outline: none;
+  border-color: rgba(255,43,43,.55);
+  box-shadow: 0 22px 54px rgba(0,0,0,.62), 0 0 0 5px rgba(255,43,43,.18), 0 0 110px rgba(255,43,43,.14);
+}
+.priceFab:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+.priceFab[aria-disabled="true"]{
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.faceMini{
+  display:none;               /* hidden by default (client-facing) */
+  align-items:center;
+  gap:8px;
+  opacity:.50;
+  transform: scale(.92);
+  transform-origin: right center;
+}
+.faceMini.is-revealed{ display:flex; }
+.faceMini__k{
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  font-weight: 900;
+  color: rgba(233,238,246,.36);
+  user-select:none;
+}
+.faceMini__select{
+  -webkit-appearance:none;
+  appearance:none;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+  color: rgba(233,238,246,.58);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  outline:none;
+  cursor:pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  transition: border-color .12s ease, color .12s ease, background .12s ease, box-shadow .12s ease;
+}
+.faceMini__select:hover{
+  color: rgba(233,238,246,.78);
+  border-color: rgba(255,43,43,.16);
+  background: rgba(255,43,43,.04);
+  box-shadow: 0 12px 26px rgba(0,0,0,.35);
+}
+.faceMini__select:focus-visible{
+  border-color: rgba(255,43,43,.30);
+  box-shadow: 0 0 0 4px rgba(255,43,43,.14), 0 18px 40px rgba(0,0,0,.55);
+}
+    .livePill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(233,238,246,.92);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      user-select:none;
+    }
+
+    /* subtle buoy glow (calm, not loud) */
+    .liveDot{
+      width:7px;height:7px;border-radius:999px;
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(255,43,43,.12), 0 0 18px rgba(255,43,43,.38);
+      animation: liveGlow 3.2s ease-in-out infinite;
+    }
+    @keyframes liveGlow{
+      0%,100%{ box-shadow: 0 0 0 4px rgba(255,43,43,.10), 0 0 16px rgba(255,43,43,.28); opacity:.92; }
+      50%{ box-shadow: 0 0 0 6px rgba(255,43,43,.14), 0 0 28px rgba(255,43,43,.46); opacity:1; }
+    }
+
+
+    .demoNumber{
+      font-size: clamp(46px, 6.2vw, 84px);
+      line-height: 1.0;
+      font-weight: 950;
+      letter-spacing: .06em;
+      margin: 0;
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,43,43,.26);
+      background:
+        radial-gradient(700px 110px at 50% 0%, rgba(255,43,43,.18), rgba(255,43,43,0) 70%),
+        rgba(0,0,0,.18);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 90px rgba(255,43,43,.12);
+      user-select:text;
+      white-space:nowrap;
+    }
+
+    .heroSub{
+      margin: 0;
+      color: rgba(233,238,246,.56);
+      font-size: 13px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+    /* ===== DEMO FACE (current vertical indicator) ===== */
+    .heroFace{
+      margin-top: 2px;
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.62);
+      font-weight: 900;
+      user-select:none;
+    }
+    .heroFace strong{
+      color: rgba(233,238,246,.90);
+      letter-spacing: .18em;
+    }
+
+/* Disabled scene buttons for vertical faces */
+.sceneBtn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  transform:none !important;
+  animation:none !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+  border-color: rgba(255,255,255,.10) !important;
+  background: rgba(255,255,255,.02) !important;
+}
+    /* ===== HERO ACTIONS (demo operator) ===== */
+    .heroActions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+
+    /* ===== DEMO FACE CONTROL (NOT A BUTTON) ===== */
+    .faceControl{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border:1px solid rgba(255,43,43,.18);
+      background:
+        radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.10), rgba(255,43,43,0) 70%),
+        rgba(0,0,0,.18);
+      box-shadow: 0 14px 34px rgba(0,0,0,.40), 0 0 70px rgba(255,43,43,.08);
+    }
+    .faceControl__k{
+      font-size: 10px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: rgba(233,238,246,.52);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .faceControl__select{
+      -webkit-appearance:none;
+      appearance:none;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(233,238,246,.92);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-family: var(--serif);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      outline:none;
+      cursor:pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .faceControl__select:focus-visible{
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.55),
+        0 0 0 4px rgba(255,43,43,.16);
+      border-color: rgba(255,43,43,.45);
+    }
+
+    .miniBtn{
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.08), rgba(255,43,43,0) 70%),
+        rgba(0,0,0,.18);
+      color: rgba(233,238,246,.92);
+      padding: 12px 16px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-family: var(--serif);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      user-select:none;
+      box-shadow: 0 14px 34px rgba(0,0,0,.40);
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .miniBtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,43,43,.34);
+      background:
+        radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.14), rgba(255,43,43,0) 70%),
+        rgba(255,43,43,.06);
+      box-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 5px rgba(255,43,43,.08), 0 0 90px rgba(255,43,43,.10);
+    }
+
+    /* ===== TOAST (copy feedback) ===== */
+    .toast{
+      position: fixed;
+      left: 50%;
+      top: calc(16px + env(safe-area-inset-top));
+      transform: translateX(-50%) translateY(-10px);
+      z-index: 999;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,43,43,.26);
+      background: rgba(0,0,0,.58);
+      color: rgba(233,238,246,.92);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 80px rgba(255,43,43,.10);
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(0px);
+    }
+
+    /* ===== SCENE ACTIVE STATE (operator confidence) ===== */
+    .sceneBtn.is-active{
+      border-color: rgba(255,43,43,.55);
+      background: rgba(255,43,43,.10);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 6px rgba(255,43,43,.12), 0 0 70px rgba(255,43,43,.10);
+      transform: translateY(-1px);
+    }
+
+    /* Helper text in headers */
+    .helper{
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.48);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* ===== CORE ===== */
+    .core{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto; /* calendar dominates; bottom row is constrained */
+      gap:12px;
+      padding:14px;
+    }
+
+    .block{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background: rgba(0,0,0,.20);
+      overflow:hidden;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .blockHead{
+      padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .headBtn{
+      margin-left:auto;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      color: rgba(233,238,246,.70);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-family: var(--serif);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      user-select:none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, color .12s ease, box-shadow .12s ease;
+}
+    .headBtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,43,43,.26);
+      background: rgba(255,43,43,.06);
+      color: rgba(233,238,246,.86);
+      box-shadow: 0 14px 30px rgba(0,0,0,.45), 0 0 0 4px rgba(255,43,43,.06);
+}
+    .headBtn:active{ transform: translateY(0px); }
+    .headBtn:focus-visible{
+      outline: none;
+      border-color: rgba(255,43,43,.45);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 4px rgba(255,43,43,.16);
+}
+    .label{
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 950;
+      color: rgba(233,238,246,.82);
+      white-space:nowrap;
+    }
+
+    .chip{
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(233,238,246,.68);
+      white-space:nowrap;
+    }
+
+    .blockBody{
+      padding: 10px 12px;
+      min-height:0;
+      flex:1;
+      overflow:auto;
+    }
+
+    /* ===== CALENDAR ===== */
+    
+    .calWrap{
+      position:relative;
+      min-height:0;
+      flex:1;
+      padding:10px;
+    }
+    .calFrame{
+      width:100%;
+      height:100%;
+      border:0;
+      border-radius: 12px;
+      background: rgba(0,0,0,.22);
+      display:none;
+
+      /* Google Calendar doesn't offer true dark theme in embeds.
+         This filter approximates a black UI for demo use. */
+      filter: invert(1) hue-rotate(180deg) contrast(1.05) saturate(0.85);
+    }
+    .calPlaceholder{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size:13px;
+      line-height:1.45;
+      color: rgba(233,238,246,.86);
+      margin:0;
+    }
+    .calPlaceholder .when{
+      display:block;
+      margin-top:8px;
+      color: rgba(233,238,246,.55);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+    }
+
+    /* ===== BOTTOM ROW ===== */
+    .bottomRow{
+      min-height: 0;
+height: clamp(280px, 34vh, 380px);      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap: 12px;
+      align-items:stretch;
+    }
+
+    /* Work log entries */
+    .event{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin: 10px 0;
+      font-size:13px;
+      line-height:1.45;
+      color: rgba(233,238,246,.86);
+    }
+    .event .when{
+      display:block;
+      margin-top:6px;
+      color: rgba(233,238,246,.55);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+    }
+    .event.red{
+      border-color: rgba(255,43,43,.26);
+      background: rgba(255,43,43,.07);
+    }
+
+    /* ===== TIME COMPRESSION BUTTONS (book.html vibe) ===== */
+    .btnStack{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      padding: 14px 12px 16px;
+      min-height:0;
+      flex:1;
+      overflow:auto; /* prevents buttons from running out of room */
+    }
+    .sceneBtn{
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.08), rgba(255,43,43,0) 70%),
+        rgba(0,0,0,.18);
+      color: rgba(233,238,246,.92);
+      padding: 12px 14px;
+      min-height: 44px;
+      line-height: 1.1;
+      touch-action: manipulation;
+      border-radius: 16px;
+      cursor:pointer;
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      display:flex;
+      align-items:center;
+      justify-content:center; /* centered label */
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+      user-select:none;
+    }
+
+    @keyframes hoverBuoy{
+      0%,100%{
+        box-shadow: 0 10px 22px rgba(0,0,0,.25), 0 0 0 4px rgba(255,43,43,.06);
+        border-color: rgba(255,43,43,.22);
+        background: rgba(255,43,43,.06);
+      }
+      50%{
+        box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 6px rgba(255,43,43,.12), 0 0 70px rgba(255,43,43,.12);
+        border-color: rgba(255,43,43,.42);
+        background: rgba(255,43,43,.10);
+      }
+    }
+
+    .sceneBtn:hover{
+      transform: translateY(-1px);
+      animation: hoverBuoy 2.8s ease-in-out infinite;
+    }
+    .sceneBtn:active{ transform: translateY(0px); }
+
+    /* Centered header variant (for Time Compression) */
+    .headCenter{
+      justify-content:center;
+    }
+    .headCenter .label{
+      text-align:center;
+    }
+    .headCenter .helper,
+    .headCenter .headBtn{
+    display:none;
+    }
+
+    /* Allow Calendar header button even when centered */
+    .calHead.headCenter .headBtn{
+    display:inline-flex;
+    }
+
+    /* ===== iPad portrait fallback ===== */
+    @media (max-width: 980px){
+      .bottomRow{ grid-template-columns: 1fr; }
+      .sceneBtn{ padding: 11px 12px; font-size: 13px; }
+      .btnStack{ gap:8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .liveDot, .sceneBtn:hover{ animation:none !important; }
+    }
+</style>
+  /* ===== Standalone refinements (Home Screen mode) ===== */
+  html.standalone body{
+    padding-top: env(safe-area-inset-top);
+  }
+    /* Work log stays readable; calendar gets the rest */
+#systemLog{ height:100%; }
+</style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main>
+    <div class="panel">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="livePill"><span class="liveDot"></span> Live Demo</div>
+        <h1 class="demoNumber" id="demoNumber">(Twilio number pending)</h1>
+        <p class="heroSub">Live system · real time</p>
+         </div>
+      
+
+      <div class="core">
+
+        <!-- CALENDAR -->
+        <div class="block" style="flex:1;">
+          <div class="blockHead headCenter calHead">
+  <div class="label">Calendar</div>
+  <button class="headBtn" id="openCalendar" type="button">Open</button>
+</div>
+
+          <div class="calWrap">
+            <!-- Replace src with your Google Calendar embed URL when ready -->
+            <iframe
+              class="calFrame"
+              id="calFrame"
+              title="Demo Calendar"
+              src="https://calendar.google.com/calendar/embed?mode=WEEK&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&wkst=1&bgcolor=%23000000&src=7b080af64caf1481bdaf5b00a5942c79ccba17015123c51a1002634792c9ea7@group.calendar.google.com&ctz=America%2FNew_York"
+            ></iframe>
+
+            <div id="calPlaceholder" class="calPlaceholder">
+            Calendar embed may be blocked on iPad Safari (cookies / cross-site tracking).
+            <span class="when">Use “Open” to view the live calendar in a new tab.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WORK LOG + TIME COMPRESSION -->
+        <div class="bottomRow">
+
+          <div class="block">
+            <div class="blockHead headCenter">
+              <div class="label">Isla Work Log</div>
+              </div>
+            <div class="blockBody" id="systemLog">
+              <div class="event">Ready.<span class="when">Waiting for live actions</span></div>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="blockHead headCenter">
+              <div class="label">Time Compression</div>
+            </div>
+            <div class="btnStack">
+              <button class="sceneBtn" data-scene="prep" type="button">24-Hour Prep</button>
+              <button class="sceneBtn" data-scene="here" type="button">HERE</button>
+              <button class="sceneBtn" data-scene="carewatch" type="button">CareWatch™</button>
+              <button class="sceneBtn" data-scene="reviewreq" type="button">Review Request</button>
+              <button class="sceneBtn" data-scene="healed" type="button">Healed Photo Request</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+     <div class="demoFooter" aria-label="RedRight mark">
+  <div class="footerOps" aria-label="Operator controls">
+    <!-- Pricing button removed, replaced by FAB -->
+    <div class="faceMini" aria-label="Select demo face">
+      <span class="faceMini__k">Face</span>
+      <select id="faceSelect" class="faceMini__select">
+        <option value="tattoo">Tattoo</option>
+        <option value="medspa">Med Spa</option>
+        <option value="physicaltherapy">Physical Therapy</option>
+        <option value="dental">Dental</option>
+        <option value="legal">Legal</option>
+        <option value="plasticsurgery">Plastic Surgery</option>
+        <option value="doggrooming">Dog Grooming</option>
+        <option value="nailsalon">Nail Salon</option>
+      </select>
+    </div>
+  </div>
+
+<img id="rrLogo" src="/assets/redright-logo.png" alt="RedRight" />
+  <p class="tag">YOUR PATH TO SAFE HARBOR</p>
+  <p class="legal-mark">RedRight Labs · Established 2025</p>
+</div>
+
+
+    </div>
+  </main>
+
+<button class="priceFab" id="openPricing" type="button" aria-label="Pricing" aria-disabled="true">$</button>  <div class="toast" id="toast" role="status" aria-live="polite">Ready</div>
+
+  <script>
+    // ===== Standalone (Home Screen) detection =====
+    (function detectStandalone(){
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+      if(isStandalone){
+        document.documentElement.classList.add('standalone');
+      }
+    })();
+    // ===== Work Log (visual proof only; real events come from phones + calendar) =====
+    const systemLog = document.getElementById('systemLog');
+
+    const demoNumberEl = document.getElementById('demoNumber');
+    const toastEl = document.getElementById('toast');
+    const pricingBtn = document.getElementById('openPricing');
+    const faceSelectEl = document.getElementById('faceSelect');
+    const faceMiniEl = document.querySelector('.faceMini');
+    const logoEl = document.getElementById('rrLogo');
+    function showToast(text){
+      toastEl.textContent = text;
+      toastEl.classList.add('show');
+      window.clearTimeout(showToast._t);
+      showToast._t = window.setTimeout(()=> toastEl.classList.remove('show'), 1200);
+    }
+
+    // Allow operator to set the number via URL: ?number=+18435551234
+    (function hydrateDemoNumber(){
+      const sp = new URLSearchParams(location.search);
+      const q = (sp.get('number') || '').trim();
+      if(q){
+        demoNumberEl.textContent = q;
+        try{ localStorage.setItem('rr_demo_number', q); }catch(e){}
+        return;
+      }
+      try{
+        const saved = (localStorage.getItem('rr_demo_number') || '').trim();
+        if(saved) demoNumberEl.textContent = saved;
+      }catch(e){}
+    })();
+
+    // ===== DEMO WATCH FACE (vertical-specific UI + pricing routing) =====
+// Face selection source of truth:
+// 1) URL param `?vertical=tattoo` (or `?vertical=medspa`, etc)
+// 2) localStorage `rr_demo_vertical`
+// Default: tattoo
+
+const FACES = {
+  tattoo: {
+    label: 'Tattoo',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','carewatch','reviewreq','healed']
+  },
+  medspa: {
+    label: 'Med Spa',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','carewatch','reviewreq','healed']
+  },
+  physicaltherapy: {
+    label: 'Physical Therapy',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','carewatch','reviewreq','healed']
+  },
+  dental: {
+    label: 'Dental',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','carewatch','reviewreq','healed']
+  },
+  legal: {
+    label: 'Legal',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','reviewreq']
+  },
+  plasticsurgery: {
+    label: 'Plastic Surgery',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','carewatch','reviewreq','healed']
+  },
+  doggrooming: {
+    label: 'Dog Grooming',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','reviewreq']
+  },
+  nailsalon: {
+    label: 'Nail Salon',
+    pricingHref: '/_plugins/pricing_pages/tattoo.html',
+    enabledScenes: ['prep','here','reviewreq']
+  }
+};
+
+function normVertical(raw){
+  const s = String(raw || '').toLowerCase().trim();
+  if(!s) return '';
+  return s
+    .replace(/\s+/g,'')
+    .replace(/[-_]/g,'')
+    .replace('law','legal')
+    .replace('lawlegalpractice','legal');
+}
+
+function getActiveFaceKey(){
+  const sp = new URLSearchParams(location.search);
+  const q = normVertical(sp.get('vertical'));
+  if(q && FACES[q]){
+    try{ localStorage.setItem('rr_demo_vertical', q); }catch(e){}
+    return q;
+  }
+  try{
+    const saved = normVertical(localStorage.getItem('rr_demo_vertical'));
+    if(saved && FACES[saved]) return saved;
+  }catch(e){}
+  return 'tattoo';
+}
+
+const ACTIVE_FACE_KEY = getActiveFaceKey();
+const ACTIVE_FACE = FACES[ACTIVE_FACE_KEY] || FACES.tattoo;
+
+// Apply face label
+// Operator-only: face drives routing + button gating.
+// We intentionally do NOT display the active face on-screen.
+
+if(faceSelectEl){
+  faceSelectEl.value = ACTIVE_FACE_KEY;
+  faceSelectEl.addEventListener('change', ()=>{
+    const next = normVertical(faceSelectEl.value);
+    if(!next || !FACES[next]) return;
+    try{ localStorage.setItem('rr_demo_vertical', next); }catch(e){}
+
+    const sp = new URLSearchParams(location.search);
+    sp.set('vertical', next);
+    // preserve number param if present
+    const q = sp.toString();
+    location.search = q ? ('?' + q) : '';
+  });
+}
+// ===== Operator-only: Long-press logo to reveal Face selector =====
+(function logoLongPressFaceReveal(){
+  if(!logoEl || !faceMiniEl) return;
+
+  let t = null;
+  let hideT = null;
+
+  function reveal(){
+    faceMiniEl.classList.add('is-revealed');
+    showToast('Face');
+    window.clearTimeout(hideT);
+    hideT = window.setTimeout(()=>{
+      faceMiniEl.classList.remove('is-revealed');
+    }, 6000);
+  }
+
+  function startPress(e){
+    // Prevent iPad Safari image callout / selection
+    e.preventDefault();
+    window.clearTimeout(t);
+    t = window.setTimeout(reveal, 650); // “Batman” long-press
+  }
+
+  function cancelPress(){
+    window.clearTimeout(t);
+  }
+
+  // Pointer events cover touch + mouse on iPad Safari
+  logoEl.addEventListener('pointerdown', startPress, {passive:false});
+  logoEl.addEventListener('pointerup', cancelPress);
+  logoEl.addEventListener('pointercancel', cancelPress);
+  logoEl.addEventListener('pointerleave', cancelPress);
+
+  // Extra safety: disable context menu
+  logoEl.addEventListener('contextmenu', (e)=> e.preventDefault());
+})();
+
+// Apply per-vertical button availability
+function applyFaceButtons(){
+  const allow = new Set(ACTIVE_FACE.enabledScenes || []);
+  const btns = Array.from(document.querySelectorAll('.sceneBtn'));
+  btns.forEach(b=>{
+    const k = b?.dataset?.scene;
+    const ok = !!k && allow.has(k);
+    b.disabled = !ok;
+    b.setAttribute('aria-disabled', String(!ok));
+  });
+}
+applyFaceButtons();
+
+// Pricing routing (works for BOTH http:// and file:///)
+function resolveHref(href){
+  const h = (href || '').trim();
+  if(!h) return '';
+
+  // Special case: if someone uses "/_plugins/..." while viewing file://,
+  // convert it to "file:///Users/.../site/_plugins/..."
+  if(location.protocol === 'file:' && h.startsWith('/_plugins/')){
+    const p = String(location.pathname || ''); // /Users/.../site/Demo/demo.html
+    const idx = p.indexOf('/site/');
+    if(idx !== -1){
+      const siteRootPath = p.slice(0, idx + '/site/'.length); // /Users/.../site/
+      return 'file://' + siteRootPath + h.slice(1); // file:///.../site/_plugins/...
+    }
+  }
+
+  // Normal resolve (http server OR relative paths)
+  try { return new URL(h, location.href).href; }
+  catch { return h; }
+}
+
+function applyPricingState(){
+  if(!pricingBtn) return;
+
+  const href = (ACTIVE_FACE.pricingHref || '').trim();
+  const ok = !!href;
+
+  // Keep both native disabled and aria state in sync
+  pricingBtn.disabled = !ok;
+  pricingBtn.setAttribute('aria-disabled', String(!ok));
+}
+applyPricingState();
+
+pricingBtn?.addEventListener('click', ()=>{
+  if(pricingBtn.disabled || pricingBtn.getAttribute('aria-disabled') === 'true'){
+    showToast('Pricing not set');
+    return;
+  }
+
+  const href = (ACTIVE_FACE.pricingHref || '').trim();
+  const join = href.includes('?') ? '&' : '?';
+  const target = resolveHref(href + join + 'vertical=' + encodeURIComponent(ACTIVE_FACE_KEY));
+
+  showToast('Pricing');
+  // Force navigation (more reliable than relying on <a> behavior on iOS/file://)
+  window.location.assign(target);
+});
+
+    
+    function nowStamp(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${hh}:${mm}`;
+    }
+
+    function addSys(text, isRed=false){
+      const el = document.createElement('div');
+      el.className = 'event' + (isRed ? ' red' : '');
+      el.innerHTML = `${text}<span class="when">${nowStamp()}</span>`;
+
+      // Cap log length for demo stability
+      const MAX = 60;
+      while(systemLog.children.length >= MAX){
+        systemLog.removeChild(systemLog.firstElementChild);
+      }
+
+      systemLog.appendChild(el);
+      systemLog.scrollTop = systemLog.scrollHeight;
+    }
+
+    const scenes = {
+      prep(){ addSys("24-Hour Prep triggered."); },
+      here(){ addSys("HERE received → Arrival Context Packet™ sent.", true); },
+      carewatch(){ addSys("CareWatch™ concern detected → Healing Context Packet™ sent.", true); },
+      reviewreq(){ addSys("Review request triggered (clean-only rules)."); },
+      healed(){ addSys("Healed photo request triggered (optional / consent-based)."); }
+    };
+
+    const sceneButtons = Array.from(document.querySelectorAll('.sceneBtn'));
+
+    function fireScene(btn){
+  if(btn?.disabled) return;
+  const k = btn?.dataset?.scene;
+  if(!k || !scenes[k]) return;
+
+      // Active state (operator confidence)
+      btn.classList.add('is-active');
+      window.setTimeout(()=> btn.classList.remove('is-active'), 650);
+
+      scenes[k]();
+    }
+
+    sceneButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=> fireScene(btn));
+    });
+
+    // Hotkeys 1–5 for live demo speed (ignore when typing)
+    window.addEventListener('keydown', (e)=>{
+      const tag = (document.activeElement?.tagName || '').toLowerCase();
+      if(tag === 'input' || tag === 'textarea') return;
+      if(e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const n = Number(e.key);
+      if(!Number.isFinite(n) || n < 1 || n > 5) return;
+      const btn = sceneButtons[n - 1];
+      if(btn && !btn.disabled){
+        e.preventDefault();
+        fireScene(btn);
+}
+    });
+
+    // ===== Calendar behavior (bulletproof for iPad Safari) =====
+const frame = document.getElementById('calFrame');
+const placeholder = document.getElementById('calPlaceholder');
+const openCalBtn = document.getElementById('openCalendar');
+
+function getCalSrc(){
+  return ((frame && frame.getAttribute('src')) || '').trim();
+}
+function isIpadSafari(){
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  return isIOS && isSafari;
+}
+function refreshCalendarState(){
+  const src = getCalSrc();
+  const has = src.length > 0;
+
+  if(!has){
+    if(placeholder) placeholder.style.display = 'block';
+    if(frame) frame.style.display = 'none';
+    if(openCalBtn) openCalBtn.disabled = true;
+    return;
+  }
+
+  // Always show fallback + enable Open
+  if(placeholder) placeholder.style.display = 'block';
+  if(openCalBtn) openCalBtn.disabled = false;
+
+  // iPad Safari: hide iframe to avoid the ugly cookie banner
+  if(isIpadSafari()){
+    if(frame) frame.style.display = 'none';
+    return;
+  }
+
+  // Desktop/non-iOS: try inline embed
+  if(frame) frame.style.display = 'block';
+  try{
+    frame.addEventListener('load', ()=>{
+      if(placeholder) placeholder.style.display = 'none';
+    }, { once:true });
+  }catch(e){}
+}
+
+// Open calendar in a new tab (most reliable on iPad)
+openCalBtn?.addEventListener('click', ()=>{
+  const src = getCalSrc();
+  if(!src){ showToast('Calendar not set'); return; }
+  showToast('Calendar');
+  window.open(src, '_blank', 'noopener');
+});
+
+refreshCalendarState();
+  </script>
+</body>
+</html>

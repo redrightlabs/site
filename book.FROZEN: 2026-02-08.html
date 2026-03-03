@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RedRight — See Isla Working Live</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+:root{
+      --bg0:#020304;
+      --bg1:#070b10;
+      --text:#e9eef6;
+      --muted:rgba(233,238,246,.78);
+      --dim:rgba(233,238,246,.62);
+      --line:rgba(255,255,255,.10);
+
+      --red:#ff2b2b;
+
+      --maxw: 860px;
+      --pad: 22px;
+      --radius: 18px;
+      --shadow: 0 30px 90px rgba(0,0,0,.62);
+      --cta-lens-tint: rgba(255,43,43,.10);
+      --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+      --hero: "Cormorant Garamond", Garamond, Georgia, serif;
+
+       /* Glass face intensity (higher = shinier lens) */
+      --cta-glass: 0.66;     /* range: 0.35 – 0.70 */
+
+      /* Light bloom strength (higher = more atmospheric bleed) */
+      --cta-bloom: 1.25;      /* range: 0.80 – 1.25 */
+
+      /* Off-black depth (lower = darker idle state) */
+      --cta-black: 0.26;     /* range: 0.20 – 0.34 */
+      --buoy-size: cover;
+      --buoy-x: 50%;
+      --buoy-y: 18%;
+    }
+
+*{ box-sizing:border-box; }
+
+
+/* SCROLL SANITY: do NOT force html/body overflow/scroll containers */
+html{
+  height: 100%;
+}
+body{
+  min-height: 100%;
+  overflow-x: hidden; /* only lock horizontal */
+  margin:0;
+  color:var(--text);
+  font-family:var(--serif);
+  background: var(--bg0);
+  position: relative; /* anchor .world/.vignette absolute layers */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ONE wrap rule only */
+.wrap{
+  position: relative;
+  z-index: 2;
+
+  /* allow natural document scroll; keep layout stable */
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  width: 100%;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(var(--pad), env(safe-area-inset-right))
+    max(22px, env(safe-area-inset-bottom))
+    max(var(--pad), env(safe-area-inset-left));
+}
+
+/* Keep background pinned */
+/* Background layers: MUST be valid CSS (no nested rules). */
+.world, .vignette{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: none;
+  will-change: auto;
+}
+
+  /* ===== World: buoy photo + batcave water overlays ===== */
+.world{
+    background:
+    /* red beacon bloom (subtle) */
+    radial-gradient(780px 520px at 58% 62%, rgba(255,43,43,.06), transparent 72%),
+    radial-gradient(900px 680px at 58% 78%, rgba(255,43,43,.04), transparent 74%),
+
+    /* faint water texture */
+    radial-gradient(1100px 800px at 18% 20%, rgba(255,255,255,.05), transparent 62%),
+    radial-gradient(1100px 800px at 82% 30%, rgba(255,255,255,.04), transparent 64%),
+
+    /* NEW BUOY */
+    url("assets/buoy_v3.png") var(--buoy-x) var(--buoy-y) / var(--buoy-size) no-repeat,    /* hard black base */
+    linear-gradient(180deg, #000, #000);
+
+}
+@media (min-width: 900px){
+  :root{
+    --buoy-size: 1200px auto;
+    --buoy-x: 52%;
+  }
+}
+/* Subtle edge falloff + top canopy (adds depth without affecting scroll) */
+.vignette{
+  background:
+    radial-gradient(1200px 820px at 50% 8%, rgba(0,0,0,.62), transparent 58%),
+    radial-gradient(1400px 980px at 50% 55%, rgba(0,0,0,.48), transparent 70%),
+    radial-gradient(900px 700px at 50% 102%, rgba(0,0,0,.42), transparent 64%),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 28%);
+  opacity: .92;
+}
+
+    /* ===== Layout ===== */
+    
+
+    .topbar{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  padding: 6px 0 4px;
+
+  position: relative;  /* ensures NOT fixed/sticky */
+  z-index: 2;          /* stays above panel fog */
+}
+
+    .pill{
+      text-decoration:none;
+      color: rgba(233,238,246,.90);
+      font-weight:700;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      border:1px solid var(--line);
+      padding:10px 14px;
+      border-radius:999px;
+      background: rgba(255,255,255,.03);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      white-space:nowrap;
+    }
+    .pill:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,43,43,.26);
+      background: rgba(255,255,255,.05);
+    }
+
+ /* ===== Panel (NO BOX) ===== */
+.panel{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;  position: relative;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  overflow: visible;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+
+/* ===== Legibility fog (HUGS THE WORDS MORE) ===== */
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:-22px;                 /* tighter = less wash */
+  pointer-events:none;
+  z-index: 0;
+
+  /* IMPORTANT: tighter + stronger center, fades fast */
+  background:
+    radial-gradient(640px 420px at 50% 18%,
+      rgba(0,0,0,.68) 0%,
+      rgba(0,0,0,.36) 48%,
+      rgba(0,0,0,0)   78%
+    ),
+    radial-gradient(760px 520px at 50% 52%,
+      rgba(0,0,0,.56) 0%,
+      rgba(0,0,0,.28) 54%,
+      rgba(0,0,0,0)   84%
+    ),
+    radial-gradient(720px 460px at 50% 88%,
+      rgba(0,0,0,.46) 0%,
+      rgba(0,0,0,.18) 58%,
+      rgba(0,0,0,0)   86%
+    );
+
+  filter: blur(16px);
+  opacity: .78;               /* lower opacity = less “washed” */
+  border-radius: var(--radius);
+  background-clip: padding-box;
+}
+
+/* keep all content above fog */
+.panel > *{
+  position: relative;
+  z-index: 1;
+}
+.brand, .copy{
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+.brand{
+  text-align:center;
+  margin: 0 0 8px;
+  
+}
+
+    .brand h1{
+      margin:0;
+      font-family: var(--hero);
+      font-weight:700;
+      font-size: clamp(46px, 10vw, 72px);
+      line-height:.95;
+      letter-spacing:.02em;
+    }
+
+    .brand p{
+      margin: 8px 0 0;
+      color: rgba(233,238,246,.78);
+      font-size: 12px;
+      letter-spacing:.22em;
+      text-transform: uppercase;
+    }
+
+    .copy{
+      margin: 18px auto 0;
+      max-width: 62ch;
+      text-align:center;
+      color: var(--muted);
+      line-height:1.75;
+      font-size: 15px;
+    }
+ 
+    .copy strong{ color: rgba(233,238,246,.92); }
+
+    .divider{
+      height:1px;
+      width: 70%;
+      margin: 16px auto;
+      background: rgba(255,255,255,.10);
+    }
+
+    .bullets{
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      text-align:center;
+      color: rgba(233,238,246,.80);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+    .bullets li{ opacity:.92; }
+
+    .isla-line{
+      margin: 18px auto 0;
+      text-align:center;
+      font-size: 14px;
+      color: rgba(233,238,246,.86);
+    }
+    .isla-line .no{
+  color: rgba(233,238,246,.92);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 1.7;
+  text-shadow: 0 2px 16px rgba(0,0,0,.75);
+}
+    .isla-line .hero{
+      font-weight: 700;
+      letter-spacing:.10em;
+    }
+
+
+
+    /* ===== Footer lockup ===== */
+    .footer{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-top: 4px;
+  text-align: center;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.legal-mark{
+  font-size: 12px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+
+  /* slightly brighter + cleaner legibility */
+  color: rgba(233,238,246,.52);
+
+  /* subtle separation from content */
+  padding-top: 10px;
+  margin: 0;
+
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.88),
+    0 1px 0 rgba(0,0,0,.60);
+}
+    /* Mobile tightening */
+    @media (max-width: 420px){
+      .panel{ padding: 20px 16px; }
+      .divider{ width: 78%; }
+      .footer img{ width: 165px; }
+    }
+
+/* ============================
+   BUOY DARKENING (NON-DESTRUCTIVE)
+   ============================ */
+.buoy,
+.buoy-image,
+.hero-bg img{
+  filter: brightness(0.78) contrast(1.05);
+}
+
+/* ============================
+   BEACON PRESERVATION
+   ============================ */
+.buoy-light{
+  box-shadow:
+    0 0 12px rgba(255,43,43,0.45),
+    0 0 28px rgba(255,43,43,0.25);
+}
+/* ============================
+   BRAND LOGO FEATHER (TOP/BOTTOM ONLY)
+   ============================ */
+.brand-logo{
+  width: min(520px, 78vw);
+  height:auto;
+  display:block;
+  margin: 0 auto 4px;
+  opacity: .98;
+  
+  
+  /* Soft edge feather (all sides) so the logo blends into the background */
+-webkit-mask-image: radial-gradient(ellipse at center,
+  #000 58%,
+  transparent 100%
+);
+mask-image: radial-gradient(ellipse at center,
+  #000 70%,
+  transparent 100%
+);
+-webkit-mask-repeat: no-repeat;
+mask-repeat: no-repeat;
+-webkit-mask-size: 100% 100%;
+mask-size: 100% 100%;
+  
+}
+
+/* ============================
+   ISLA DOCTRINE (MORE PRONOUNCED)
+   ============================ */
+.isla-line.doctrine{
+  margin: 22px auto 10px;
+  text-align: center;
+}
+.isla-line.doctrine .no{
+  display:block;
+  font-size: 12px;
+  letter-spacing: .22em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: rgba(233,238,246,.94);
+  margin-bottom: 6px;
+  text-shadow:
+    0 2px 14px rgba(0,0,0,.85),
+    0 0 22px rgba(255,43,43,.10);
+}
+.isla-line.doctrine::after{
+  content:"";
+  display:block;
+  width: 46px;
+  height: 1px;
+  margin: 14px auto 0;
+  background: rgba(255,255,255,.14);
+}
+
+/* Give slogan breathing room before hero copy */
+.brand p{
+  margin-bottom: 22px;
+}
+
+
+
+/* ============================
+   MOBILE TUNING (PROPERLY SCOPED)
+   ============================ */
+@media (max-width: 640px){
+  .panel{
+    padding-top: 18px;
+    padding-bottom: 10px;
+  }
+
+  .brand{ margin: 0 0 8px; }
+  .brand p{ margin-top: 6px; }
+
+  .copy{ margin-top: 12px; }
+  .copy.tight{ margin-top: 10px; }
+  .copy.poetic{ line-height: 1.75; }
+
+  .bullets.tight{
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .isla-line.doctrine{ margin: 14px auto 6px; }
+  .isla-line.doctrine .no{ font-size: 11px; }
+
+  .isla-line .hero{
+    font-size: clamp(16px, 4.3vw, 22px);
+    line-height: 1.25;
+  }
+
+  .cta-row{
+  margin-top: 12px;
+  margin-bottom: 6px;
+  transform: none; /* was pushing content down and forcing scroll */
+}
+
+
+
+ 
+}
+ @media (max-width: 640px) and (max-height: 760px){
+  .panel{ padding-top: 14px; padding-bottom: 8px; }
+  .brand h1{ font-size: clamp(44px, 10vw, 64px); }
+  .brand p{ margin-bottom: 18px; }
+  .copy{ font-size: 14px; line-height: 1.68; }
+  .divider{ margin: 14px auto; }
+  .isla-line{ margin-top: 14px; }
+  .isla-line.doctrine{ margin: 12px auto 6px; }
+}
+ @media (max-width: 420px){
+    .copy{ font-size: 14px; }
+    .bullets.tight{ font-size: 12.5px; }
+    .cta{ padding: 15px 26px; }
+    .rr-cta{ width: min(92vw, 480px); }
+  }
+
+.cta-row{
+  display:flex;
+  justify-content:center;
+  margin-top:22px;
+  margin-bottom:18px;
+  overflow:visible; /* do not clip glow */
+}
+
+
+.rr-cta{
+  -webkit-tap-highlight-color: transparent;
+  display:block;
+  width: min(78vw, 480px);
+  height:54px;
+  position:relative;
+  text-decoration:none;
+  border-radius:999px;
+  overflow:visible;
+  user-select:none;
+  contain: layout;
+  --dur: 5.2s;
+  --ease: cubic-bezier(.45,0,.15,1);
+
+  background:
+    /* faint internal tint so OFF state still reads colored glass */
+    radial-gradient(720px 220px at 50% 55%, rgba(255,43,43,.02), rgba(255,43,43,0) 68%),
+    /* deep body (dark, not milky) */
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.42));
+
+  box-shadow:
+    /* crisp top lip + soft depth only (no molded plastic) */
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(0,0,0,.55),
+    0 18px 40px rgba(0,0,0,.35);
+}
+
+.rr-cta__label{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  z-index:3;
+  pointer-events:none;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:rgba(255,255,255,.97);
+  text-shadow:
+  0 2px 18px rgba(0,0,0,.92),
+  0 0 28px rgba(0,0,0,.55);
+}
+
+.rr-cta__svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events: none;
+  z-index:1;
+}
+.rr-cta::after{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: 999px;
+  pointer-events:none;
+  z-index: 2;
+
+  background:
+    /* edge darkening (glass thickness) */
+    radial-gradient(120% 140% at 50% 50%,
+      rgba(0,0,0,0) 52%,
+      rgba(0,0,0,.22) 100%),
+
+    /* lens tint (thin red glass, not fill) */
+    radial-gradient(980px 340px at 50% 62%,
+      var(--cta-lens-tint) 0%,
+      rgba(255,43,43,0) 70%),
+
+    /* main spec streak */
+    linear-gradient(110deg,
+      rgba(255,255,255,0) 34%,
+      rgba(255,255,255,.18) 45%,
+      rgba(255,255,255,0) 56%),
+
+    /* secondary streak (adds “shiny” complexity without rings) */
+    linear-gradient(72deg,
+      rgba(255,255,255,0) 46%,
+      rgba(255,255,255,.08) 52%,
+      rgba(255,255,255,0) 58%),
+
+    /* top hotspot */
+    radial-gradient(900px 240px at 50% -18%,
+      rgba(255,255,255,.14),
+      rgba(255,255,255,0) 62%),
+
+    /* curved glass depth */
+    linear-gradient(180deg,
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.03) 18%,
+      rgba(255,255,255,0) 52%,
+      rgba(0,0,0,var(--cta-black)) 100%);
+
+  /* subtle inner rim (curvature) */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.40);
+
+  /* tiny clarity lift */
+  filter: saturate(112%) contrast(106%);
+
+  /* tiny refraction; if unsupported, it just gets ignored */
+  -webkit-backdrop-filter: blur(1.4px) saturate(120%);
+  backdrop-filter: blur(1.4px) saturate(120%);
+
+  opacity: var(--cta-glass);
+}
+
+
+/* HARD-PIN origin (prevents L/R drift)
+   Do NOT set a shared transform here — each layer has its own base scale. */
+.rr-cta .glow,
+.rr-cta .fill,
+.rr-cta .fil{
+  transform-origin: 340px 27px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Base transforms (SAFE): each layer has its own baseline scale.
+   Keyframes will override these during the ON window. */
+.rr-cta .glow{ transform: translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+.rr-cta .fill{ transform: translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+.rr-cta .fil { transform: translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+
+.rr-cta .glow{ animation: rrGlow var(--dur) var(--ease) infinite; }
+.rr-cta .fill{ animation: rrFill var(--dur) var(--ease) infinite; }
+.rr-cta .fil { animation: rrFil  var(--dur) var(--ease) infinite; }
+
+@keyframes rrGlow{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+  18%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  76%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.92 * var(--cta-bloom))); }
+}
+@keyframes rrFill{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+  18%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  76%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.28 * var(--cta-bloom))); }
+}
+@keyframes rrFil{
+  0%, 11%  { opacity:0; transform:translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+  18%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  76%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  100%     { opacity:0; transform:translateZ(0) scale(.86) scaleX(.92) scaleY(1.22); }
+}
+
+@media (max-width: 420px){
+  .rr-cta{ height:52px; }
+  .rr-cta__label{ letter-spacing:.12em; font-size:14px; }
+}
+
+ /* Hard override: nothing in the page chrome is fixed/sticky */
+.topbar, .footer{
+  position: relative !important;
+  top: auto !important;
+  bottom: auto !important;
+}
+/* ============================
+   BOOK PAGE (ALIGNED TO INDEX)
+   ============================ */
+
+/* Book uses same world/vignette/wrap system as index. */
+
+/* Slightly tighter panel for form content */
+.panel.panel--book{
+  padding: 18px 18px 6px; /* bottom tucked here */
+}
+
+/* Smaller logo on book so the hero copy stays primary */
+.brand-logo.brand-logo--sm{
+  width: min(360px, 70vw);
+  margin: 2px auto 10px;
+  opacity: .96;
+}
+
+/* Hero block */
+.book-hero{
+  text-align:center;
+}
+.book-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  background: rgba(255,43,43,.08);
+  border:1px solid rgba(255,43,43,.22);
+  color: rgba(233,238,246,.90);
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  font-weight:900;
+  user-select:none;
+}
+.book-kicker .dot{
+  width:7px;height:7px;border-radius:999px;
+  background: var(--red);
+  box-shadow: 0 0 0 4px rgba(255,43,43,.14), 0 0 22px rgba(255,43,43,.40);
+}
+.book-title{
+  margin: 10px auto 8px;
+  font-family: var(--hero);
+  font-weight:700;
+  font-size: clamp(34px, 6vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -.01em;
+  max-width: 26ch;
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+.book-sub{
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 56ch;
+}
+.book-sub.tight{ margin-top: 8px; }
+.book-sub .line{ display:block; margin-top: 6px; }
+
+/* Form shell: atmospheric (fog does the work), not a SaaS card */
+.form-wrap{
+  display:flex;
+  justify-content:center;
+  margin-top: 14px;
+}
+.form-card{
+  width: min(720px, 100%);
+  border-radius: 18px;
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.10);
+  padding: 14px 14px 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.32);
+  overflow: hidden; /* keeps internal sheen subtle */
+  position: relative;
+}
+
+/* a faint internal sheen so it reads as glass-on-night, not plastic */
+.form-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 240px at 50% -18%,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,0) 62%),
+    linear-gradient(180deg,
+      rgba(255,255,255,.03),
+      rgba(0,0,0,0) 45%,
+      rgba(0,0,0,.22));
+  opacity:.9;
+}
+.form-card > *{ position: relative; z-index: 1; }
+
+.form-note{
+  text-align: center;
+  margin: 14px auto 18px;
+  max-width: 40ch;
+  color: rgba(233,238,246,.78);
+}
+
+.fields{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (min-width: 720px){
+  .fields{ grid-template-columns: 1fr 1fr; }
+}
+
+label{
+  display:block;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color: rgba(233,238,246,.62);
+  font-weight:900;
+  margin: 10px 0 8px;
+  text-align:center;
+}
+
+/* Mobile tuning */
+@media (max-width: 480px){
+ 
+
+  label{
+    margin-bottom: 6px;
+  }
+}
+.section-divider{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.65;
+  margin: 16px 0 10px;
+}
+
+.hint strong{ color: rgba(233,238,246,.95); }
+
+
+.isla-note{
+  text-align: center;
+  opacity: 0.82;
+  margin-top: 18px;
+  font-size: 0.95rem;
+}
+
+
+
+ 
+
+@supports (-webkit-touch-callout: none){
+  .fields input,
+  .choice{
+    border-color: rgba(255,255,255,.30);
+  }
+}
+
+@media (max-width: 420px){
+  
+  .status{ margin-top: 10px; }
+  .hint{ margin: 8px auto 0; font-size: 13px; }
+  .footer{ margin-top: 10px; padding-top: 8px; }
+}
+
+
+/* ============================
+   BOOK — CHOICES + INPUTS (SINGLE SOURCE OF TRUTH)
+   ============================ */
+
+/* Inputs */
+.fields input{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.24);
+  background:rgba(0,0,0,.42);
+  color:rgba(233,238,246,.94);
+  outline:none;
+  font-size:15px;
+  text-align:center;
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.fields input::placeholder{ color: rgba(233,238,246,.50); }
+.fields input:focus{
+  border-color: rgba(255,43,43,.60);
+  background: rgba(0,0,0,.46);
+  box-shadow:
+    0 0 0 3px rgba(255,43,43,.18),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 0 0 1px rgba(0,0,0,.45);
+}
+/* ============================
+   AUTOFILL (KILL YELLOW)
+   iOS Safari + Chrome/WebKit
+   ============================ */
+
+.fields input:-webkit-autofill,
+.fields input:-webkit-autofill:hover,
+.fields input:-webkit-autofill:focus,
+.fields input:-webkit-autofill:active{
+  -webkit-text-fill-color: rgba(233,238,246,.94) !important;
+  caret-color: rgba(233,238,246,.94) !important;
+
+  /* Paint OUR background over the autofill yellow */
+  -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+  box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+
+  border: 1px solid rgba(255,255,255,.24) !important;
+  border-radius: 14px;
+  background-clip: padding-box;
+
+  transition: background-color 9999s ease-out 0s;
+}
+
+.fields input:-internal-autofill-selected{
+  -webkit-text-fill-color: rgba(233,238,246,.94) !important;
+  box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+}
+/* Choices grid */
+.choices{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+  margin-top: 10px;
+}
+
+@media (min-width:360px){
+  .choices{ grid-template-columns: 1fr 1fr; } /* phones: 2-col to reduce scroll */
+}
+
+/* Choice button (this fixes “weird font” + iOS flicker) */
+.choice{
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance:none;
+  appearance:none;
+
+  font-family: var(--serif);     /* <-- your site typography */
+  font-weight: 900;
+  letter-spacing: .06em;
+  font-size: 14px;
+  line-height: 1.15;
+
+  border:1px solid rgba(255,255,255,.24);
+  background: rgba(0,0,0,.38);
+  color: rgba(233,238,246,.98);
+
+  padding:12px 14px;
+  border-radius:16px;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  text-shadow: 0 2px 16px rgba(0,0,0,.85);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,0,0,.45),
+    0 10px 26px rgba(0,0,0,.22);
+
+  transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+
+  /* iOS compositing lock to prevent tap-disappear */
+  transform: translateZ(0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  isolation:isolate;
+  will-change: transform;
+}
+
+/* No pseudo overlay on mobile — it’s what kills legibility */
+.choice::before{ display:none; }
+
+/* Active/selected */
+.choice:active{
+  transform: translateY(1px);
+  border-color: rgba(255,43,43,.45);
+}
+.choice.is-selected{
+  border-color: rgba(255,43,43,.60);
+  background: rgba(255,43,43,.10);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,0,0,.45);
+}
+
+/* Hover effects ONLY on real hover devices (desktop) */
+@media (hover:hover) and (pointer:fine){
+  .choice:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,43,43,.48);
+    background: rgba(255,43,43,.06);
+    box-shadow:
+      0 18px 38px rgba(0,0,0,.45),
+      0 0 0 4px rgba(255,43,43,.07),
+      0 0 80px rgba(255,43,43,.16);
+  }
+}
+
+
+
+/* Status + hint (single) */
+.status{
+  margin: 12px auto 2px;
+  text-align:center;
+  font-size:13px;
+  letter-spacing:.06em;
+  color: rgba(233,238,246,.72);
+  min-height:18px;
+
+  /* Status actually animates on/off */
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.status.show{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hint{
+  text-align:center;
+  max-width:34ch;
+  margin: 10px auto 0;
+  color: rgba(233,238,246,.80);
+  font-size:13px;
+  line-height:1.45;
+}
+.hint strong{ color: rgba(233,238,246,.96); font-weight: 800; }
+
+.choice{
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Optional tones (so it doesn’t feel “stuck yellow”) */
+.status.tone-warn{ color: rgba(255,220,120,.92); }
+.status.tone-ok{ color: rgba(233,238,246,.86); }
+.status.tone-wait{ color: rgba(255,43,43,.82); }
+
+/* Guaranteed press feedback even when :active is unreliable */
+.choice.is-pressed{
+  transform: translateY(1px) translateZ(0);
+}
+
+/* If your JS ever uses .selected, make it match too */
+.choice.selected{
+  border-color: rgba(255,43,43,.60);
+  background: rgba(255,43,43,.10);
+}
+
+/* Disabled look */
+.choice:disabled{ opacity: .55; cursor: not-allowed; }
+
+.choice.is-waiting{
+  border-color: rgba(255,43,43,.72);
+  background: rgba(255,43,43,.12);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.45),
+    0 0 0 4px rgba(255,43,43,.10),
+    0 0 90px rgba(255,43,43,.22);
+  animation: rrWaitPulse 900ms ease-in-out infinite;
+}
+@keyframes rrWaitPulse{
+  0%,100%{ transform: translateZ(0) scale(1.00); }
+  50%{ transform: translateZ(0) scale(1.015); }
+}
+
+/* Mobile: tighten + footer up */
+@media (max-width:420px){
+  .panel.panel--book{ padding: 14px 12px 8px; }
+  .form-card{ padding: 12px; }
+  .choice{ padding: 12px 12px; font-size: 14px; }
+  .footer{ margin-top: 8px; padding-top: 8px; }
+}
+  </style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="index.html">Home</a>
+    </div>
+
+    <main class="panel panel--book" role="main">
+      <header class="brand">
+        <img class="brand-logo brand-logo--sm" src="assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+<section class="book-hero">
+        <div class="book-kicker"><span class="dot"></span> Live demo request</div>
+<h1 class="book-title">See Isla work — live</h1>
+        <p class="book-sub">
+          Enter your info below.
+        </p>
+
+        
+
+       <div class="form-wrap">
+  <div class="form-card">
+
+    <div class="fields">
+      <div>
+        <label for="owner">Owner name</label>
+        <input id="owner" name="owner" placeholder="Your name" autocomplete="name" />
+      </div>
+
+      <div>
+        <label for="biz">Business name</label>
+        <input id="biz" name="biz" placeholder="Studio / practice / office" autocomplete="organization" />
+      </div>
+
+      <div>
+        <label for="phone">Phone number</label>
+<input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" inputmode="tel" autocomplete="tel" />      </div>
+
+      <div>
+        <label for="location">City / State / Country</label>
+        <input id="location" name="location" type="text" placeholder="Myrtle Beach, SC, US" autocomplete="address-level2" />
+      </div>
+    </div>
+
+    <div class="section-divider">Choose your industry</div>
+    <p class="book-sub tight">Tap one to begin.</p>
+
+    <div class="choices" aria-label="Choose your vertical">
+      <button class="choice" type="button" data-vertical="Tattoo Studio">Tattoo Studio</button>
+      <button class="choice" type="button" data-vertical="Med Spa">Med Spa</button>
+      <button class="choice" type="button" data-vertical="Physical Therapy">Physical Therapy</button>
+      <button class="choice" type="button" data-vertical="Dental">Dental</button>
+      <button class="choice" type="button" data-vertical="Legal">Legal</button>
+      <button class="choice" type="button" data-vertical="Plastic Surgery">Plastic Surgery</button>
+      <button class="choice" type="button" data-vertical="Dog Grooming">Dog Grooming</button>
+      <button class="choice" type="button" data-vertical="Nail Salon">Nail Salon</button>
+    </div>
+
+    <div class="status" id="status" aria-live="polite"></div>
+
+  </div>
+</div>
+      </section>
+
+    </main>
+
+    <footer class="footer" aria-label="Legal mark">
+      <p class="legal-mark">RedRight Labs · Established 2025</p>
+    </footer>
+  </div>
+
+<script>
+  const choices = Array.from(document.querySelectorAll('.choice'));
+  const statusEl = document.getElementById('status');
+
+  const ownerEl = document.getElementById('owner');
+  const bizEl   = document.getElementById('biz');
+  const phoneEl = document.getElementById('phone');
+  const locEl   = document.getElementById('location');
+
+  let lastSelectedBtn = null;
+  let inFlight = false;
+  let submitted = false;
+
+  function digitsOnly(v){
+    return (v || '').replace(/\D/g,'');
+  }
+
+  // Accept (843) 555-5555, 843-555-5555, +1 843 555 5555, etc.
+  // Strips extensions like "ext 123" or "x123".
+  // Returns digits; if 11 and starts with 1, trims to 10.
+  function normalizePhone(raw){
+    const cleaned = (raw || '').replace(/(ext\.?|x)\s*\d+$/i,'');
+    const d = digitsOnly(cleaned);
+    if (d.length === 11 && d.startsWith('1')) return d.slice(1);
+    return d;
+  }
+
+  function setStatus(text, tone = ''){
+    const msg = (text || '').trim();
+
+    // If no message, fully clear state (prevents “stuck yellow”)
+    if (!msg){
+      statusEl.textContent = '';
+      statusEl.classList.remove('show','tone-warn','tone-ok','tone-wait');
+      clearTimeout(setStatus._t);
+      return;
+    }
+
+    statusEl.textContent = msg;
+    statusEl.classList.add('show');
+
+    statusEl.classList.remove('tone-warn','tone-ok','tone-wait');
+    if (tone) statusEl.classList.add(tone);
+
+    clearTimeout(setStatus._t);
+    setStatus._t = setTimeout(() => statusEl.classList.remove('show'), 2200);
+  }
+
+  function getFormData(){
+    return {
+      owner: ownerEl.value.trim(),
+      biz: bizEl.value.trim(),
+      phone: normalizePhone(phoneEl.value.trim()),
+      location: locEl.value.trim(),
+    };
+  }
+
+  function lockSelected(btn){
+    // Match your CSS: .is-selected (and also support .selected)
+    choices.forEach(b => b.classList.remove('is-selected','selected'));
+    btn.classList.add('is-selected','selected');
+    lastSelectedBtn = btn;
+
+    // Guaranteed press feedback (even when :active is flaky)
+    btn.classList.remove('is-pressed');
+    void btn.offsetWidth; // reflow
+    btn.classList.add('is-pressed');
+    setTimeout(() => btn.classList.remove('is-pressed'), 140);
+  }
+
+  function disableAll(on, keepBtn = null){
+    choices.forEach(b => {
+      b.disabled = !!on && b !== keepBtn;
+    });
+  }
+
+  function lockAfterSuccess(btn){
+    submitted = true;
+    disableAll(true);     // lock everything after a successful submit
+    btn.disabled = true;  // keep it visibly locked
+  }
+
+  function validatePhoneUI(){
+    const d = normalizePhone(phoneEl.value);
+
+    if (!d.length){
+      setStatus('', '');
+      return true;
+    }
+    if (d.length === 10){
+      setStatus('Ready.', 'tone-ok');
+      return true;
+    }
+
+    setStatus('Finish your number…', 'tone-warn');
+    return false;
+  }
+
+  function trySubmitFromKeyboard(){
+  if (submitted || inFlight) return;
+
+  // Require an explicit vertical selection (no default)
+  if (!lastSelectedBtn){
+    setStatus('Choose your industry.', 'tone-warn');
+
+    const choicesWrap = document.querySelector('.choices');
+    if (choicesWrap){
+      choicesWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return;
+  }
+
+  lastSelectedBtn.click();
+}
+
+  // Phone validation (autofill can be weird)
+  phoneEl.addEventListener('input', validatePhoneUI);
+  phoneEl.addEventListener('blur', validatePhoneUI);
+  phoneEl.addEventListener('change', validatePhoneUI);
+  phoneEl.addEventListener('focus', () => {
+    setTimeout(validatePhoneUI, 80);
+    setTimeout(validatePhoneUI, 240);
+  });
+  window.addEventListener('pageshow', () => setTimeout(validatePhoneUI, 60));
+  setTimeout(validatePhoneUI, 300);
+  setTimeout(validatePhoneUI, 900);
+
+  // Enter submits using selected (or first) vertical
+  [ownerEl, bizEl, phoneEl, locEl].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        trySubmitFromKeyboard();
+      }
+    });
+  });
+
+  async function triggerIsla(payload){
+    // Replace later with your backend call:
+    // return fetch('/api/lead', {...})
+    return new Promise(res => setTimeout(res, 350));
+  }
+
+  choices.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (submitted || inFlight) return;
+
+      const { owner, biz, phone, location } = getFormData();
+      const vertical = btn.dataset.vertical || btn.textContent.trim();
+
+      if(!owner || !biz || !phone){
+        setStatus('Enter your info first.', 'tone-warn');
+        return;
+      }
+
+      const phone10 = normalizePhone(phone);
+      if (phone10.length !== 10){
+        setStatus('Add a valid phone number.', 'tone-warn');
+        return;
+      }
+
+      lockSelected(btn);
+      setStatus('Received.', 'tone-ok');
+
+      inFlight = true;
+      btn.classList.add('is-waiting');
+      disableAll(true, btn);
+
+      try{
+        await triggerIsla({ owner, biz, phone: phone10, location, vertical });
+        setStatus('Stand by.', 'tone-wait');
+        lockAfterSuccess(btn);
+      }catch(err){
+        console.error(err);
+        setStatus('Something glitched. Try again in a moment.', 'tone-warn');
+        disableAll(false);
+      }finally{
+        inFlight = false;
+        btn.classList.remove('is-waiting');
+      }
+    });
+  });
+</script>
+</body>
+</html>

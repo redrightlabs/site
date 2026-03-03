@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RedRight — Your path to safe harbor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/index-world.css" />
+  <link rel="stylesheet" href="shared/index-page.css" />
+  <style>
+    :root{
+      --bg0:#020304;
+      --bg1:#070b10;
+      --text:#e9eef6;
+      --muted:rgba(233,238,246,.78);
+      --dim:rgba(233,238,246,.62);
+      --line:rgba(255,255,255,.10);
+
+      --red:#ff2b2b;
+
+      --maxw: 860px;
+      --pad: 22px;
+      --radius: 18px;
+      --shadow: 0 30px 90px rgba(0,0,0,.62);
+      --cta-lens-tint: rgba(255,43,43,.030);
+      --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+      --hero: "Cormorant Garamond", Garamond, Georgia, serif;
+
+      /* Glass face intensity (higher = shinier lens) */
+      --cta-glass: 0.56;     /* range: 0.35 – 0.70 */
+      /* Light bloom strength (higher = more atmospheric bleed) */
+      --cta-bloom: 1.15;      /* range: 0.80 – 1.25 */
+
+      /* Off-black depth (lower = darker idle state) */
+      --cta-black: 0.26;     /* range: 0.20 – 0.34 */
+    }
+
+*{ box-sizing:border-box; }
+
+
+/* SCROLL SANITY: do NOT force html/body overflow/scroll containers */
+html{
+  height: 100%;
+}
+body{
+  min-height: 100%;
+  overflow-x: hidden; /* only lock horizontal */
+}
+
+body{
+  margin:0;
+  color:var(--text);
+  font-family:var(--serif);
+  background: var(--bg0);
+  position: relative; /* anchor .world/.vignette absolute layers */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ONE wrap rule only */
+.wrap{
+  position: relative;
+  z-index: 2;
+
+  /* allow natural document scroll; keep layout stable */
+  min-height: 100%;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  width: 100%;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(var(--pad), env(safe-area-inset-right))
+    max(44px, env(safe-area-inset-bottom))
+    max(var(--pad), env(safe-area-inset-left));
+}
+
+
+    /* ===== Layout ===== */
+    
+
+    .topbar{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  padding: 6px 0 4px;
+
+  position: relative;  /* ensures NOT fixed/sticky */
+  z-index: 2;          /* stays above panel fog */
+}
+
+    .pill{
+      text-decoration:none;
+      color: rgba(233,238,246,.90);
+      font-weight:700;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      border:1px solid var(--line);
+      padding:10px 14px;
+      border-radius:999px;
+      background: rgba(255,255,255,.03);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      white-space:nowrap;
+    }
+    .pill:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,43,43,.26);
+      background: rgba(255,255,255,.05);
+    }
+
+ /* ===== Panel (NO BOX) ===== */
+.panel{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;  position: relative;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  overflow: visible;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+
+/* ===== Legibility fog (HUGS THE WORDS MORE) ===== */
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:-22px;                 /* tighter = less wash */
+  pointer-events:none;
+  z-index: 0;
+
+  /* IMPORTANT: tighter + stronger center, fades fast */
+  background:
+    radial-gradient(640px 420px at 50% 18%,
+      rgba(0,0,0,.68) 0%,
+      rgba(0,0,0,.36) 48%,
+      rgba(0,0,0,0)   78%
+    ),
+    radial-gradient(760px 520px at 50% 52%,
+      rgba(0,0,0,.56) 0%,
+      rgba(0,0,0,.28) 54%,
+      rgba(0,0,0,0)   84%
+    ),
+    radial-gradient(720px 460px at 50% 88%,
+      rgba(0,0,0,.46) 0%,
+      rgba(0,0,0,.18) 58%,
+      rgba(0,0,0,0)   86%
+    );
+
+  filter: blur(16px);
+  opacity: .62;               /* lower opacity = less “washed” */
+  border-radius: var(--radius);
+  background-clip: padding-box;
+}
+
+/* keep all content above fog */
+.panel > *{
+  position: relative;
+  z-index: 1;
+}
+.brand, .copy{
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+.brand{
+  text-align:center;
+  margin: 0 0 8px;
+  
+}
+
+    .brand h1{
+      margin:0;
+      font-family: var(--hero);
+      font-weight:700;
+      font-size: clamp(46px, 10vw, 72px);
+      line-height:.95;
+      letter-spacing:.02em;
+    }
+
+    .brand p{
+      margin: 8px 0 0;
+      color: rgba(233,238,246,.78);
+      font-size: 12px;
+      letter-spacing:.22em;
+      text-transform: uppercase;
+    }
+
+    .copy{
+      margin: 18px auto 0;
+      max-width: 62ch;
+      text-align:center;
+      color: var(--muted);
+      line-height:1.75;
+      font-size: 15px;
+    }
+ 
+    .copy strong{ color: rgba(233,238,246,.92); }
+
+    .divider{
+      height:1px;
+      width: 70%;
+      margin: 16px auto;
+      background: rgba(255,255,255,.10);
+    }
+
+    .bullets{
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      text-align:center;
+      color: rgba(233,238,246,.80);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+    .bullets li{ opacity:.92; }
+
+    
+    .isla-line .no{
+  color: rgba(233,238,246,.92);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 1.7;
+  text-shadow: 0 2px 16px rgba(0,0,0,.75);
+}
+ .isla-line{
+  margin: 10px auto 6px; /* slightly tighter */
+  text-align:center;
+}
+
+.isla-line .hero{
+  display:inline-block;
+  padding: 10px 16px;               /* tighter pill */
+  border-radius: 999px;
+
+  font-weight: 800;
+  font-size: 16px;                  /* up from 14 */
+  letter-spacing: .06em;            /* less spaced = more readable */
+  color: rgba(233,238,246,.96);
+
+  background: rgba(0,0,0,.18);      /* lighter than before so it doesn’t “mud” */
+  border: 1px solid rgba(255,255,255,.07);
+
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.92),
+    0 0 22px rgba(255,43,43,.10);
+
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+.isla-line::after{
+  content:"";
+  display:block;
+  width: 64px;
+  height: 1px;
+  margin: 12px auto 0;
+  background: rgba(255,255,255,.10);
+}
+
+    /* ===== Footer lockup ===== */
+   /* ===== Footer lockup (soft, bloom-safe) ===== */
+.footer{
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+
+  margin-top: auto;        /* pins footer to bottom on short pages */
+  margin-bottom: 34px;
+  padding-top: 10px;
+  padding-bottom: 6px;
+
+  text-align: center;
+  position: relative;
+  z-index: 2;
+
+  /* softer divider = no “hard cut” */
+  border-top: 1px solid rgba(255,255,255,.01);
+}
+
+/* Smaller + lower-opacity plate so it doesn't eat the water/bloom */
+.footer::before{
+  content:"";
+  position:absolute;
+  left:-12px;
+  right:-12px;
+  top:-4px;
+  bottom:-6px;
+  pointer-events:none;
+  z-index:-1;
+
+  background:
+    radial-gradient(900px 120px at 50% 92%,
+      rgba(0,0,0,.28) 0%,
+      rgba(0,0,0,0) 72%),
+    linear-gradient(180deg,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,.12) 100%);
+}
+.legal-mark{
+  font-size: 12px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+
+  /* slightly brighter + cleaner legibility */
+  color: rgba(233,238,246,.62);
+
+  /* subtle separation from content */
+  padding-top: 10px;
+  margin: 0;
+
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.88),
+    0 1px 0 rgba(0,0,0,.60);
+}
+.footer-links{
+  margin: 10px 0 0;
+  font-size: 12px;
+  letter-spacing: .20em;
+  text-transform: uppercase;
+  display:flex;
+  gap: 10px;
+  justify-content:center;
+  align-items:center;
+}
+
+.footer-links a{
+  color: rgba(233,238,246,.62);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  padding-bottom: 2px;
+  transition: color .16s ease, border-color .16s ease;
+}
+
+.footer-links a:hover{
+  color: rgba(233,238,246,.86);
+  border-color: rgba(255,43,43,.28);
+}
+
+.footer-links .sep{
+  color: rgba(233,238,246,.26);
+  letter-spacing: 0;
+}
+    /* Mobile tightening */
+    @media (max-width: 420px){
+      .panel{ padding: 20px 16px; }
+      .divider{ width: 78%; }
+      .footer img{ width: 165px; }
+    }
+
+
+/* ============================
+   BEACON PRESERVATION
+   ============================ */
+.buoy-light{
+  box-shadow:
+    0 0 12px rgba(255,43,43,0.45),
+    0 0 28px rgba(255,43,43,0.25);
+}
+/* ============================
+   BRAND LOGO FEATHER (TOP/BOTTOM ONLY)
+   ============================ */
+.brand-logo{
+  width: min(520px, 78vw);
+  height:auto;
+  display:block;
+  margin: 0 auto 4px;
+  opacity: .98;
+  
+  
+  /* Soft edge feather (all sides) so the logo blends into the background */
+-webkit-mask-image: radial-gradient(ellipse at center,
+  #000 58%,
+  transparent 100%
+);
+mask-image: radial-gradient(ellipse at center,
+  #000 70%,
+  transparent 100%
+);
+-webkit-mask-repeat: no-repeat;
+mask-repeat: no-repeat;
+-webkit-mask-size: 100% 100%;
+mask-size: 100% 100%;
+  
+}
+
+/* ============================
+   ISLA DOCTRINE (MORE PRONOUNCED)
+   ============================ */
+.isla-line.doctrine{
+  margin: 18px auto 6px;
+  text-align: center;
+}
+.isla-line.doctrine .no{
+  display:block;
+  font-size: 12px;
+  letter-spacing: .22em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: rgba(233,238,246,.94);
+  margin-bottom: 6px;
+  text-shadow:
+    0 2px 14px rgba(0,0,0,.85),
+    0 0 22px rgba(255,43,43,.10);
+}
+.isla-line.doctrine::after{
+  content:"";
+  display:block;
+  width: 46px;
+  height: 1px;
+  margin: 14px auto 0;
+  background: rgba(255,255,255,.14);
+}
+
+/* Give slogan breathing room before hero copy */
+.brand p{
+  margin-bottom: 22px;
+}
+
+
+
+/* ============================
+   MOBILE TUNING (PROPERLY SCOPED)
+   ============================ */
+@media (max-width: 640px){
+  .panel{
+    padding-top: 18px;
+    padding-bottom: 10px;
+  }
+
+  .brand{ margin: 0 0 8px; }
+  .brand p{ margin-top: 6px; }
+
+  .copy{ margin-top: 12px; }
+  .copy.tight{ margin-top: 10px; }
+  .copy.poetic{ line-height: 1.75; }
+
+  .bullets.tight{
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .isla-line.doctrine{ margin: 14px auto 6px; }
+  .isla-line.doctrine .no{ font-size: 11px; }
+
+  .isla-line .hero{
+  font-size: clamp(15px, 4.4vw, 19px);
+  line-height: 1.25;
+}
+
+  .cta-row{
+  margin-top: 12px;
+  margin-bottom: 6px;
+  transform: none; /* was pushing content down and forcing scroll */
+}
+
+
+
+  /* iPhone Safari: make bloom cheaper so it still flashes */
+  @supports (-webkit-touch-callout: none){
+    .cta-row::before{
+      width: 2600px;
+      height: 520px;
+      filter: blur(60px);
+      mix-blend-mode: normal;
+    }
+  }
+}
+ @media (max-width: 640px) and (max-height: 760px){
+  .panel{ padding-top: 14px; padding-bottom: 8px; }
+  .brand h1{ font-size: clamp(44px, 10vw, 64px); }
+  .brand p{ margin-bottom: 18px; }
+  .copy{ font-size: 14px; line-height: 1.68; }
+  .divider{ margin: 14px auto; }
+  .isla-line{ margin-top: 14px; }
+  .isla-line.doctrine{ margin: 12px auto 6px; }
+}
+ @media (max-width: 420px){
+    .copy{ font-size: 14px; }
+    .bullets.tight{ font-size: 12.5px; }
+    .cta{ padding: 15px 26px; }
+    .rr-cta{ width: min(92vw, 480px); }
+  }
+
+.cta-row{
+  display:flex;
+  justify-content:center;
+  margin-top:22px;
+  margin-bottom:18px;
+  overflow:visible; /* do not clip glow */
+}
+
+
+.rr-cta{
+  -webkit-tap-highlight-color: transparent;
+  display:block;
+  width: min(78vw, 480px);
+  height:54px;
+  position:relative;
+  text-decoration:none;
+  border-radius:999px;
+  overflow:visible;
+  user-select:none;
+  --dur: 5.2s;
+  --ease: cubic-bezier(.45,0,.15,1);
+background:
+  /* ultra-faint internal lens sparkle (keep this) */
+  radial-gradient(720px 220px at 50% 55%,
+    rgba(255,255,255,.012),
+    rgba(255,255,255,0) 70%
+  ),
+
+  /* OFF state smoked red glass (subtle) */
+  linear-gradient(180deg,
+  rgba(205, 24, 24, 0.30),
+  rgba(8, 0, 0, 0.78)
+);
+  box-shadow:
+    /* crisp top lip + soft depth only (no molded plastic) */
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(0,0,0,.55),
+    0 18px 40px rgba(0,0,0,.35);
+}
+
+.rr-cta__label{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  z-index:3;
+  pointer-events:none;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:rgba(255,255,255,.97);
+  text-shadow:
+  0 2px 18px rgba(0,0,0,.92),
+  0 0 28px rgba(0,0,0,.55);
+}
+
+.rr-cta__svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events: none;
+  z-index:1;
+  transform: translateZ(0);
+}
+.rr-cta::after{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: 999px;
+  pointer-events:none;
+  z-index: 2;
+
+  background:
+    /* edge darkening (glass thickness) */
+    radial-gradient(120% 140% at 50% 50%,
+      rgba(0,0,0,0) 52%,
+      rgba(0,0,0,.22) 100%),
+
+    /* lens tint (thin red glass, not fill) */
+    radial-gradient(980px 340px at 50% 62%,
+      var(--cta-lens-tint) 0%,
+      rgba(255,43,43,0) 70%),
+
+    /* main spec streak */
+    linear-gradient(110deg,
+      rgba(255,255,255,0) 34%,
+      rgba(255,255,255,.18) 45%,
+      rgba(255,255,255,0) 56%),
+
+    /* secondary streak (adds “shiny” complexity without rings) */
+    linear-gradient(72deg,
+      rgba(255,255,255,0) 46%,
+      rgba(255,255,255,.08) 52%,
+      rgba(255,255,255,0) 58%),
+
+    /* top hotspot */
+    radial-gradient(900px 240px at 50% -18%,
+      rgba(255,255,255,.14),
+      rgba(255,255,255,0) 62%),
+
+    /* curved glass depth */
+    linear-gradient(180deg,
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.03) 18%,
+      rgba(255,255,255,0) 52%,
+      rgba(0,0,0,var(--cta-black)) 100%);
+
+  /* subtle inner rim (curvature) */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.40);
+
+  /* tiny clarity lift */
+  filter: saturate(100%) contrast(103%);
+
+  /* tiny refraction; if unsupported, it just gets ignored */
+  -webkit-backdrop-filter: blur(1.4px) saturate(120%);
+  backdrop-filter: blur(1.4px) saturate(120%);
+
+  opacity: var(--cta-glass);
+  transition: opacity .25s ease;
+}
+
+
+/* HARD-PIN origin (prevents L/R drift)
+   Do NOT set a shared transform here — each layer has its own base scale. */
+.rr-cta .glow,
+.rr-cta .fill,
+.rr-cta .fil{
+  transform-origin: 50% 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Base transforms (SAFE): each layer has its own baseline scale.
+   Keyframes will override these during the ON window. */
+.rr-cta .glow{ transform: translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+.rr-cta .fill{ transform: translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+.rr-cta .fil { transform: translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+
+.rr-cta .glow{ animation: rrGlow var(--dur) var(--ease) infinite; animation-delay: .0s; }
+.rr-cta .fill{ animation: rrFill var(--dur) var(--ease) infinite; animation-delay: .0s; }
+.rr-cta .fil { animation: rrFil  var(--dur) var(--ease) infinite; animation-delay: .0s; }
+
+/* Let keyframes control visibility (do NOT hard-force opacity off) */
+.rr-cta .glow,
+.rr-cta .fill,
+.rr-cta .fil{
+  animation-fill-mode: both;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+@keyframes rrGlow{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+  18%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  76%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.92 * var(--cta-bloom))); }
+}
+@keyframes rrFill{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+  18%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  76%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.28 * var(--cta-bloom))); }
+}
+@keyframes rrFil{
+  0%, 11%  { opacity:0; transform:translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+  18%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  76%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  100%     { opacity:0; transform:translateZ(0) scale(.86) scaleX(.92) scaleY(1.22); }
+}
+/* If the user prefers reduced motion, force the CTA fully OFF (no red glow). */
+@media (prefers-reduced-motion: reduce){
+  .rr-cta .glow,
+  .rr-cta .fill,
+  .rr-cta .fil{
+    animation: none !important;
+    opacity: 0 !important;
+    transform: translateZ(0) !important;
+  }
+}
+@media (max-width: 420px){
+  .rr-cta{ height:52px; }
+  .rr-cta__label{ letter-spacing:.12em; font-size:14px; }
+}
+
+ /* Hard override: nothing in the page chrome is fixed/sticky */
+.topbar, .footer{
+  position: relative !important;
+  top: auto !important;
+  bottom: auto !important;
+} 
+
+</style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="login.html">Login</a>
+    </div>
+
+    <main class="panel" role="main">
+  <header class="brand">
+  <img class="brand-logo" src="assets/redright-logo2.png" alt="RedRight">
+  <p>Your path to safe harbor.</p>
+</header>
+
+<div class="copy poetic">
+  <strong>You didn’t build your business to run a front desk.</strong><br>
+  You built it for the craft.<br>
+  For the people who trust you.
+</div>
+
+<ul class="bullets tight" aria-label="Operational realities">
+  <li>Messages slip.</li>
+  <li>Appointments shift.</li>
+  <li>Follow-ups don’t always happen.</li>
+</ul>
+
+<div class="copy poetic tight">
+  Not because you don’t care —<br>
+  <strong>but because no one can be everywhere at once.</strong>
+</div>
+
+<div class="copy poetic tight">
+  The real risk comes <em>after</em> the appointment.<br>
+  Between visits. After hours.<br>
+  When questions surface later.<br>
+  <strong>When one unseen moment becomes the lasting impression.</strong>
+</div>
+
+<div class="isla-line doctrine">
+  <span class="no">ISLA IS NOT A BOT.</span>
+  <span class="no">ISLA IS NOT SOFTWARE.</span>
+</div>
+
+<div class="isla-line">
+  <span class="hero">Isla is operational relief — at your service.</span>
+</div>
+
+<div class="cta-row">
+  <a class="rr-cta" href="book.html" aria-label="See Isla working live">
+    <span class="rr-cta__label">SEE ISLA WORKING — LIVE</span>
+
+    <svg class="rr-cta__svg" viewBox="0 0 680 54" preserveAspectRatio="xMidYMid meet" role="presentation" aria-hidden="true">
+      <defs>
+        
+<!-- GLASS (FACE) -->
+<!-- Base glass: darker edges + gentle mid lift (reads as curved glass) -->
+<linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%"   stop-color="rgb(255,255,255)" stop-opacity="0.26"/>
+  <stop offset="18%"  stop-color="rgb(255,255,255)" stop-opacity="0.14"/>
+  <stop offset="52%"  stop-color="rgb(0,0,0)"       stop-opacity="0.14"/>
+  <stop offset="100%" stop-color="rgb(0,0,0)"       stop-opacity="0.46"/>
+</linearGradient>
+
+<!-- Fresnel edge darkening (vignette inside the pill) -->
+<radialGradient id="gFresnel" cx="50%" cy="50%" r="78%">
+  <stop offset="0%"   stop-color="rgb(255,255,255)" stop-opacity="0"/>
+  <stop offset="58%"  stop-color="rgb(0,0,0)"       stop-opacity="0"/>
+  <stop offset="100%" stop-color="rgb(0,0,0)"       stop-opacity="0.34"/>
+</radialGradient>
+
+<!-- Specular band + top sheen -->
+<linearGradient id="gSheen" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%"   stop-color="rgb(255,255,255)" stop-opacity="0.32"/>
+  <stop offset="22%"  stop-color="rgb(255,255,255)" stop-opacity="0.12"/>
+  <stop offset="55%"  stop-color="rgb(255,255,255)" stop-opacity="0"/>
+</linearGradient>
+
+<!-- Bottom thickness / internal shadow (adds glass depth without affecting outer glow) -->
+<linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%"   stop-color="rgb(0,0,0)" stop-opacity="0"/>
+  <stop offset="58%"  stop-color="rgb(0,0,0)" stop-opacity="0.10"/>
+  <stop offset="100%" stop-color="rgb(0,0,0)" stop-opacity="0.30"/>
+</linearGradient>
+
+<!-- Existing soft spec hotspot -->
+<radialGradient id="gSpec" cx="50%" cy="-12%" r="78%">
+  <stop offset="0%"  stop-color="rgb(255,255,255)" stop-opacity="0.26"/>  <stop offset="55%" stop-color="rgb(255,255,255)" stop-opacity="0"/>
+</radialGradient>
+
+        <!-- OUTER ATMOSPHERIC BLEED -->
+        <radialGradient id="gAtmos" cx="50%" cy="52%" r="70%">
+          <stop offset="0%"   stop-color="rgba(255,43,43,.16)"/>
+          <stop offset="28%"  stop-color="rgba(255,43,43,.10)"/>
+          <stop offset="55%"  stop-color="rgba(140,0,0,.06)"/>
+          <stop offset="100%" stop-color="rgba(140,0,0,0)"/>
+        </radialGradient>
+
+        <!-- INTERNAL BLOOM -->
+        <radialGradient id="gBloom" cx="50%" cy="52%" r="68%">
+          <stop offset="0%"   stop-color="rgba(255,255,255,.20)"/>
+          <stop offset="16%"  stop-color="rgba(255,43,43,.78)"/>
+          <stop offset="42%"  stop-color="rgba(255,43,43,.34)"/>
+          <stop offset="68%"  stop-color="rgba(255,43,43,.12)"/>
+          <stop offset="100%" stop-color="rgba(255,43,43,0)"/>
+        </radialGradient>
+
+        <!-- HOT CORE ANCHOR -->
+        <radialGradient id="gHot" cx="50%" cy="52%" r="55%">
+          <stop offset="0%"   stop-color="rgba(255,255,255,.95)"/>
+          <stop offset="10%"  stop-color="rgba(255,255,255,.55)"/>
+          <stop offset="24%"  stop-color="rgba(255,190,190,.22)"/>
+          <stop offset="100%" stop-color="rgba(255,43,43,0)"/>
+        </radialGradient>
+
+        <!-- FILAMENT -->
+        <radialGradient id="gFlameBody" cx="50%" cy="64%" r="75%">
+          <stop offset="0%"   stop-color="rgba(255,120,120,.50)"/>
+          <stop offset="52%"  stop-color="rgba(255,70,70,.22)"/>
+          <stop offset="100%" stop-color="rgba(255,43,43,0)"/>
+        </radialGradient>
+        <radialGradient id="gFlameHead" cx="50%" cy="38%" r="62%">
+          <stop offset="0%"   stop-color="rgba(255,255,255,1)"/>
+          <stop offset="44%"  stop-color="rgba(255,255,255,1)"/>
+          <stop offset="72%"  stop-color="rgba(255,235,235,.55)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+        <linearGradient id="gWick" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="rgba(255,255,255,1)"/>
+          <stop offset="60%"  stop-color="rgba(255,255,255,.62)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+
+        <!-- Static blurs -->
+        <filter id="fAtmos" x="-90%" y="-260%" width="280%" height="620%">
+          <feGaussianBlur stdDeviation="18"/>
+        </filter>
+        <filter id="fFill" x="-70%" y="-180%" width="240%" height="460%">
+          <feGaussianBlur stdDeviation="12"/>
+        </filter>
+        <filter id="fFil" x="-60%" y="-140%" width="220%" height="380%">
+          <feGaussianBlur stdDeviation="0.8"/>
+        </filter>
+      </defs>
+
+      <g class="glow" filter="url(#fAtmos)">
+        <ellipse cx="340" cy="26" rx="280" ry="100" fill="url(#gAtmos)"/>
+        <ellipse cx="340" cy="28" rx="210" ry="76"  fill="url(#gAtmos)" opacity=".55"/>
+      </g>
+
+      
+
+      <g class="fill" filter="url(#fFill)">
+        <ellipse cx="340" cy="28" rx="460" ry="160" fill="url(#gBloom)"/>
+        <ellipse cx="340" cy="28" rx="150" ry="100" fill="url(#gHot)" opacity=".95"/>
+      </g>
+
+      <g class="fil" filter="url(#fFil)">
+        <ellipse cx="340" cy="30" rx="28" ry="19" fill="url(#gFlameBody)"/>
+        <ellipse cx="340" cy="25" rx="12" ry="21" fill="url(#gFlameHead)"/>
+        <rect x="337" y="16" width="6" height="24" rx="999" fill="url(#gWick)" opacity=".92"/>
+        <ellipse cx="340" cy="22" rx="5" ry="9" fill="rgba(255,255,255,.95)" opacity=".40"/>
+      </g>
+    </svg>
+  </a>
+</div>
+
+</main>
+   <footer class="footer" aria-label="Legal mark">
+  <p class="legal-mark">RedRight Labs · Established 2025</p>
+
+  <nav class="footer-links" aria-label="Footer links">
+    <a href="privacy.html">Privacy</a>
+    <span class="sep">/</span>
+    <a href="terms.html">Terms</a>
+    <span class="sep">/</span>
+    <a href="contact.html">Contact</a>
+    <span class="sep">/</span>
+    <a href="manifesto.html">Manifesto</a>
+  </nav>
+</footer>
+  </div>
+</body>
+</html>

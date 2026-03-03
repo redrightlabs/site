@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Activate Trial · RedRight</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+
+  <!-- Unified world + page system (match Manifesto baseline) -->
+  <link rel="stylesheet" href="/canon.css" />
+  <link rel="stylesheet" href="/shared/index-world.css" />
+  <link rel="stylesheet" href="/shared/index-page.css" />
+
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <style>
+    /* Page-local safety: if any layer/iframe introduces a 1px overflow on iOS,
+       Safari will allow a slight lateral scroll. Clamp only horizontal overflow
+       on this page (does not change layout sizes). */
+    html, body{ overflow-x: hidden; width: 100%; }
+    .wrap{ overflow-x: hidden; }
+    h1{
+      margin: 16px 0 6px;
+      font-family: var(--hero);
+      font-weight:700;
+      font-size: clamp(30px, 5.6vw, 44px);
+      text-align:center;
+    }
+
+    .sub{
+      margin: 0 0 18px;
+      text-align:center;
+      color: rgba(233,238,246,.68);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .copy{
+      /* Avoid vw rounding overflow on iOS; keep identical visual max width */
+      width: 100%;
+      max-width: 546px;
+      margin: 0 auto;
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    form{
+  margin-top: 22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center; /* center the rail */
+}
+/* single centered rail = symmetry */
+    .form-rail{
+      /* Same rail sizing, but without vw (prevents side-scroll on iOS Safari) */
+      width: 100%;
+      max-width: 380px; /* tighter on mobile */
+      margin: 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:stretch; /* children fill the rail width */
+    }
+
+@media (min-width: 720px){
+  .form-rail{ max-width: 420px; }
+}
+
+    input{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.2;
+  height: 44px;
+  width: 100%;
+  text-align: left;
+}
+
+input::placeholder{
+  text-align: center;
+}
+    input:focus{
+      outline:none;
+      border-color: rgba(255,43,43,.35);
+      background: rgba(255,255,255,.06);
+    }
+
+    .cf-wrap{
+      display:flex;
+      justify-content:center;
+      width: 100%;
+
+      /* Turnstile iframe keeps its *layout* width (~300px) even when scaled.
+         Constrain + clip THIS wrapper so it can never create horizontal scroll on iOS. */
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow: hidden;
+      contain: layout paint;
+
+      /* keep the widget low on the page, closer to the footer */
+      margin-top: clamp(44px, 10vh, 140px);
+      padding-bottom: 6px;
+    }
+
+    button{
+  margin-top:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,43,43,.28);
+  background: rgba(255,43,43,.12);
+  color:white;
+  font-weight:800;
+  font-size: 12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition: background .2s ease;
+
+  width: fit-content;     /* fit the words */
+  align-self:center;      /* center on the rail */
+  text-align:center;
+}
+
+    button:hover{
+      background: rgba(255,43,43,.22);
+    }
+
+    .status{
+      margin-top:14px;
+      font-size:14px;
+      text-align:center;
+      color: rgba(233,238,246,.80);
+    }
+
+   
+
+/* Turnstile is iframe-based; keep its layout box constrained */
+.cf-wrap .cf-turnstile{
+  width: 300px;              /* layout width (prevents overflow) */
+  max-width: 100%;
+  transform: scale(.74);     /* visual size only */
+  transform-origin: top center;
+  opacity: .44;
+  filter: brightness(.82) contrast(.95) saturate(.90);
+}
+
+    /* Buoy placement is CANON and comes from /shared/index-world.css.
+       No page-level background-position overrides here (must match Manifesto baseline). */
+
+@supports (-webkit-touch-callout:none){
+  /* Prevent iOS elastic horizontal overscroll from “sticking” the viewport */
+  html{ overscroll-behavior-x: none; }
+  body{ overscroll-behavior-x: none; }
+}
+
+  
+
+  </style>
+</head>
+
+<body>
+    
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+<a class="pill" href="/">Home</a>
+    </div>
+
+    <main class="panel" role="main">
+      <header class="brand">
+        <img class="brand-logo" src="/assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+      <h1>Activate Your Trial</h1>
+      <div class="sub">Operational Relief as a Service</div>
+
+      <div class="copy">
+        Complete the information below to begin your RedRight trial.
+      </div>
+
+      <form id="trialForm">
+  <div class="form-rail">
+    <input type="text" name="name" placeholder="Your Name" required>
+    <input type="text" name="business" placeholder="Business Name" required>
+    <input type="email" name="email" placeholder="Email Address" required>
+    <input type="tel" name="phone" placeholder="Phone Number" required>
+
+    <button type="submit">Activate Trial</button>
+
+    <div class="cf-wrap">
+      <div
+        class="cf-turnstile"
+        data-sitekey="0x4AAAAAACj_zEP4jY42ryV-"
+        data-action="trial_activate">
+      </div>
+    </div>
+  </div>
+</form>
+
+        
+
+
+      <div class="status" id="status"></div>
+    </main>
+
+    <footer class="footer">
+      <p class="legal-mark">RedRight Labs · Established 2025</p>
+      <nav class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <span class="sep">/</span>
+        <a href="/terms.html">Terms</a>
+        <span class="sep">/</span>
+        <a href="/contact.html">Contact</a>
+        <span class="sep">/</span>
+        <a href="/manifesto.html">Manifesto</a>
+      </nav>
+    </footer>
+  </div>
+
+
+
+<script>
+document.getElementById("trialForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const status = document.getElementById("status");
+  status.textContent = "Processing...";
+
+  const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
+
+  if (!token) {
+    status.textContent = "Please complete verification.";
+    return;
+  }
+
+  const form = e.target;
+
+  const payload = {
+    receipt: crypto.randomUUID(),
+    ts: new Date().toISOString(),
+    vertical: "tattoo",
+    name: form.name.value,
+    business: form.business.value,
+    email: form.email.value,
+    phone: form.phone.value,
+    tos_url: "https://redrightlabs.com/terms.html",
+    user_agent: navigator.userAgent,
+    turnstile_token: token
+  };
+
+  try{
+    const res = await fetch("https://redright-api.lucky-brook-4718.workers.dev/trial/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      status.textContent = "Trial activated successfully.";
+    } else {
+      status.textContent = "Activation failed. Please try again.";
+    }
+  } catch {
+    status.textContent = "Network error. Please try again.";
+  }
+});
+</script>
+
+</body>
+</html>

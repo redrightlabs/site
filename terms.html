@@ -1,0 +1,323 @@
+<!--
+STATUS: DRAFT
+CANON NOTICE: Public-facing RedRight site page. Copy verbatim into /redright/site/.
+FREEZE NOTICE: Do not ad-hoc rewrite policy language. Update only via versioned replacement or addendum.
+SOURCE-OF-TRUTH STYLE: Mirrors index.html typography + batcave world layers.  [oai_citation:1‡index.html](sediment://file_00000000a8ac71f58a0069cc30ed4c8d)
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Terms of Service · RedRight</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="canon.css" />
+<link rel="stylesheet" href="shared/index-world.css" />
+<link rel="stylesheet" href="shared/index-page.css" />
+  <style>
+  /* TERMS PAGE (legal)
+   - Uses shared/index-world.css + shared/index-page.css for the world + buoy.
+   - Forces stable, readable legal typography (left aligned) on mobile.
+   - Keeps headings styled, bullets normal.
+*/
+
+/* Title/sub should match index hero tone */
+h1{
+  margin: 6px 0 8px;
+  text-align: center;
+  font-family: var(--hero);
+  font-weight: 700;
+  font-size: clamp(34px, 7.5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: .02em;
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+.sub{
+  text-align: center;
+  color: rgba(233,238,246,.78);
+  font-size: 12px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+
+/* --- READABILITY OVERRIDES (beats shared .copy center rules) --- */
+main.panel .copy{ text-align: left !important; }
+main.panel .copy p{ text-align: left !important; }
+main.panel .copy li{ text-align: left !important; }
+
+/* Section heads: clean + legal */
+main.panel .copy h2{
+  text-align: left;
+  margin: 18px 0 8px;
+  font-size: 14px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(233,238,246,.78);
+}
+
+/* Divider to match index rhythm */
+.rule{
+  height:1px;
+  width: 70%;
+  margin: 16px auto;
+  background: rgba(255,255,255,.10);
+}
+
+/* Bullets should look normal on mobile */
+main.panel .copy ul{
+  margin: 10px 0 10px;
+  padding-left: 1.25em;
+  list-style: disc;
+}
+main.panel .copy li{ margin: 8px 0; }
+
+/* Reduce panel fog slightly so buoy doesn’t get crushed on legal pages */
+.panel--policy::before{ opacity: .56 !important; }
+@supports (-webkit-touch-callout:none){
+  .panel--policy::before{ opacity: .48 !important; }
+}
+
+/* Mobile tightening */
+@media (max-width: 420px){
+  main.panel .copy{ font-size: 14px; }
+  .rule{ width: 78%; }
+}
+  </style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="index.html">Home</a>
+    </div>
+
+    <main class="panel panel--policy" role="main">
+      <header class="brand">
+        <img class="brand-logo" src="assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+     <h1>Terms of Service</h1>
+<div class="sub">Effective Date: February 2026</div>
+
+<div class="copy">
+  <p>
+    These Terms of Service (“Terms”) govern access to and use of services provided
+    by RedRight Labs LLC (“RedRight,” “we,” “our,” or “us”).
+    By accessing, subscribing to, or using the RedRight Isla system,
+    you agree to these Terms.
+  </p>
+
+  <div class="rule"></div>
+
+  <h2>1. Service Description</h2>
+  <p>
+    RedRight Isla is an operational communication and workflow assistance system
+    designed for service-based businesses. Functionality may vary by configuration,
+    industry vertical, and onboarding scope.
+  </p>
+
+  <h2>2. Operational Model & Human Oversight</h2>
+  <p>
+    Isla operates within defined workflows and protocols. Certain booking requests,
+    confirmations, or operational packets may be routed for human review and approval.
+    Final appointment confirmations may require approval by the business or artist.
+  </p>
+
+  <h2>3. SMS & Communication Disclosure</h2>
+  <p>
+    Where enabled, Isla may send operational messages via SMS or voice.
+    Message frequency varies based on business activity.
+    Message and data rates may apply.
+  </p>
+  <p>
+     Businesses using Isla are responsible for implementing legally compliant
+    opt-in processes and maintaining records of end-user consent.
+    RedRight provides communication infrastructure but does not directly
+    collect end-user consent unless explicitly stated in a written agreement.
+  </p>
+  
+  <h2>3.1 End-User SMS Consent & Opt-Out Rights</h2>
+  <p>
+    When SMS messaging functionality is enabled, RedRight Isla may send operational
+    text messages on behalf of subscribing businesses. These messages may include
+    appointment confirmations, scheduling coordination, reminders, intake follow-ups,
+    aftercare communications, and service-related notifications.
+  </p>
+
+  <p>
+    End users must provide prior express consent before receiving SMS messages.
+    Consent may be obtained through website forms, written agreements,
+    in-person intake forms, or other legally valid opt-in methods implemented
+    by the subscribing business.
+  </p>
+
+  <p>
+    By providing a mobile phone number and consenting to receive messages,
+    the end user agrees to receive operational SMS communications.
+    Message frequency varies based on appointment activity and workflow triggers.
+    Message and data rates may apply.
+  </p>
+
+  <p>
+    End users may opt out at any time by replying STOP to any SMS message.
+    Once an opt-out request is received, no further SMS messages will be sent
+    unless the user reinitiates communication or provides renewed consent.
+  </p>
+
+  <p>
+    For assistance, users may reply HELP to any message or contact
+    <a href="mailto:support@redrightlabs.com">support@redrightlabs.com</a>.
+  </p>
+
+  <p>
+    Consent to receive SMS messages is not a condition of purchasing
+    services from RedRight or any subscribing business.
+  </p>
+
+  <p>
+    RedRight does not sell, rent, or share mobile phone numbers
+    for third-party marketing purposes.
+  </p>
+
+  <h2>4. No Guarantees</h2>
+  <p>
+    RedRight provides operational support services and does not guarantee
+    uninterrupted service, error-free operation, revenue growth, bookings,
+    or specific business outcomes.
+  </p>
+
+  <h2>5. Business Responsibilities</h2>
+  <p>Businesses using Isla are responsible for:</p>
+  <ul>
+    <li>Final approval of bookings and scheduling commitments</li>
+    <li>Maintaining accurate calendar availability</li>
+    <li>Compliance with applicable laws and professional obligations</li>
+    <li>Obtaining required customer communication consent</li>
+    <li>Timely review and response to operational packets where applicable</li>
+  </ul>
+
+  <h2>6. Acceptable Use</h2>
+  <p>
+    You agree not to use our services for unlawful, abusive, deceptive,
+    fraudulent, or harmful activity. RedRight may suspend or terminate access
+    for violations, misuse, nonpayment, or risk to platform integrity.
+  </p>
+
+  <h2>7. Limitation of Liability</h2>
+  <p>
+    To the fullest extent permitted by law, RedRight shall not be liable
+    for indirect, incidental, special, consequential, or punitive damages,
+    including business losses arising from missed appointments, scheduling conflicts,
+    communication delays, or reliance on automated workflows.
+  </p>
+
+  <h2>8. Intellectual Property</h2>
+  <p>
+    The RedRight Isla system, including its workflows, automation logic,
+    templates, branding, and documentation, remains the exclusive property
+    of RedRight Labs LLC.
+  </p>
+
+  <h2>9. Governing Law</h2>
+  <p>
+    These Terms are governed by the laws of the State of South Carolina,
+    United States, without regard to conflict-of-law principles.
+  </p>
+
+  <h2>10. Fees, Billing & Subscription Terms</h2>
+  <p>
+    This section defines commercial terms for RedRight Isla subscriptions, including onboarding fees,
+    recurring billing, commitment terms, and cancellation.
+  </p>
+
+  <h2>10.1 Onboarding &amp; Personalization Fee (Month-to-Month)</h2>
+  <p>
+    If you choose a month-to-month plan, you will be charged a one-time onboarding and personalization fee at activation.
+    Unless otherwise stated in writing, the onboarding fee is non-refundable.
+  </p>
+
+  <h2>10.2 Annual Plan Onboarding Waiver</h2>
+  <p>
+    If you choose an annual commitment plan, RedRight may waive the onboarding and personalization fee.
+    Any waiver is an incentive tied to the annual commitment and does not change the remaining terms of this agreement.
+  </p>
+
+  <h2>10.3 Subscription Billing Authorization</h2>
+  <p>
+    By subscribing, you authorize RedRight to charge your selected payment method for all applicable fees on a recurring basis.
+    Subscription fees are billed monthly in advance unless otherwise stated.
+  </p>
+
+  <h2>10.4 Annual Commitment Minimum Term</h2>
+  <p>
+    Annual commitment plans require a minimum commitment of twelve (12) months. By selecting an annual plan,
+    you agree to maintain subscription payments for the full minimum term.
+  </p>
+
+  <h2>10.5 Auto-Renewal</h2>
+  <p>
+    After the initial 12-month term, annual plans automatically renew for successive twelve (12) month terms unless you cancel at least
+    thirty (30) days prior to the renewal date. RedRight will provide reasonable renewal notice where required by law.
+  </p>
+
+  <h2>10.6 Month-to-Month Cancellation</h2>
+  <p>
+    Month-to-month subscriptions may be canceled with thirty (30) days written notice. Service remains active and billable through the notice period.
+  </p>
+
+  <h2>10.7 Price Lock (Annual)</h2>
+  <p>
+    Annual plans receive locked pricing for the initial 12-month term. Renewal pricing may be adjusted for future terms with notice.
+    Pricing for new clients may change at any time.
+  </p>
+
+  <h2>10.8 Failed Payments / Suspension</h2>
+  <p>
+    If a payment fails or a valid payment method is not maintained, RedRight may suspend or terminate service until the account is brought current.
+    Service interruptions may impact workflows, messaging, and booking operations.
+  </p>
+
+  <h2>10.9 Refund Policy</h2>
+  <p>
+    Fees are non-refundable except where required by law or explicitly stated in a written agreement signed by RedRight.
+  </p>
+
+  <h2>11. Contact</h2>
+  <p>
+    RedRight Labs LLC<br/>
+    South Carolina, USA<br/>
+    <a href="mailto:support@redrightlabs.com">support@redrightlabs.com</a>
+  </p>
+</div>
+    </main>
+
+    <footer class="footer" aria-label="Legal and links">
+      <p class="legal-mark">RedRight Labs · Established 2025</p>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a><span class="sep">|</span>
+        <a href="terms.html">Terms</a><span class="sep">|</span>
+        <a href="contact.html">Contact</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Optional: auto-fill effective date
+    // document.getElementById('eff').textContent = new Date().toISOString().slice(0,10);
+  </script>
+</body>
+</html>

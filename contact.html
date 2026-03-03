@@ -1,0 +1,277 @@
+<!--
+STATUS: DRAFT
+CANON NOTICE: Public-facing RedRight site page. Copy verbatim into /redright/site/.
+FREEZE NOTICE: Keep contact info factual. Update only via versioned replacement or addendum.
+SOURCE-OF-TRUTH STYLE: Mirrors index.html typography + batcave world layers.  [oai_citation:2‡index.html](sediment://file_00000000a8ac71f58a0069cc30ed4c8d)
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contact · RedRight</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="canon.css" />
+<link rel="stylesheet" href="shared/index-world.css" />
+<link rel="stylesheet" href="shared/index-page.css" />
+  <style>
+  /* CONTACT PAGE — page-specific only.
+     IMPORTANT: Do NOT redefine .world/.vignette/.wrap/.panel/.footer here.
+     Those are canon and live in shared/index-world.css + shared/index-page.css.
+  */
+/* CONTACT — lift buoy visibility (reduce dark overlays) */
+.vignette{ opacity: 0.50; }               /* less dark sheet over the buoy */
+.panel--contact::before{ opacity: 0.34; } /* reduce panel fog so buoy reads */
+
+/* iOS tends to render vignette heavier */
+@supports (-webkit-touch-callout:none){
+  .vignette{ opacity: 0.48; }
+  .panel--contact::before{ opacity: 0.36; }
+}
+  /* Logo image treatment (matches other legal pages) */
+  .brand-logo{
+    width: min(520px, 78vw);
+    height:auto;
+    display:block;
+    margin: 0 auto 4px;
+    opacity:.98;
+    -webkit-mask-image: radial-gradient(ellipse at center,#000 70%,transparent 100%);
+    mask-image: radial-gradient(ellipse at center,#000 70%,transparent 100%);
+    -webkit-mask-repeat:no-repeat;
+    mask-repeat:no-repeat;
+    -webkit-mask-size:100% 100%;
+    mask-size:100% 100%;
+  }
+
+.vignette{ opacity: 0.50; }
+.panel--contact::before{ opacity: 0.34; }
+
+/* Page title + subline */
+  h1{
+    margin: 16px 0 6px;
+    font-family: var(--hero);
+    font-weight:700;
+    font-size: clamp(30px, 5.6vw, 44px);
+    line-height:1.05;
+    text-align:center;
+    letter-spacing:.02em;
+  }
+  .sub{
+    margin: 0 0 16px;
+    text-align:center;
+    color: rgba(233,238,246,.68);
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* Contact card (light glass, NO blur — let world stay crisp) */
+  .card{
+    max-width: 62ch;
+    margin: 14px auto 0;
+    padding: 14px 14px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 14px;
+    background: rgba(0,0,0,.10);
+    color: var(--muted);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+  .label{
+    font-size: 12px;
+    letter-spacing:.22em;
+    text-transform: uppercase;
+    color: rgba(233,238,246,.70);
+    margin: 10px 0 6px;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .value a{
+    color: rgba(233,238,246,.86);
+    text-decoration:none;
+    border-bottom: 1px solid rgba(255,255,255,.14);
+    padding-bottom: 2px;
+  }
+  .value a:hover{ border-bottom-color: rgba(255,43,43,.35); }
+
+  @media (max-width:420px){
+    .card{ font-size: 14px; }
+  }
+  /* CTA block inside the contact card */
+.demo-cta{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.08);
+
+  display: grid;
+  gap: 10px;
+  justify-items: center;   /* <-- makes it feel intentional */
+}
+
+.demo-cta__text{
+  color: rgba(233,238,246,.72);
+  font-size: 14px;
+}
+
+/* Smaller, tighter pill so it doesn't overpower the card */
+.pill--cta{
+  padding: 10px 14px;
+  font-size: 12px;
+  letter-spacing: .18em;
+}
+/* CTA callout that can survive over the buoy */
+.panel--contact .demo-callout{
+  max-width: 440px;
+  margin: 18px auto 0;
+  padding: 16px 16px 18px;
+
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+.demo-callout__title{
+  color: rgba(233,238,246,.92);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.demo-callout__sub{
+  color: rgba(233,238,246,.70);
+  font-size: 13px;
+  line-height: 1.35;
+  margin-top: -4px;
+}
+
+/* Make it obviously a button */
+.pill--cta{
+  margin-top: 2px;
+  padding: 12px 18px;        /* bigger hit area */
+  min-width: 220px;          /* makes it read like a real CTA */
+  text-align: center;
+
+  font-size: 12px;
+  letter-spacing: .18em;
+
+  /* more “button” contrast without turning into neon */
+  background: rgba(255,43,43,.14);
+  border: 1px solid rgba(255,43,43,.35);
+  box-shadow:
+    0 14px 34px rgba(0,0,0,.35),
+    0 0 42px rgba(255,43,43,.10);
+}
+.panel--contact .pill--cta{
+  padding: 14px 22px;
+  min-width: 240px;
+
+  background: rgba(255, 43, 43, .22);
+  border: 1px solid rgba(255, 43, 43, .55);
+
+  box-shadow:
+    0 20px 48px rgba(0,0,0,.55),
+    0 0 60px rgba(255,43,43,.25);
+}
+@media (max-width: 420px){
+  .pill--cta{ min-width: 86%; }
+}
+.card-divider{
+  margin: 18px 0 16px;
+  border: none;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.demo-inline{
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+
+.demo-inline__text{
+  font-weight: 600;
+  color: rgba(233,238,246,.88);
+  font-size: 15px;
+}
+
+.panel--contact .pill--cta{
+  padding: 14px 22px;
+  min-width: 240px;
+  background: rgba(255,43,43,.20);
+  border: 1px solid rgba(255,43,43,.45);
+}
+</style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="index.html">Home</a>
+    </div>
+
+    <main class="panel panel--contact" role="main">
+        <header class="brand">
+        <img class="brand-logo" src="assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+      <h1>Contact</h1>
+      <div class="sub">RedRight Labs LLC</div>
+
+      <div class="card">
+        <div class="label">Email</div>
+        <div class="value">
+          <a href="mailto:support@redrightlabs.com">support@redrightlabs.com</a>
+        </div>
+
+        <div class="label">Location</div>
+        <div class="value">South Carolina, USA</div>
+
+        
+       <div class="label">SMS Support</div>
+<div class="value">
+  For SMS assistance, reply <strong>HELP</strong> to any RedRight message.
+  To opt out, reply <strong>STOP</strong>.
+  Message &amp; data rates may apply.
+  You may also email
+  <a href="mailto:support@redrightlabs.com">support@redrightlabs.com</a>.
+</div>
+
+<hr class="card-divider">
+
+<div class="demo-inline">
+  <div class="demo-inline__text">
+    Want a live demo?
+  </div>
+  <a class="pill pill--cta" href="book.html">
+    Live Demo Request
+  </a>
+</div>
+
+    </main>
+
+    <footer class="footer" aria-label="Legal and links">
+      <p class="legal-mark">RedRight Labs · Established 2025</p>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a><span class="sep">|</span>
+        <a href="terms.html">Terms</a><span class="sep">|</span>
+        <a href="contact.html">Contact</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

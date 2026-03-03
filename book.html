@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RedRight — See Isla Working Live</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./canon.css" />
+  <link rel="stylesheet" href="./shared/index-world.css" />
+  <link rel="stylesheet" href="./shared/index-page.css" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+
+
+
+
+
+
+
+  
+
+
+
+/* ============================
+   BRAND LOGO FEATHER (TOP/BOTTOM ONLY)
+   ============================ */
+.brand-logo{
+  width: min(520px, 78vw);
+  height:auto;
+  display:block;
+  margin: 0 auto 4px;
+  opacity: .98;
+  
+  
+  /* Soft edge feather (all sides) so the logo blends into the background */
+-webkit-mask-image: radial-gradient(ellipse at center,
+  #000 58%,
+  transparent 100%
+);
+mask-image: radial-gradient(ellipse at center,
+  #000 70%,
+  transparent 100%
+);
+-webkit-mask-repeat: no-repeat;
+mask-repeat: no-repeat;
+-webkit-mask-size: 100% 100%;
+mask-size: 100% 100%;
+  
+}
+
+
+
+
+
+
+/* ============================
+   MOBILE TUNING (PROPERLY SCOPED)
+   ============================ */
+@media (max-width: 640px){
+  .cta-row{
+  margin-top: 12px;
+  margin-bottom: 6px;
+  transform: none; /* was pushing content down and forcing scroll */
+}
+}
+ 
+ @media (max-width: 420px){
+    .rr-cta{ width: min(92vw, 480px); }
+  }
+
+.cta-row{
+  display:flex;
+  justify-content:center;
+  margin-top:22px;
+  margin-bottom:18px;
+  overflow:visible; /* do not clip glow */
+}
+
+
+.rr-cta{
+  -webkit-tap-highlight-color: transparent;
+  display:block;
+  width: min(78vw, 480px);
+  height:54px;
+  position:relative;
+  text-decoration:none;
+  border-radius:999px;
+  overflow:visible;
+  user-select:none;
+  contain: layout;
+  --dur: 5.2s;
+  --ease: cubic-bezier(.45,0,.15,1);
+
+  background:
+    /* faint internal tint so OFF state still reads colored glass */
+    radial-gradient(720px 220px at 50% 55%, rgba(255,43,43,.02), rgba(255,43,43,0) 68%),
+    /* deep body (dark, not milky) */
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.42));
+
+  box-shadow:
+    /* crisp top lip + soft depth only (no molded plastic) */
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(0,0,0,.55),
+    0 18px 40px rgba(0,0,0,.35);
+}
+
+.rr-cta__label{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  z-index:3;
+  pointer-events:none;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:rgba(255,255,255,.97);
+  text-shadow:
+  0 2px 18px rgba(0,0,0,.92),
+  0 0 28px rgba(0,0,0,.55);
+}
+
+.rr-cta__svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events: none;
+  z-index:1;
+}
+.rr-cta::after{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: 999px;
+  pointer-events:none;
+  z-index: 2;
+
+  background:
+    /* edge darkening (glass thickness) */
+    radial-gradient(120% 140% at 50% 50%,
+      rgba(0,0,0,0) 52%,
+      rgba(0,0,0,.22) 100%),
+
+    /* lens tint (thin red glass, not fill) */
+    radial-gradient(980px 340px at 50% 62%,
+      var(--cta-lens-tint) 0%,
+      rgba(255,43,43,0) 70%),
+
+    /* main spec streak */
+    linear-gradient(110deg,
+      rgba(255,255,255,0) 34%,
+      rgba(255,255,255,.18) 45%,
+      rgba(255,255,255,0) 56%),
+
+    /* secondary streak (adds “shiny” complexity without rings) */
+    linear-gradient(72deg,
+      rgba(255,255,255,0) 46%,
+      rgba(255,255,255,.08) 52%,
+      rgba(255,255,255,0) 58%),
+
+    /* top hotspot */
+    radial-gradient(900px 240px at 50% -18%,
+      rgba(255,255,255,.14),
+      rgba(255,255,255,0) 62%),
+
+    /* curved glass depth */
+    linear-gradient(180deg,
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.03) 18%,
+      rgba(255,255,255,0) 52%,
+      rgba(0,0,0,var(--cta-black)) 100%);
+
+  /* subtle inner rim (curvature) */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.40);
+
+  /* tiny clarity lift */
+  filter: saturate(112%) contrast(106%);
+
+  /* tiny refraction; if unsupported, it just gets ignored */
+  -webkit-backdrop-filter: blur(1.4px) saturate(120%);
+  backdrop-filter: blur(1.4px) saturate(120%);
+
+  opacity: var(--cta-glass);
+}
+
+
+/* HARD-PIN origin (prevents L/R drift)
+   Do NOT set a shared transform here — each layer has its own base scale. */
+.rr-cta .glow,
+.rr-cta .fill,
+.rr-cta .fil{
+  transform-origin: 50% 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Base transforms (SAFE): each layer has its own baseline scale.
+   Keyframes will override these during the ON window. */
+.rr-cta .glow{ transform: translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+.rr-cta .fill{ transform: translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+.rr-cta .fil { transform: translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+
+.rr-cta .glow{ animation: rrGlow var(--dur) var(--ease) infinite; }
+.rr-cta .fill{ animation: rrFill var(--dur) var(--ease) infinite; }
+.rr-cta .fil { animation: rrFil  var(--dur) var(--ease) infinite; }
+
+@keyframes rrGlow{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.84 * var(--cta-bloom))); }
+  18%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  76%      { opacity:.72; transform:translateZ(0) scale(calc(1.06 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.92 * var(--cta-bloom))); }
+}
+@keyframes rrFill{
+  0%, 9%   { opacity:0; transform:translateZ(0) scale(calc(.14 * var(--cta-bloom))); }
+  18%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  76%      { opacity:1; transform:translateZ(0) scale(calc(1.22 * var(--cta-bloom))); }
+  100%     { opacity:0; transform:translateZ(0) scale(calc(.28 * var(--cta-bloom))); }
+}
+@keyframes rrFil{
+  0%, 11%  { opacity:0; transform:translateZ(0) scale(.74) scaleX(.92) scaleY(1.22); }
+  18%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  76%      { opacity:1; transform:translateZ(0) scale(1.00) scaleX(.92) scaleY(1.22); }
+  100%     { opacity:0; transform:translateZ(0) scale(.86) scaleX(.92) scaleY(1.22); }
+}
+
+@media (max-width: 420px){
+  .rr-cta{ height:52px; }
+  .rr-cta__label{ letter-spacing:.12em; font-size:14px; }
+}
+
+
+/* ============================
+   BOOK PAGE (ALIGNED TO INDEX)
+   ============================ */
+/* Ensure footer sits at the bottom and spacing stays consistent */
+
+.wrap{
+  min-height: 100vh;
+  min-height: 100svh; /* iOS/modern viewport correctness */
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.panel.panel--book{ flex: 1; }
+
+/* Slightly tighter panel for form content */
+.panel.panel--book{
+  padding: 18px 18px 14px; /* a little more breathing room above footer */
+}
+
+/* BOOK PAGE: don't crush the buoy */
+.panel.panel--book::before{
+  opacity: .36;       /* less “black wash” */
+  filter: blur(14px); /* softer */
+}
+
+/* Make the form readable vs buoy glow (without killing the scene) */
+.panel.panel--book .form-card{
+  background: rgba(0,0,0,.20);
+}
+
+/* Smaller logo on book so the hero copy stays primary */
+.brand-logo.brand-logo--sm{
+  width: min(360px, 70vw);
+  margin: 2px auto 10px;
+  opacity: .96;
+}
+
+/* Hero block */
+.book-hero{
+  text-align:center;
+}
+.book-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  background: rgba(255,43,43,.08);
+  border:1px solid rgba(255,43,43,.22);
+  color: rgba(233,238,246,.90);
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  font-weight:900;
+  user-select:none;
+}
+.book-kicker .dot{
+  width:7px;height:7px;border-radius:999px;
+  background: var(--red);
+  box-shadow: 0 0 0 4px rgba(255,43,43,.14), 0 0 22px rgba(255,43,43,.40);
+}
+.book-title{
+  margin: 10px auto 8px;
+  font-family: var(--hero);
+  font-weight:700;
+  font-size: clamp(34px, 6vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -.01em;
+  max-width: 26ch;
+  text-shadow:
+    0 2px 18px rgba(0,0,0,.85),
+    0 1px 0 rgba(0,0,0,.55);
+}
+.book-sub{
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 56ch;
+}
+.book-sub.tight{
+  margin-top: 8px;
+  font-size: 13px;
+  opacity: .92; /* was .82 */
+  text-shadow: 0 2px 16px rgba(0,0,0,.75);
+}
+.section-divider{
+  opacity: .72; /* was .65 */
+  margin: 16px 0 6px; /* tighten vertical rhythm */
+}
+.book-sub .line{ display:block; margin-top: 6px; }
+
+/* Form shell: atmospheric (fog does the work), not a SaaS card */
+.form-wrap{
+  display:flex;
+  justify-content:center;
+  margin-top: 14px;
+}
+.form-card{
+  width: min(720px, 100%);
+  border-radius: 18px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.07);
+  padding: 14px 14px 0px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.32);
+  overflow: hidden; /* keeps internal sheen subtle */
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* a faint internal sheen so it reads as glass-on-night, not plastic */
+.form-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 240px at 50% -18%,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,0) 62%),
+    linear-gradient(180deg,
+      rgba(255,255,255,.03),
+      rgba(0,0,0,0) 45%,
+      rgba(0,0,0,.22));
+  opacity:.9;
+}
+/* subtle rim + red hint so the card reads against the buoy glow */
+.form-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    inset 0 0 0 2px rgba(0,0,0,.35);
+  background:
+    radial-gradient(700px 220px at 50% 0%, rgba(255,43,43,.10), rgba(255,43,43,0) 60%);
+  opacity: .52;
+}
+.form-card > *{ position: relative; z-index: 1; }
+
+.form-note{
+  text-align: center;
+  margin: 14px auto 18px;
+  max-width: 40ch;
+  color: rgba(233,238,246,.78);
+}
+
+.fields{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (min-width: 720px){
+  .fields{ grid-template-columns: 1fr 1fr; }
+}
+
+label{
+  display:block;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color: rgba(233,238,246,.62);
+  font-weight:900;
+  margin: 10px 0 8px;
+  text-align:center;
+}
+
+/* Mobile tuning */
+@media (max-width: 480px){
+ 
+
+  label{
+    margin-bottom: 6px;
+  }
+}
+.section-divider{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.65;
+  margin: 18px 0 8px;
+}
+
+.hint strong{ color: rgba(233,238,246,.95); }
+
+
+.isla-note{
+  text-align: center;
+  opacity: 0.82;
+  margin-top: 18px;
+  font-size: 0.95rem;
+}
+
+
+
+ 
+
+@supports (-webkit-touch-callout: none){
+  .fields input,
+  .choice{
+    border-color: rgba(255,255,255,.30);
+  }
+}
+
+
+
+
+/* ============================
+   BOOK — CHOICES + INPUTS (SINGLE SOURCE OF TRUTH)
+   ============================ */
+
+/* Inputs */
+.fields input{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.24);
+  background:rgba(0,0,0,.52);
+  color:rgba(233,238,246,.97);
+  outline:none;
+  font-size:15px;
+  text-align:center;
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.fields input::placeholder{ color: rgba(233,238,246,.56); }.fields input:focus{
+  border-color: rgba(255,43,43,.60);
+  background: rgba(0,0,0,.46);
+  box-shadow:
+    0 0 0 3px rgba(255,43,43,.18),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 0 0 1px rgba(0,0,0,.45);
+}
+/* ============================
+   AUTOFILL (KILL YELLOW)
+   iOS Safari + Chrome/WebKit
+   ============================ */
+
+.fields input:-webkit-autofill,
+.fields input:-webkit-autofill:hover,
+.fields input:-webkit-autofill:focus,
+.fields input:-webkit-autofill:active{
+  -webkit-text-fill-color: rgba(233,238,246,.94) !important;
+  caret-color: rgba(233,238,246,.94) !important;
+
+  /* Paint OUR background over the autofill yellow */
+  -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+  box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+
+  border: 1px solid rgba(255,255,255,.24) !important;
+  border-radius: 14px;
+  background-clip: padding-box;
+
+  transition: background-color 9999s ease-out 0s;
+}
+
+.fields input:-internal-autofill-selected{
+  -webkit-text-fill-color: rgba(233,238,246,.94) !important;
+  box-shadow: 0 0 0 1000px rgba(0,0,0,.42) inset !important;
+}
+/* Choices grid */
+.choices{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+  margin-top: 10px;
+}
+
+@media (min-width:360px){
+  .choices{ grid-template-columns: 1fr 1fr; } /* phones: 2-col to reduce scroll */
+}
+
+/* Choice button (this fixes “weird font” + iOS flicker) */
+.choice{
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance:none;
+  appearance:none;
+
+  font-family: var(--serif);     /* <-- your site typography */
+  font-weight: 900;
+  letter-spacing: .06em;
+  font-size: 14px;
+  line-height: 1.15;
+
+  border:1px solid rgba(255,255,255,.24);
+  background: rgba(0,0,0,.38);
+  color: rgba(233,238,246,.98);
+
+  padding:12px 14px;
+  border-radius:16px;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  text-shadow: 0 2px 16px rgba(0,0,0,.85);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,0,0,.45),
+    0 10px 26px rgba(0,0,0,.22);
+
+  transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+
+  /* iOS compositing lock to prevent tap-disappear */
+  transform: translateZ(0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  isolation:isolate;
+  will-change: transform;
+}
+
+/* No pseudo overlay on mobile — it’s what kills legibility */
+.choice::before{ display:none; }
+
+/* Active/selected */
+.choice:active{
+  transform: translateY(1px);
+  border-color: rgba(255,43,43,.45);
+}
+.choice.is-selected{
+  border-color: rgba(255,43,43,.70);
+  background: rgba(255,43,43,.12);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.42),
+    0 0 0 4px rgba(255,43,43,.08),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,0,0,.45);
+}
+
+/* Hover effects ONLY on real hover devices (desktop) */
+@media (hover:hover) and (pointer:fine){
+  .choice:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,43,43,.48);
+    background: rgba(255,43,43,.06);
+    box-shadow:
+      0 18px 38px rgba(0,0,0,.45),
+      0 0 0 4px rgba(255,43,43,.07),
+      0 0 80px rgba(255,43,43,.16);
+  }
+}
+
+
+
+/* Status + hint (single) */
+.status{
+  margin: 12px auto 2px;
+  text-align:center;
+  font-size:13px;
+  letter-spacing:.06em;
+  color: rgba(233,238,246,.72);
+  min-height:18px;
+
+  /* Status actually animates on/off */
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.status.show{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hint{
+  text-align:center;
+  max-width:34ch;
+  margin: 10px auto 0;
+  color: rgba(233,238,246,.80);
+  font-size:13px;
+  line-height:1.45;
+}
+.hint strong{ color: rgba(233,238,246,.96); font-weight: 800; }
+.footer{
+  margin-top: 1px; /* if it was 24+ */
+}
+.choice{
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Optional tones (so it doesn’t feel “stuck yellow”) */
+.status.tone-warn{ color: rgba(255,220,120,.92); }
+.status.tone-ok{ color: rgba(233,238,246,.86); }
+.status.tone-wait{ color: rgba(255,43,43,.82); }
+
+/* Guaranteed press feedback even when :active is unreliable */
+.choice.is-pressed{
+  transform: translateY(1px) translateZ(0);
+}
+
+/* If your JS ever uses .selected, make it match too */
+.choice.selected{
+  border-color: rgba(255,43,43,.60);
+  background: rgba(255,43,43,.10);
+}
+
+/* Disabled look */
+.choice:disabled{ opacity: .55; cursor: not-allowed; }
+
+.choice.is-waiting{
+  border-color: rgba(255,43,43,.72);
+  background: rgba(255,43,43,.12);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.45),
+    0 0 0 4px rgba(255,43,43,.10),
+    0 0 90px rgba(255,43,43,.22);
+  animation: rrWaitPulse 900ms ease-in-out infinite;
+}
+@keyframes rrWaitPulse{
+  0%,100%{ transform: translateZ(0) scale(1.00); }
+  50%{ transform: translateZ(0) scale(1.015); }
+}
+/* ============================
+   SMS CONSENT (A2P / Twilio)
+   ============================ */
+.sms-consent{
+  text-align: left;
+  width: min(720px, 100%);
+  margin: 20px auto 0;
+
+  max-width: 720px;   /* was 72ch */
+  width: 90%;
+
+  color: rgba(233,238,246,.62);
+  font-size: 12px;
+  line-height: 1.55;
+
+  text-shadow: 0 2px 16px rgba(0,0,0,.75);
+}
+.sms-consent a{ color: rgba(233,238,246,.90); text-decoration: underline; }
+
+.sms-checkbox{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 12px auto 0;
+  padding: 8px 14px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+
+  color: rgba(233,238,246,.72);
+  font-size: 12px;
+  line-height: 1.45;
+
+  font-weight: 500;        /* ↓ lighter */
+  text-transform: none;    /* ↓ no all caps */
+  letter-spacing: 0;       /* ↓ remove tracking */
+}
+.sms-checkbox span{ display:block; }
+.sms-checkbox input{ margin-top: 2px; accent-color: rgba(255,43,43,.85); }
+.sms-checkbox input{
+  margin-top: 2px;
+  transform: scale(1.05);
+  accent-color: rgba(255,43,43,.85);
+  flex: 0 0 auto;
+}
+.sms-checkbox strong{
+  color: rgba(233,238,246,.94);
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+
+.footer .legal-mark{ margin: 0 0 6px; }
+.footer .footer-links{ margin: 0; }
+/* ============================
+   SINGLE SCROLLER: .wrap (iOS-stable)
+   Put this LAST in the style tag
+   ============================ */
+
+/* Body never scrolls */
+html, body{
+  height: 100%;
+  overflow: hidden;
+}
+
+/* The page scrolls INSIDE .wrap */
+.wrap{
+  height: 100svh;               /* iOS safe viewport */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Make sure background layers never eat gestures */
+.world, .vignette{
+  pointer-events: none;
+}
+
+/* Footer spacing: no extra gap */
+.footer{
+  margin-top: 10px;
+  padding-top: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.footer .legal-mark{ margin: 0 0 6px; }
+.footer .footer-links{ margin: 0; }
+@media (max-width: 480px){
+  .sms-checkbox{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+/* ============================
+   TURNSTILE (BOOK PAGE)
+   - faint, low-visibility
+   - clamps iframe width to prevent iOS side-scroll
+   ============================ */
+.turnstile-wrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin: 40px auto 6px;
+  overflow:hidden;           /* prevent iOS horizontal wobble */
+  contain: layout paint;
+}
+.turnstile-wrap .cf-turnstile{
+  width: 300px;              /* Turnstile layout width */
+  max-width: 100%;
+  transform: scale(.78);     /* smaller */
+  transform-origin: top center;
+  opacity: .35;              /* faint */
+  filter: brightness(.85) contrast(.95);
+}
+  </style>
+</head>
+
+<body>
+  <div class="world"></div>
+  <div class="vignette"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="index.html">Home</a>
+    </div>
+
+    <main class="panel panel--book" role="main">
+      <header class="brand">
+        <img class="brand-logo brand-logo--sm" src="assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+<section class="book-hero">
+        <div class="book-kicker"><span class="dot"></span> Live demo request</div>
+<h1 class="book-title">See Isla work — live</h1>
+        <p class="book-sub">
+          Enter your info below.
+        </p>
+
+        
+
+       <div class="form-wrap">
+  <div class="form-card">
+
+    <div class="fields">
+  <div>
+    <label for="owner">Owner name</label>
+    <input id="owner" name="owner" placeholder="Your name" autocomplete="name" />
+  </div>
+
+  <div>
+    <label for="biz">Business name</label>
+    <input id="biz" name="biz" placeholder="Studio / practice / office" autocomplete="organization" />
+  </div>
+
+  <div>
+    <label for="phone">Phone number</label>
+    <input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" inputmode="tel" autocomplete="tel" />
+
+    
+
+    
+  </div>
+
+  <div>
+    <label for="location">City / State / Country</label>
+    <input id="location" name="location" type="text" placeholder="Myrtle Beach, SC, US" autocomplete="address-level2" />
+  </div>
+</div>
+<!-- SMS Consent Block -->
+<div class="sms-block">
+ 
+
+  <label class="sms-checkbox" for="sms_consent">
+    <input id="sms_consent" name="sms_consent" type="checkbox" />
+    <span>
+      I agree to receive operational SMS messages from RedRight Labs LLC.
+    </span>
+  </label>
+</div>
+    <div class="section-divider">Choose your industry</div>
+    <p class="book-sub tight">Tap one to begin.</p>
+
+    <div class="choices" aria-label="Choose your vertical">
+      <button class="choice" type="button" data-vertical="Tattoo Studio">Tattoo Studio</button>
+      <button class="choice" type="button" data-vertical="Med Spa">Med Spa</button>
+      <button class="choice" type="button" data-vertical="Physical Therapy">Physical Therapy</button>
+      <button class="choice" type="button" data-vertical="Dental">Dental</button>
+      <button class="choice" type="button" data-vertical="Legal">Legal</button>
+      <button class="choice" type="button" data-vertical="Plastic Surgery">Plastic Surgery</button>
+      <button class="choice" type="button" data-vertical="Dog Grooming">Dog Grooming</button>
+      <button class="choice" type="button" data-vertical="Nail Salon">Nail Salon</button>
+    </div>
+
+ <p class="sms-consent">
+    By providing your phone number, you agree to receive <strong>operational</strong>
+    text messages from RedRight Labs LLC related to demo coordination and service updates.
+    Message frequency varies. Message &amp; data rates may apply.
+    Reply <strong>STOP</strong> to opt out. Reply <strong>HELP</strong> for help.
+    See <a href="privacy.html">Privacy</a> and <a href="terms.html">Terms</a>.
+  </p>
+  <!-- Turnstile (kept low-visibility) -->
+<div class="turnstile-wrap" id="turnstileWrap">
+  <div
+  class="cf-turnstile"
+  data-sitekey="0x4AAAAAACj_zEP4jY42ryV-"
+  data-action="book_demo"
+  data-callback="onTurnstileSuccess"
+  data-expired-callback="onTurnstileExpired">
+</div>
+</div>
+    <div class="status" id="status" aria-live="polite"></div>
+
+  </div>
+</div>
+
+   
+      </section>
+
+    </main>
+
+    <footer class="footer" aria-label="Legal mark">
+  <p class="legal-mark">RedRight Labs · Established 2025</p>
+
+  <nav class="footer-links" aria-label="Footer links">
+    <a href="privacy.html">Privacy</a>
+    <span class="sep">/</span>
+    <a href="terms.html">Terms</a>
+    <span class="sep">/</span>
+    <a href="contact.html">Contact</a>
+    <span class="sep">/</span>
+    <a href="manifesto.html">Manifesto</a>
+  </nav>
+</footer>
+  </div>
+
+<script>
+  let turnstileToken = '';
+  function onTurnstileSuccess(token){
+  turnstileToken = token;
+}
+
+function onTurnstileExpired(){
+  turnstileToken = '';
+}
+  const choices = Array.from(document.querySelectorAll('.choice'));
+  const statusEl = document.getElementById('status');
+
+  const ownerEl = document.getElementById('owner');
+  const bizEl   = document.getElementById('biz');
+  const phoneEl = document.getElementById('phone');
+  const locEl   = document.getElementById('location');
+  const smsConsentEl = document.getElementById('sms_consent');
+
+  let lastSelectedBtn = null;
+  let inFlight = false;
+  let submitted = false;
+
+  function digitsOnly(v){
+    return (v || '').replace(/\D/g,'');
+  }
+
+  // Accept (843) 555-5555, 843-555-5555, +1 843 555 5555, etc.
+  // Strips extensions like "ext 123" or "x123".
+  // Returns digits; if 11 and starts with 1, trims to 10.
+  function normalizePhone(raw){
+    const cleaned = (raw || '').replace(/(ext\.?|x)\s*\d+$/i,'');
+    const d = digitsOnly(cleaned);
+    if (d.length === 11 && d.startsWith('1')) return d.slice(1);
+    return d;
+  }
+
+  function setStatus(text, tone = ''){
+    const msg = (text || '').trim();
+
+    if (!msg){
+      statusEl.textContent = '';
+      statusEl.classList.remove('show','tone-warn','tone-ok','tone-wait');
+      clearTimeout(setStatus._t);
+      return;
+    }
+
+    statusEl.textContent = msg;
+    statusEl.classList.add('show');
+
+    statusEl.classList.remove('tone-warn','tone-ok','tone-wait');
+    if (tone) statusEl.classList.add(tone);
+
+    clearTimeout(setStatus._t);
+    setStatus._t = setTimeout(() => statusEl.classList.remove('show'), 2200);
+  }
+
+  
+
+  // ✅ SINGLE source of truth (includes turnstile_token)
+  function getFormData(){
+  return {
+    owner: ownerEl.value.trim(),
+    biz: bizEl.value.trim(),
+    phone: normalizePhone(phoneEl.value.trim()),
+    location: locEl.value.trim(),
+    sms_consent: !!(smsConsentEl && smsConsentEl.checked),
+    turnstile_token: turnstileToken,
+  };
+}
+
+  function lockSelected(btn){
+    choices.forEach(b => b.classList.remove('is-selected','selected'));
+    btn.classList.add('is-selected','selected');
+    lastSelectedBtn = btn;
+
+    btn.classList.remove('is-pressed');
+    void btn.offsetWidth;
+    btn.classList.add('is-pressed');
+    setTimeout(() => btn.classList.remove('is-pressed'), 140);
+  }
+
+  function disableAll(on, keepBtn = null){
+    choices.forEach(b => {
+      b.disabled = !!on && b !== keepBtn;
+    });
+  }
+
+  function lockAfterSuccess(btn){
+    submitted = true;
+    disableAll(true);
+    btn.disabled = true;
+  }
+
+  function validatePhoneUI(){
+    const d = normalizePhone(phoneEl.value);
+
+    if (!d.length){
+      setStatus('', '');
+      return true;
+    }
+    if (d.length === 10){
+      setStatus('Ready.', 'tone-ok');
+      return true;
+    }
+
+    setStatus('Finish your number…', 'tone-warn');
+    return false;
+  }
+
+  function trySubmitFromKeyboard(){
+    if (submitted || inFlight) return;
+
+    if (!lastSelectedBtn){
+      setStatus('Choose your industry.', 'tone-warn');
+      const choicesWrap = document.querySelector('.choices');
+      if (choicesWrap){
+        choicesWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    lastSelectedBtn.click();
+  }
+
+  phoneEl.addEventListener('input', validatePhoneUI);
+  phoneEl.addEventListener('blur', validatePhoneUI);
+  phoneEl.addEventListener('change', validatePhoneUI);
+  phoneEl.addEventListener('focus', () => {
+    setTimeout(validatePhoneUI, 80);
+    setTimeout(validatePhoneUI, 240);
+  });
+  window.addEventListener('pageshow', () => setTimeout(validatePhoneUI, 60));
+  setTimeout(validatePhoneUI, 300);
+  setTimeout(validatePhoneUI, 900);
+
+  [ownerEl, bizEl, phoneEl, locEl].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        trySubmitFromKeyboard();
+      }
+    });
+  });
+
+  async function triggerIsla(payload){
+    // Replace later with your backend call:
+    return new Promise(res => setTimeout(res, 350));
+  }
+
+  choices.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (submitted || inFlight) return;
+
+      const vertical = String(btn.dataset.vertical || '').trim();
+      const { owner, biz, phone, location, sms_consent, turnstile_token } = getFormData();
+
+      if(!owner || !biz || !phone){
+        setStatus('Enter your info first.', 'tone-warn');
+        return;
+      }
+
+      const phone10 = normalizePhone(phone);
+      if (phone10.length !== 10){
+        setStatus('Add a valid phone number.', 'tone-warn');
+        return;
+      }
+
+      if (!vertical){
+        setStatus('Choose your industry.', 'tone-warn');
+        return;
+      }
+
+      if (!sms_consent){
+        setStatus('Please consent to SMS to continue.', 'tone-warn');
+        smsConsentEl && smsConsentEl.focus();
+        return;
+      }
+
+      if (!turnstile_token){
+        setStatus('Please complete verification to continue.', 'tone-warn');
+        const tw = document.getElementById('turnstileWrap');
+        if (tw){
+          tw.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      lockSelected(btn);
+      setStatus('Received.', 'tone-ok');
+
+      inFlight = true;
+      btn.classList.add('is-waiting');
+      disableAll(true, btn);
+
+      try{
+        await triggerIsla({
+          owner,
+          biz,
+          phone: phone10,
+          location,
+          vertical,
+          sms_consent,
+          turnstile_token,
+        });
+
+        setStatus('Stand by.', 'tone-wait');
+        lockAfterSuccess(btn);
+      }catch(err){
+        console.error(err);
+        setStatus('Something glitched. Try again in a moment.', 'tone-warn');
+        disableAll(false);
+      }finally{
+        inFlight = false;
+        btn.classList.remove('is-waiting');
+      }
+    });
+  });
+</script>
+</body>
+</html>

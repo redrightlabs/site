@@ -1,0 +1,193 @@
+<!--
+STATUS: DRAFT
+CANON NOTICE: Public-facing RedRight site page. Copy verbatim into /redright/site/.
+FREEZE NOTICE: Manifesto language is identity. Do not ad-hoc rewrite. Update only via versioned replacement.
+STYLE AUTHORITY: Batcave buoy world layer. Buoy stays STATIC while text scrolls over it.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manifesto · RedRight</title>
+
+  <!-- Unified world + page system (same as index/privacy/terms/contact) -->
+  <link rel="stylesheet" href="canon.css" />
+  <link rel="stylesheet" href="shared/index-world.css" />
+  <link rel="stylesheet" href="shared/index-page.css" />
+
+  <style>
+  /* Page-specific rules ONLY.
+     Canon world/vignette/wrap/panel/topbar/footer styles come from shared/index-world.css + shared/index-page.css */
+
+  
+
+  h1{
+    margin: 16px 0 8px;
+    font-family: var(--hero);
+    font-weight:700;
+    font-size: clamp(34px, 6vw, 52px);
+    line-height:1.02;
+    text-align:center;
+    letter-spacing:.02em;
+  }
+  .sub{
+    margin: 0 0 16px;
+    text-align:center;
+    color: rgba(233,238,246,.68);
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* Copy should read like a manifesto (left aligned like the other legal pages) */
+  .copy{
+    max-width: 72ch;
+    text-align: left;
+  }
+  .copy p{ margin: 0 0 14px; }
+  .copy .lead{ font-size: 17px; }
+
+  .copy h2{
+    margin: 22px 0 10px;
+    font-size: 12px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color: rgba(233,238,246,.86);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .rule{
+    height:1px;
+    width: 72%;
+    margin: 18px auto;
+    background: rgba(255,255,255,.10);
+  }
+
+  @media (max-width:420px){
+    .copy{ font-size: 15px; }
+    .copy .lead{ font-size: 16px; }
+    .rule{ width: 78%; }
+  }
+  </style>
+</head>
+
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <a class="pill" href="index.html">Home</a>
+    </div>
+
+    <main class="panel panel--manifesto" role="main">
+      <header class="brand">
+        <img class="brand-logo" src="assets/redright-logo2.png" alt="RedRight">
+        <p>Your path to safe harbor.</p>
+      </header>
+
+      <h1>The RedRight Manifesto</h1>
+      <div class="sub">Operational Relief as a Service</div>
+
+      <div class="copy">
+        <p class="lead">
+          Most businesses don’t fail because they lack talent.<br/>
+          They fail because the day never gets quiet.
+        </p>
+
+        <p>Phones ring.</p>
+        <p>Messages stack.</p>
+        <p>Clients worry.</p>
+        <p>Staff scramble.</p>
+        <p>
+          Important things fall through the cracks — not because no one cares,
+          but because everyone is busy.
+        </p>
+
+        <p><strong>RedRight exists to change that.</strong></p>
+
+        <div class="rule"></div>
+
+        <h2>We Believe Calm Is a Signal</h2>
+        <p>When operations are working, they don’t announce themselves. They disappear.</p>
+        <p>A calm day is not an empty day. It’s a day where nothing went wrong.</p>
+        <p>RedRight is built to make calm repeatable.</p>
+
+        <h2>We Don’t Replace People. We Protect Them.</h2>
+        <p>Front desks shouldn’t be fire extinguishers.</p>
+        <p>Artists and providers shouldn’t manage logistics between clients.</p>
+        <p>Owners shouldn’t carry the entire system in their heads.</p>
+        <p>RedRight doesn’t replace human roles. It removes the chaos around them.</p>
+        <p>When people can focus on what they do best, everything improves.</p>
+
+        <h2>We Build for the Entire Journey</h2>
+        <p>Most systems stop at booking.</p>
+        <p><strong>RedRight doesn’t.</strong></p>
+        <p>
+          We operate before the appointment, during the appointment, and long after it’s over —
+          quietly guiding, monitoring, and supporting the experience from start to finish.
+        </p>
+        <p>Because the real work happens between moments.</p>
+
+        <h2>We Design With Restraint</h2>
+        <p>Just because something <em>can</em> be automated doesn’t mean it should be.</p>
+        <p>RedRight routes information. Humans make decisions.</p>
+        <p>Judgment, nuance, and authority always belong to people.</p>
+        <p>Technology exists to support them — never to override them.</p>
+        <p>Trust is built by knowing when <strong>not</strong> to speak.</p>
+
+        <h2>We Treat Care as a Responsibility, Not a Feature</h2>
+        <p>Following up isn’t marketing.</p>
+        <p>Checking in isn’t engagement.</p>
+        <p>Escalation isn’t drama.</p>
+        <p>It’s responsibility.</p>
+        <p>
+          RedRight observes, documents, and routes — ensuring nothing important is missed
+          and nothing unnecessary is added.
+        </p>
+        <p>Support should feel available, not intrusive.</p>
+
+        <h2>We Build for the Hardest Environments First</h2>
+        <p>
+          If a system works where stakes are high, timing matters, and judgment is critical —
+          it will work anywhere.
+        </p>
+        <p>RedRight is built for complexity, not convenience.</p>
+        <p>That’s why it feels simple.</p>
+
+        <h2>We Believe Silence Can Be Success</h2>
+        <p>No alerts.</p>
+        <p>No unnecessary check-ins.</p>
+        <p>No noise for noise’s sake.</p>
+        <p>When everything is quiet, it means the system is doing its job.</p>
+        <p>RedRight doesn’t chase attention. It earns trust.</p>
+
+        <h2>Our Promise</h2>
+        <p>RedRight won’t make your business louder.</p>
+        <p>It won’t make it busier.</p>
+        <p>It won’t make it more complicated.</p>
+        <p><strong>It will make it calmer.</strong></p>
+        <p><strong>And calm compounds.</strong></p>
+
+        <div class="rule"></div>
+      </div>
+    </main>
+
+    <footer class="footer" aria-label="Legal and links">
+      <p class="legal-mark">RedRight Labs · Established 2025</p>
+      <nav class="footer-links" aria-label="Footer links">
+        <a href="privacy.html">Privacy</a>
+        <span class="sep">/</span>
+        <a href="terms.html">Terms</a>
+        <span class="sep">/</span>
+        <a href="contact.html">Contact</a>
+        <span class="sep">/</span>
+        <a href="manifesto.html">Manifesto</a>
+      </nav>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>MedSpa Onboarding — RedRight</title>
+</head>
+<body>
+  <script>
+    // Default to shop onboarding if index is hit.
+    // Preserves existing params.
+    (() => {
+      const sp = new URLSearchParams(location.search);
+      location.replace(`./shop.html?${sp.toString()}`);
+    })();
+  </script>
+</body>
+</html>

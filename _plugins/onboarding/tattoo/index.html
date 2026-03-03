@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Onboarding</title>
+  <script>
+    (function () {
+      const sp = new URLSearchParams(location.search);
+      const flow = (sp.get("flow") || "shop").toLowerCase();
+
+      // keep query params (mock/reset/etc.)
+      const qs = sp.toString();
+      const target = (flow === "artist") ? "artist.html" : "shop.html";
+      location.replace(target + (qs ? "?" + qs : ""));
+    })();
+  </script>
+</head>
+<body></body>
+</html>

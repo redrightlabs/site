@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>RedRight · Founder HQ</title>
+
+  <!-- If you don't have a favicon yet, this prevents noisy 404s -->
+  <link rel="icon" href="data:," />
+
+  <link rel="stylesheet" href="./founder.css" />
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Top Bar -->
+    <header class="top" aria-label="Founder status">
+      <div class="topRow">
+        <span class="dot" id="buoyDot" aria-label="System status"></span>
+        <div class="date" id="todayLabel">—</div>
+      </div>
+
+      <!-- Only appears when there is attention needed -->
+      <div class="chipsRow" id="attentionRow" hidden aria-label="Needs attention">
+        <button class="chip chipAlert" id="chipPayments" type="button">
+          Failed payments <span class="count" id="payCount">0</span>
+        </button>
+        <button class="chip chipAlert" id="chipBroken" type="button">
+          Broken Islas <span class="count" id="hitlCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN VIEW: Home -->
+    <main class="main view viewActive" id="viewHome" aria-label="Founder home">
+
+      <!-- Daily Brief -->
+      <section class="card" aria-label="Daily brief">
+        <div class="cardHead">
+          <div class="cardTitle">Daily brief</div>
+        </div>
+
+        <div class="list" id="demoList" aria-label="Upcoming demos">
+          <!-- rows injected -->
+        </div>
+      </section>
+
+      <!-- Weekly Insights (single line) -->
+      <section class="card" aria-label="Weekly insights">
+        <div class="cardHead">
+          <div class="cardTitle">Weekly insights</div>
+        </div>
+        <div class="inlineStats" id="weeklyLine">—</div>
+      </section>
+
+      <!-- Shops: systems check -->
+      <section class="card" aria-label="Shops systems check">
+        <div class="cardHead">
+          <div class="cardTitle">Shops</div>
+        </div>
+
+        <div class="subtle">Tap a shop for details + reports.</div>
+
+        <div class="list" id="shopList" aria-label="Shop list">
+          <!-- rows injected -->
+        </div>
+      </section>
+
+      <!-- Global proof-of-work (compact) -->
+      <section class="card" aria-label="Global Isla stats">
+        <div class="cardHead">
+          <div class="cardTitle">Global</div>
+        </div>
+        <div class="inlineStats" id="globalLine">—</div>
+      </section>
+
+    </main>
+
+    <!-- CALENDAR VIEW (behind button) -->
+    <main class="main view" id="viewCalendar" aria-label="Founder calendar">
+      <section class="card" aria-label="30-day outlook">
+        <div class="cardHead">
+          <div class="cardTitle">Calendar · 30 days</div>
+        </div>
+        <div class="list" id="calList" aria-label="Calendar items"></div>
+      </section>
+    </main>
+
+    <!-- BOOKS VIEW (behind button) -->
+    <main class="main view" id="viewBooks" aria-label="Books">
+      <section class="card" aria-label="Books summary">
+        <div class="cardHead">
+          <div class="cardTitle">Books</div>
+        </div>
+        <div class="booksGrid" id="booksGrid" aria-label="Books tiles"></div>
+      </section>
+    </main>
+
+    <!-- Dock: bottom nav + footer brand ALWAYS below nav -->
+    <div class="dock" aria-label="Founder dock">
+      <nav class="bottomNav" aria-label="Navigation">
+        <button class="tab active" id="tabHome" type="button">Home</button>
+        <button class="tab" id="tabCalendar" type="button">Calendar</button>
+        <button class="tab" id="tabBooks" type="button">Books</button>
+      </nav>
+
+      <footer class="brand" aria-label="RedRight">
+        <!-- Put your logo file in this same folder -->
+        <img class="logo" src="./redright-logo.png" alt="RedRight" />
+        <div class="slogan">Operational Relief, at your service.</div>
+      </footer>
+    </div>
+
+  </div>
+
+  <!-- Sheet (shop detail + queues) -->
+  <div class="sheet" id="sheet" aria-hidden="true"></div>
+
+  <script src="./founder.js"></script>
+</body>
+</html>

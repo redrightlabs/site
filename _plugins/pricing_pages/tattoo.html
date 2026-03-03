@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Isla — Pricing</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+:root{
+      --bg0:#020304;
+      --ink:#070b10;
+
+      --text:#e9eef6;
+      --muted:rgba(233,238,246,.70);
+      --line:rgba(255,255,255,.10);
+
+      --rr-red:#ff2b2b;
+      --rr-red-dim:rgba(255,43,43,.12);
+      --rr-red-soft:rgba(255,43,43,.06);
+
+      --radius:18px;
+      --shadow:0 30px 90px rgba(0,0,0,.62);
+
+      --pad:18px;
+      --maxw:1040px;
+
+      --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+      --hero: "Cormorant Garamond", Garamond, Georgia, serif;
+    
+    
+  /* Buoy art placement (subtle, off-center) */
+  --buoy-size: 1100px auto;
+  --buoy-x: 56%;
+  --buoy-y: 22%;
+}
+
+/* ===== WORLD (inky ocean + restrained beacon) ===== */
+.world{
+  position:fixed; inset:0; z-index:0;
+  transform: translateZ(0);
+  background:
+    /* faint water highlights */
+    radial-gradient(1400px 900px at 50% 120%, rgba(255,255,255,.020), transparent 70%),
+    radial-gradient(1200px 800px at 18% 22%, rgba(255,255,255,.016), transparent 68%),
+    radial-gradient(1200px 800px at 82% 22%, rgba(255,255,255,.012), transparent 68%),
+
+    /* tiny, controlled red beacon (NOT a wash) */
+    radial-gradient(520px 260px at 50% 10%, rgba(255,43,43,.030), transparent 72%),
+    radial-gradient(900px 520px at 50% 18%, rgba(255,43,43,.015), transparent 78%),
+
+    /* hard black depth */
+    linear-gradient(180deg, #010102 0%, #030407 45%, #010102 100%);
+}
+
+/* Buoy art as its own layer so we can control intensity */
+.world::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background: url("../../assets/buoy_v3.png") var(--buoy-x) var(--buoy-y) / var(--buoy-size) no-repeat;
+  opacity: .68;                 /* keep it present but not loud */
+  filter: contrast(1.08) saturate(.95) brightness(.95);
+}
+
+.vignette{
+  position:fixed; inset:0; z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(1200px 900px at 50% 40%, transparent 44%, rgba(0,0,0,.78) 100%),
+    radial-gradient(900px 700px at 12% 18%, rgba(0,0,0,.52), transparent 62%),
+    radial-gradient(900px 700px at 88% 18%, rgba(0,0,0,.52), transparent 62%);
+  opacity:.92;
+  transform: translateZ(0);
+}
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color: var(--text);
+      font-family: var(--serif);
+      background: var(--bg0);
+      overflow-x:hidden;
+      overflow-y:auto;
+      -webkit-text-size-adjust: 100%;
+    }
+
+        /* ===== APP SHELL ===== */
+    .rr-app{
+      position:relative;
+      z-index:3;
+      min-height:100dvh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:
+        max(var(--pad), env(safe-area-inset-top))
+        max(var(--pad), env(safe-area-inset-right))
+        max(var(--pad), env(safe-area-inset-bottom))
+        max(var(--pad), env(safe-area-inset-left));
+    }
+
+    .panel{
+      width: min(var(--maxw), 100%);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(1200px 520px at 50% 0%, rgba(255,255,255,.018), rgba(255,255,255,0) 70%),
+        linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.06));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* ===== HERO ===== */
+    .pricing-hero{
+      text-align:center;
+      padding: 18px 18px 22px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(820px 200px at 50% 0%, rgba(255,43,43,.045), rgba(255,43,43,0) 68%),
+        linear-gradient(180deg, rgba(255,255,255,.010), rgba(0,0,0,0)); }
+
+    .isla-wordmark{
+      margin: 10px 0 6px;
+      font-family: var(--hero);
+      font-weight: 700;
+      font-size: clamp(56px, 9vw, 88px);
+      line-height: .92;
+      letter-spacing: .02em;
+      text-transform:none;
+      position:relative;
+      display:inline-block;
+      padding: 0 18px;
+      filter: drop-shadow(0 18px 50px rgba(0,0,0,.55));
+    }
+
+    .isla-wordmark::before,
+    .isla-wordmark::after{
+      content:"";
+      position:absolute;
+      left: 18px;
+      width: 26px;
+      height: 1px;
+      background: rgba(233,238,246,.58);
+      opacity:.55;
+      filter: blur(.2px);
+    }
+    .isla-wordmark::before{ top: 10px; }
+    .isla-wordmark::after{ bottom: 12px; }
+
+    .pricing-sub{
+      margin:0;
+      font-size:12px;
+      letter-spacing:.28em;
+      text-transform:uppercase;
+      color: var(--muted);
+    }
+
+    .pricing-note{
+      margin: 10px auto 0;
+      max-width: 64ch;
+      font-size: 12px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.48);
+    }
+
+    /* ===== CONTENT ===== */
+    .content{
+      padding: 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .pricing-grid{
+      position: relative;
+      isolation: isolate;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-items:stretch;
+      border-radius: 22px;
+      padding: 14px;
+    }
+    /* Subtle shell behind both pricing plates (keep it light so the buoy reads) */
+    .pricing-grid::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.01);
+  opacity: .06;
+  pointer-events:none;
+  z-index:-1;
+}
+    @media (min-width: 860px){
+      .pricing-grid{ grid-template-columns: 1fr 1fr; gap: 16px; }
+    }
+
+    /* ===== PLATES ===== */
+    .plate{
+      position: relative;
+      isolation: isolate;
+      border:1px solid var(--line);
+      border-radius: 18px;
+      overflow:hidden;
+      background: transparent;
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      min-height: 0;
+    }
+
+    /* Solid interior mask (stops Safari tint bleed) */
+    .plate::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: 18px;
+      pointer-events:none;
+      z-index:0;
+      background: rgba(8,9,11,.92);
+    }
+
+    .plate > *{ position:relative; z-index:1; }
+
+    .plate-title{
+      font-size: 11px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.52);
+      margin-bottom: 10px;
+      font-weight: 900;
+    }
+
+    .price{
+      font-size: clamp(34px, 4.2vw, 44px);
+      line-height: 1.05;
+      letter-spacing: .01em;
+      margin: 0 0 12px 0;
+      text-align:center;
+      font-weight: 950;
+    }
+    .price span{
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.55);
+      font-weight: 900;
+      margin-left: 8px;
+    }
+
+    .plate-body{
+      flex:1 1 auto;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .plate-quote{
+      margin:0;
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.45;
+      color: rgba(233,238,246,.66);
+      text-align:center;
+    }
+
+    .line-strong-onboarding{
+      text-align:center;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: rgba(233,238,246,.92);
+      text-shadow: 0 0 6px rgba(233,238,246,.08);
+    }
+
+    .annual-badge-group{
+      text-align:center;
+      margin: 0 0 4px 0;
+    }
+    .plate-quote--badge{
+      margin:0;
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.45;
+      color: rgba(233,238,246,.66);
+      text-align:center;
+    }
+    .line-commitment{
+      margin-top: 4px;
+      text-align:center;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.55);
+      font-weight: 900;
+    }
+
+    .plate-ghost{
+      margin-top:auto;
+      text-align:center;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.40);
+    }
+
+    /* === Annual emphasis: glow behind (dominant choice) === */
+    .plate--annual{
+      overflow: visible;
+    }
+    .plate--annual::before{
+      content:"";
+      position:absolute;
+      /* asymmetry so it feels like a beacon behind the primary choice */
+      inset:-44px -96px -60px -14px;
+      border-radius: 34px;
+      pointer-events:none;
+      z-index:-1;
+      background:
+        radial-gradient(760px 380px at 50% -4%, rgba(255,43,43,.07), transparent 72%),
+        radial-gradient(940px 540px at 38% 54%, rgba(255,43,43,.14), transparent 74%),
+        radial-gradient(520px 360px at 70% 36%, rgba(255,43,43,.09), transparent 76%);
+      filter: blur(34px);
+      opacity: .95;
+    }
+
+    /* ===== CTA ===== */
+    .cta{
+      margin-top: 14px;
+      width: 100%;
+      border-radius: 16px;
+      padding: 14px 14px;
+      background: rgba(0,0,0,.18);
+      color: rgba(233,238,246,.92);
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      transition: transform .10s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+
+    .cta:active{ transform: translateY(0px); }
+
+    .cta--primary{
+      border-color: rgba(255,43,43,.30);
+      background:
+        radial-gradient(520px 140px at 50% 0%, rgba(255,43,43,.14), rgba(255,43,43,0) 70%),
+        rgba(255,43,43,.08);
+    }
+
+    /* Quiet interview link */
+    .quiet{
+      text-align:left;
+      margin-top: 2px;
+    }
+    .quiet a{
+      display:inline-block;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:999px;
+      padding: 10px 12px;
+      text-decoration:none;
+      color: rgba(233,238,246,.46);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,.01);
+      transition: color .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+    }
+    .quiet a:hover{
+        color: rgba(233,238,246,.62);
+        background: rgba(255,255,255,.02);
+        border-color: rgba(255,43,43,.18);
+        box-shadow: 0 14px 30px rgba(0,0,0,.45);
+}
+
+    /* ===== FOOTER BRAND (bottom mark, bigger logo) ===== */
+    .rr-brand{
+      padding: 14px 18px 18px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 8px;
+      opacity:.85;
+      user-select:none;
+      background:
+        radial-gradient(980px 220px at 50% 120%, rgba(255,43,43,.14), rgba(255,43,43,0) 66%),
+        linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.10));
+    }
+    #rrLogo{
+      display:block;
+      width: 220px; /* bigger */
+      max-width: 70vw;
+      height:auto;
+      margin: 0 auto;
+      opacity: .82;
+      filter: drop-shadow(0 16px 44px rgba(0,0,0,.45));
+    }
+    .rr-slogan{
+      margin:0;
+      font-size: 9px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.32);
+      font-weight: 600;
+      text-align:center;
+}
+    .legal-mark{
+      margin: 0;
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(233,238,246,.26);
+      font-weight: 600;
+}
+    @media (max-width: 420px){
+      #rrLogo{ width: 190px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="world" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="rr-app">
+    <main class="panel" aria-label="Vertical pricing">
+
+      <section class="pricing-hero">
+        <div class="isla-wordmark">Isla</div>
+        <p class="pricing-sub">Operational relief — at your service</p>
+        <p class="pricing-note">Choose a path · Isla sends next steps</p>
+      </section>
+
+      <section class="content">
+        <section class="pricing-grid" aria-label="Pricing options">
+
+          <!-- LEFT: Month-to-Month -->
+          <article class="plate plate--monthly" aria-label="Month-to-month coverage">
+            <div class="plate-title">Monthly coverage</div>
+            <div class="price" id="m2m_price">$1,500 <span>/ month</span></div>
+            <div class="plate-body">
+              <p class="plate-quote">
+                Nothing ever falls through the cracks —<br />
+                even when it’s busy, the work feels calm.
+              </p>
+
+              <div class="line-strong-onboarding" id="m2m_onboarding">$3,000 onboarding absorbed (paid up front)</div>
+              <div class="plate-ghost" id="m2m_equiv">$21,000 total / year</div>
+            </div>
+
+            <button class="cta" id="btn_m2m" type="button">Start month-to-month</button>
+          </article>
+
+          <!-- RIGHT: Annual (Primary) -->
+          <article class="plate plate--annual" aria-label="Annual commitment">
+            <div class="plate-title">Annual commitment</div>
+            <div class="price" id="annual_price">$1,200 <span>/ month</span></div>
+
+            <div class="plate-body">
+              <div class="annual-badge-group">
+                <p class="plate-quote plate-quote--badge">Most owners choose this</p>
+                <div class="line-commitment">12-month commitment</div>
+              </div>
+
+              <div class="line-strong-onboarding">Onboarding absorbed</div>
+              <div class="plate-ghost" id="annual_equiv">$14,400 total / year</div>
+            </div>
+
+            <button class="cta cta--primary" id="btn_annual" type="button">Continue with annual coverage</button>
+          </article>
+
+        </section>
+
+        <div class="quiet">
+          <a href="#" id="btn_interview">Start 14-day operational interview</a>
+        </div>
+      </section>
+
+      <footer class="rr-brand" aria-label="Footer branding">
+        <img id="rrLogo" src="../../assets/redright-logo.png" alt="RedRight logo">
+        <p class="rr-slogan">Your path to safe harbor</p>
+        <p class="legal-mark">RedRight Labs · Established 2025</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+  // One pricing page that morphs based on ?vertical=
+  const PRICING = {
+    tattoo: {
+      label: 'Tattoo',
+      month: { price: '$1,500 / month', onboarding: '$3,000 onboarding absorbed (paid up front)', annualEq: '$21,000 total / year' },
+      annual:{ price: '$1,200 / month', onboarding: 'Onboarding absorbed', annualEq: '$14,400 total / year' }
+    },
+    doggrooming: {
+      label: 'Dog Grooming',
+      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding absorbed (paid up front)', annualEq: '$16,400 total / year' },
+      annual:{ price: '$800 / month', onboarding: 'Onboarding absorbed', annualEq: '$9,600 total / year' }
+    },
+    dental: {
+      label: 'Dental',
+      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding absorbed (paid up front)', annualEq: '$33,500 total / year' },
+      annual:{ price: '$2,000 / month', onboarding: 'Onboarding absorbed', annualEq: '$24,000 total / year' }
+    },
+    medspa: {
+      label: 'Med Spa',
+      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding absorbed (paid up front)', annualEq: '$40,000 total / year' },
+      annual:{ price: '$2,400 / month', onboarding: 'Onboarding absorbed', annualEq: '$28,800 total / year' }
+    },
+    physicaltherapy: {
+      label: 'Physical Therapy',
+      month: { price: '$2,000 / month', onboarding: '$3,000 onboarding absorbed (paid up front)', annualEq: '$27,000 total / year' },
+      annual:{ price: '$1,600 / month', onboarding: 'Onboarding absorbed', annualEq: '$19,200 total / year' }
+    },
+    legal: {
+      label: 'Legal',
+      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding absorbed (paid up front)', annualEq: '$33,500 total / year' },
+      annual:{ price: '$2,000 / month', onboarding: 'Onboarding absorbed', annualEq: '$24,000 total / year' }
+    },
+    plasticsurgery: {
+      label: 'Plastic Surgery',
+      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding absorbed (paid up front)', annualEq: '$40,000 total / year' },
+      annual:{ price: '$2,400 / month', onboarding: 'Onboarding absorbed', annualEq: '$28,800 total / year' }
+    },
+    nailsalon: {
+      label: 'Nail Salon',
+      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding absorbed (paid up front)', annualEq: '$16,400 total / year' },
+      annual:{ price: '$800 / month', onboarding: 'Onboarding absorbed', annualEq: '$9,600 total / year' }
+    }
+  };
+
+  function normVertical(raw){
+    return String(raw || '').toLowerCase().trim()
+      .replace(/\s+/g,'')
+      .replace(/[-_]/g,'')
+      .replace('law','legal')
+      .replace('lawlegalpractice','legal');
+  }
+
+  function getVertical(){
+    const sp = new URLSearchParams(location.search);
+    return normVertical(sp.get('vertical')) || 'tattoo';
+  }
+
+  function applyPricing(){
+    const key = getVertical();
+    const data = PRICING[key] || PRICING.tattoo;
+
+    document.title = `Isla — ${data.label} Pricing`;
+
+    const m2mPrice = document.getElementById('m2m_price');
+    const m2mOnb   = document.getElementById('m2m_onboarding');
+    const m2mEq    = document.getElementById('m2m_equiv');
+
+    const annPrice = document.getElementById('annual_price');
+    const annEq    = document.getElementById('annual_equiv');
+
+    if(m2mPrice) m2mPrice.innerHTML = data.month.price.replace(' / month',' <span>/ month</span>');
+    if(m2mOnb)   m2mOnb.textContent = data.month.onboarding;
+    if(m2mEq)    m2mEq.textContent  = data.month.annualEq;
+
+    if(annPrice) annPrice.innerHTML = data.annual.price.replace(' / month',' <span>/ month</span>');
+    if(annEq)    annEq.textContent  = data.annual.annualEq;
+  }
+
+  function hook(id, choice){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', (e)=>{
+      e.preventDefault();
+      console.log('PRICING_CHOICE:', choice, 'VERTICAL:', getVertical());
+      // micro-confirmation
+      const prev = el.style.borderColor;
+      el.style.borderColor = 'rgba(255,43,43,.75)';
+      setTimeout(()=>{ el.style.borderColor = prev || ''; }, 260);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    applyPricing();
+    hook('btn_m2m', 'month_to_month');
+    hook('btn_annual', 'annual');
+    hook('btn_interview', 'operational_interview');
+  });
+</script>
+</body>
+</html>

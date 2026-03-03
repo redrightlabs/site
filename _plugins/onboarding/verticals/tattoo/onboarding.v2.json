@@ -1,0 +1,439 @@
+{
+  "id": "RR_TATTOO_ONBOARDING_v2",
+  "status": "LOCKED_CANON",
+  "locked_date": "2026-01-31",
+  "surface": {
+    "spec": "ISLA_ONBOARDING_SURFACE_SPEC_v1",
+    "theme": "batcave_industrial",
+    "rules": {
+      "no_back_button": true,
+      "no_progress_ui": true,
+      "close_means_pause": true,
+      "resume_returns_to_last_unanswered": true,
+      "multi_select_never_auto_advances": true,
+      "end_screen_has_no_buttons": true
+    }
+  },
+  "persistence": {
+    "storage_key": "rr_onboarding_tattoo_v2",
+    "dev_reset_query_param": "reset=1"
+  },
+  "mode": {
+    "entry": {
+      "role": "shop_owner_or_manager",
+      "vertical": "tattoo"
+    },
+    "fanout": {
+      "provider_links_sent_outside_portal": true,
+      "shop_isla_intro_sequence_visible_in_portal": false
+    }
+  },
+  "data_contract": {
+    "writes": {
+      "shop": [
+        "shop.name",
+        "shop.timezone",
+        "shop.logo.asset_id",
+        "shop.hours.mode",
+        "shop.hours.template",
+        "shop.isla_line.phone",
+        "shop.ops_help.primary_person_id",
+        "shop.after_hours.policy",
+        "owner.is_provider"
+      ],
+      "artist": [
+        "in_session.policy",
+        "after_hours.policy",
+        "tattoo.placements.do_not",
+        "tattoo.age_policy",
+        "escalation.target_person_id",
+        "carewatch.checkpoints",
+        "aftercare.regimen",
+        "media.enabled",
+        "media.timing_days",
+        "reviews.enabled",
+        "rebooking.timing"
+      ]
+    },
+    "forbids": {
+      "freeform_logic": true,
+      "feature_explanations": true,
+      "instructional_quotes": true,
+      "progress_indicators": true,
+      "foreshadowing": true
+    }
+  },
+  "inputs": {
+    "roster": {
+      "source": "shop_setup_payload_or_api",
+      "fallback": "mock_when_query_param_mock_equals_1",
+      "required_for": [
+        "SHOP_S5_OPS_HELP_PICK",
+        "ARTIST_A5_COVERAGE_ROUTING"
+      ],
+      "mock": [
+        { "id": "u1", "name": "Mason Reed", "phone": "+1 (555) 201-4401", "roles": ["Owner", "Artist"] },
+        { "id": "u2", "name": "Jordan Vale", "phone": "+1 (555) 201-4402", "roles": ["Manager"] },
+        { "id": "u3", "name": "Riley Knox", "phone": "+1 (555) 201-4403", "roles": ["Admin"] },
+        { "id": "u4", "name": "Nova Lane", "phone": "+1 (555) 201-4404", "roles": ["Artist"] },
+        { "id": "u5", "name": "Kai Mercer", "phone": "+1 (555) 201-4405", "roles": ["Artist"] },
+        { "id": "u6", "name": "Sage Hollow", "phone": "+1 (555) 201-4406", "roles": ["Artist"] },
+        { "id": "u7", "name": "Ezra North", "phone": "+1 (555) 201-4407", "roles": ["Artist"] }
+      ]
+    },
+    "logo_upload": {
+      "accept": ["image/png", "image/jpeg", "image/webp"],
+      "max_size_mb": 8,
+      "required": true
+    }
+  },
+  "flows": [
+    {
+      "flow_id": "TATTOO_SHOP_FLOW_v2",
+      "kind": "shop",
+      "screens": [
+        {
+          "id": "SHOP_S0_WELCOME",
+          "block": "BLOCK_G0_WELCOME_TIMING",
+          "type": "single",
+          "title": "",
+          "quote": "You can change anything later just by texting Isla.",
+          "question": "This takes a few minutes.",
+          "key": "shop.welcome_ack",
+          "options": [{ "label": "Continue", "value": "ok", "primary": true }],
+          "next": "SHOP_S1_IDENTITY"
+        },
+        {
+          "id": "SHOP_S1_IDENTITY",
+          "block": "BLOCK_S1_SHOP_IDENTITY",
+          "type": "form",
+          "title": "Shop",
+          "quote": "Quiet basics. No back-and-forth later.",
+          "question": "What should Isla call your shop?",
+          "fields": [
+            { "id": "shop.name", "label": "Shop name", "type": "text", "required": true, "max_length": 60 },
+            { "id": "shop.timezone", "label": "Timezone", "type": "timezone", "required": true }
+          ],
+          "primary_cta": { "label": "Continue" },
+          "next": "SHOP_S2_BRANDING"
+        },
+        {
+          "id": "SHOP_S2_BRANDING",
+          "block": "BLOCK_S2_SHOP_BRANDING",
+          "type": "upload",
+          "title": "Branding",
+          "quote": "This is how clients recognize your shop.",
+          "question": "Upload your logo.",
+          "upload": { "field_id": "shop.logo.asset_id", "required": true },
+          "primary_cta": { "label": "Continue" },
+          "next": "SHOP_S3_HOURS"
+        },
+        {
+          "id": "SHOP_S3_HOURS",
+          "block": "BLOCK_S3_SHOP_HOURS",
+          "type": "hours",
+          "title": "Hours",
+          "quote": "Clean hours now means fewer interruptions later.",
+          "question": "Set your shop hours.",
+          "writes": ["shop.hours.template", "shop.hours.mode"],
+          "hours_template": {
+            "field_id": "shop.hours.template",
+            "required": true,
+            "supports": ["open_close_per_day", "closed_days", "split_shifts_optional"]
+          },
+          "secondary_toggle": {
+            "label": "My hours vary week to week",
+            "writes_key": "shop.hours.mode",
+            "value_when_on": "varies",
+            "value_when_off": "standard",
+            "default": "standard"
+          },
+          "primary_cta": { "label": "Continue" },
+          "next": "SHOP_S4_SHOP_LINE"
+        },
+        {
+          "id": "SHOP_S4_SHOP_LINE",
+          "block": "BLOCK_S4_SHOP_CONTACT_LINE",
+          "type": "form",
+          "title": "Shop line",
+          "quote": "This is where clients will reach the shop.",
+          "question": "What number should Isla use for the Shop line?",
+          "fields": [
+            { "id": "shop.isla_line.phone", "label": "Shop phone number", "type": "phone", "required": true, "format": "e164_preferred" }
+          ],
+          "primary_cta": { "label": "Continue" },
+          "next": "SHOP_S5_OPS_HELP_PICK"
+        },
+        {
+          "id": "SHOP_S5_OPS_HELP_PICK",
+          "block": "BLOCK_S5_SHOP_ROUTING_HELP",
+          "type": "roster",
+          "title": "Second set of eyes",
+          "quote": "Sometimes it helps to have a second set of eyes.",
+          "question": "If Isla needs a quick decision and can’t reach the right person, who can she quietly loop in to help keep things moving?",
+          "key": "shop.ops_help.primary_person_id",
+          "source": "roster",
+          "filter": { "allow_roles": ["Owner", "Manager", "Admin", "Artist"] },
+          "next": "SHOP_S7_AFTER_HOURS"
+        },
+        {
+          "id": "SHOP_S7_AFTER_HOURS",
+          "block": "BLOCK_S7_AFTER_HOURS_POLICY",
+          "type": "single",
+          "title": "After hours",
+          "quote": "Clients are acknowledged — without creating urgency.",
+          "question": "After hours, should Isla…",
+          "key": "shop.after_hours.policy",
+          "options": [
+            { "label": "Handle it, but hold until business hours", "value": "hold_to_hours" },
+            { "label": "Reach out anytime", "value": "anytime" },
+            { "label": "Emergency only", "value": "emergency_only" }
+          ],
+          "next": "SHOP_S6_OWNER_PROVIDER_CHECK_LAST"
+        },
+        {
+          "id": "SHOP_S6_OWNER_PROVIDER_CHECK_LAST",
+          "block": "BLOCK_S6_OWNER_PROVIDER_CHECK",
+          "type": "single",
+          "title": "Owner",
+          "quote": "This decides what I configure next.",
+          "question": "Do you tattoo clients yourself?",
+          "key": "owner.is_provider",
+          "options": [
+            { "label": "Yes", "value": true, "primary": true },
+            { "label": "No", "value": false }
+          ],
+          "next": {
+            "if": [
+              { "equals": ["owner.is_provider", true], "go": "ARTIST_A0_WELCOME" },
+              { "equals": ["owner.is_provider", false], "go": "SHOP_S8_QUIET_EXIT" }
+            ]
+          }
+        },
+        {
+          "id": "SHOP_S8_QUIET_EXIT",
+          "block": "BLOCK_S8_SHOP_EXIT",
+          "type": "end",
+          "title": "",
+          "quote": "",
+          "question": "Shop preferences saved.\nThank you.",
+          "writes_nothing": true
+        }
+      ]
+    },
+    {
+      "flow_id": "TATTOO_ARTIST_FLOW_v2",
+      "kind": "artist",
+      "screens": [
+        {
+          "id": "ARTIST_A0_WELCOME",
+          "block": "BLOCK_G0_WELCOME_TIMING",
+          "type": "single",
+          "title": "",
+          "quote": "Built to protect your time and keep your books full — without extra work.",
+          "question": "Artist preferences. A few quick choices.",
+          "key": "artist.welcome_ack",
+          "options": [{ "label": "Continue", "value": "ok", "primary": true }],
+          "next": "ARTIST_A1_IN_SESSION"
+        },
+        {
+          "id": "ARTIST_A1_IN_SESSION",
+          "block": "BLOCK_P5_IN_SESSION_BOUNDARIES",
+          "type": "single",
+          "title": "When you’re tattooing",
+          "quote": "I’ll work around your flow — not interrupt it.",
+          "question": "If someone reaches out while you’re in session…",
+          "key": "in_session.policy",
+          "options": [
+            { "label": "Try me first (a quick approve is fine)", "value": "try_first" },
+            { "label": "Hold everything until I’m free", "value": "hold" },
+            { "label": "Text me once only if it’s urgent", "value": "text_once_urgent" }
+          ],
+          "next": "ARTIST_A2_AFTER_HOURS"
+        },
+        {
+          "id": "ARTIST_A2_AFTER_HOURS",
+          "block": "BLOCK_P6_AFTER_HOURS_POLICY",
+          "type": "single",
+          "title": "After hours",
+          "quote": "You decide when I can reach you — I’ll handle the rest.",
+          "question": "After hours, should Isla…",
+          "key": "after_hours.policy",
+          "options": [
+            { "label": "Handle it, but hold until business hours", "value": "hold_to_hours" },
+            { "label": "Reach out to me anytime", "value": "anytime" },
+            { "label": "Emergency only", "value": "emergency_only" }
+          ],
+          "next": "ARTIST_A3_PLACEMENTS_DONT_DO"
+        },
+        {
+          "id": "ARTIST_A3_PLACEMENTS_DONT_DO",
+          "block": "BLOCK_TAT_PLACEMENTS_DO_NOT",
+          "type": "multi",
+          "title": "Placements",
+          "quote": "This prevents awkward situations before they start.",
+          "question": "Which placements do you NOT tattoo?",
+          "key": "tattoo.placements.do_not",
+          "options": [
+            { "label": "Face", "value": "face" },
+            { "label": "Neck", "value": "neck" },
+            { "label": "Hands", "value": "hands" },
+            { "label": "Feet", "value": "feet" },
+            { "label": "Breasts / nipples", "value": "breasts" },
+            { "label": "Genitals", "value": "genitals" },
+            { "label": "Butt / groin-adjacent", "value": "butt_groin" },
+            { "label": "Inner thigh", "value": "inner_thigh" }
+          ],
+          "continue_label": "Continue",
+          "next": "ARTIST_A4_AGE_POLICY"
+        },
+        {
+          "id": "ARTIST_A4_AGE_POLICY",
+          "block": "BLOCK_TAT_AGE_POLICY",
+          "type": "single",
+          "title": "Age policy",
+          "quote": "Clear boundaries. No awkward conversations.",
+          "question": "What’s your policy for clients under 18?",
+          "key": "tattoo.age_policy",
+          "options": [
+            { "label": "18+ only", "value": "18_plus", "primary": true },
+            { "label": "16–17 with parent/guardian consent", "value": "16_17_consent" },
+            { "label": "Case-by-case (always route for approval)", "value": "case_by_case" }
+          ],
+          "next": "ARTIST_A5_COVERAGE_ROUTING"
+        },
+        {
+          "id": "ARTIST_A5_COVERAGE_ROUTING",
+          "block": "BLOCK_P8_ESCALATION_TARGET",
+          "type": "roster",
+          "title": "Second set of eyes",
+          "quote": "If Isla can’t reach you after a couple attempts, who should she quietly loop in to help keep things moving?",
+          "question": "Who can help keep things moving?",
+          "key": "escalation.target_person_id",
+          "source": "roster",
+          "filter": { "allow_roles": ["Owner", "Manager", "Admin", "Artist"] },
+          "next": "ARTIST_A6_CAREWATCH"
+        },
+        {
+          "id": "ARTIST_A6_CAREWATCH",
+          "block": "BLOCK_CW1_CAREWATCH_CADENCE",
+          "type": "multi",
+          "title": "CareWatch",
+          "quote": "A calm check-in after the appointment reduces anxiety and surfaces issues early — without getting weird.",
+          "question": "When should Isla check in?",
+          "key": "carewatch.checkpoints",
+          "options": [
+            { "label": "24 hours (recommended)", "value": "24h" },
+            { "label": "5 days (recommended)", "value": "5d" },
+            { "label": "7 days", "value": "7d" },
+            { "label": "Retouch window reminder (5–6 months)", "value": "retouch_5_6m" },
+            { "label": "Never", "value": "never" }
+          ],
+          "continue_label": "Continue",
+          "next": "ARTIST_A7_AFTERCARE_REGIMEN"
+        },
+        {
+          "id": "ARTIST_A7_AFTERCARE_REGIMEN",
+          "block": "BLOCK_TAT_AFTERCARE_REGIMEN",
+          "type": "single",
+          "title": "Aftercare",
+          "quote": "Isla will deliver your aftercare instructions for you — exactly how you prefer.",
+          "question": "Which aftercare regimen do you recommend most often?",
+          "key": "aftercare.regimen",
+          "options": [
+            { "label": "Mild soap + water, then light unscented lotion", "value": "soap_water_lotion" },
+            { "label": "Antibacterial soap + Aquaphor (thin layer)", "value": "antibacterial_aquaphor" },
+            { "label": "Dial Gold + thin ointment (first days), then lotion", "value": "dial_gold_ointment_then_lotion" },
+            { "label": "Saniderm / second-skin style aftercare", "value": "second_skin" },
+            { "label": "Case-by-case (always ask me)", "value": "case_by_case" }
+          ],
+          "next": "ARTIST_A8_PORTFOLIO"
+        },
+        {
+          "id": "ARTIST_A8_PORTFOLIO",
+          "block": "BLOCK_M1_MEDIA_CAPTURE",
+          "type": "single",
+          "title": "Portfolio",
+          "quote": "Only with consent. Always respectful.",
+          "question": "Isla can help you build your online portfolio.\nShe can request photos and posting consent for you.\nWould you like her to help you build your portfolio?",
+          "key": "media.enabled",
+          "options": [
+            { "label": "Yes", "value": true, "primary": true },
+            { "label": "No", "value": false }
+          ],
+          "next": {
+            "if": [
+              { "equals": ["media.enabled", true], "go": "ARTIST_A8B_HEALED_PHOTO_TIMING" },
+              { "equals": ["media.enabled", false], "go": "ARTIST_A9_REVIEWS" }
+            ]
+          }
+        },
+        {
+          "id": "ARTIST_A8B_HEALED_PHOTO_TIMING",
+          "block": "BLOCK_M1_MEDIA_TIMING_DAYS",
+          "type": "single",
+          "title": "Healed photos",
+          "quote": "When it’s time, Isla handles the ask — and consent.",
+          "question": "When should Isla request a healed photo?",
+          "key": "media.timing_days",
+          "options": [
+            { "label": "30 days (recommended)", "value": 30, "primary": true },
+            { "label": "45 days", "value": 45 },
+            { "label": "60 days", "value": 60 }
+          ],
+          "next": "ARTIST_A9_REVIEWS"
+        },
+        {
+          "id": "ARTIST_A9_REVIEWS",
+          "block": "BLOCK_R1_REVIEW_POLICY",
+          "type": "single",
+          "title": "Reviews",
+          "quote": "Only after Isla knows it was a good experience.",
+          "question": "Should Isla request reviews for you?",
+          "key": "reviews.enabled",
+          "options": [
+            { "label": "Yes — only after good experiences", "value": true, "primary": true },
+            { "label": "No", "value": false }
+          ],
+          "next": "ARTIST_A10_REINVITE"
+        },
+        {
+          "id": "ARTIST_A10_REINVITE",
+          "block": "BLOCK_RB1_REBOOKING_NUDGE",
+          "type": "single",
+          "title": "Invite them back",
+          "quote": "Isla can help keep your books full by inviting clients back at the right time.",
+          "question": "When should Isla invite clients back?",
+          "key": "rebooking.timing",
+          "options": [
+            { "label": "3 months", "value": "3m" },
+            { "label": "6 months", "value": "6m", "primary": true },
+            { "label": "9–12 months", "value": "9_12m" },
+            { "label": "Only if the client initiates", "value": "client_initiates" },
+            { "label": "Never", "value": "never" }
+          ],
+          "next": "ARTIST_END"
+        },
+        {
+          "id": "ARTIST_END",
+          "block": "BLOCK_G1_COMPLETION_SIGNAL",
+          "type": "end",
+          "title": "",
+          "quote": "",
+          "question": "Onboarding complete.\nYour preferences have been sent.",
+          "writes_nothing": true
+        }
+      ]
+    }
+  ],
+  "ui_hints": {
+    "button_state_colors": {
+      "selected": "signal_red_tint",
+      "unselected": "neutral"
+    },
+    "tight_lists": {
+      "apply_to": ["ARTIST_A3_PLACEMENTS_DONT_DO"],
+      "behavior": "two_column_when_space_allows_else_compact_single_column"
+    }
+  }
+}

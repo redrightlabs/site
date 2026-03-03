@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Isla — Dental Onboarding (Provider)</title>
+
+  <!-- Shared onboarding styles (universal buoy, etc.) -->
+  <link rel="stylesheet" href="../shared/onboarding.css" />
+</head>
+
+<body>
+  <div class="world">
+    <div class="panel">
+      <div class="top">
+        <div class="kicker" id="kicker">RedRight Isla</div>
+        <div class="title" id="title">Loading…</div>
+        <div class="quote" id="quote"></div>
+      </div>
+
+      <div class="question" id="question"></div>
+      <div class="input" id="input"></div>
+
+      <div class="bottom">
+        <button class="btn ghost" id="closeBtn" type="button">Close</button>
+      </div>
+
+      <div class="brand">
+        <div class="brandName">RedRight</div>
+        <div class="brandSub">RedRight Labs · Established 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canon: No URL guards. Flow comes from default + state. -->
+  <script>
+    window.RR_DEFAULT_FLOW = "artist";
+    window.RR_ONBOARDING_VERTICAL_KEY = "dental_v1";
+  </script>
+
+  <!-- IMPORTANT: screens.js MUST load before engine.js -->
+  <script src="./screens.js"></script>
+  <script src="../shared/engine.js"></script>
+</body>
+</html>

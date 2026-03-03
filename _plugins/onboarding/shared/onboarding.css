@@ -1,0 +1,322 @@
+:root{
+  /* Brand signal */
+  --rr-red: #b1121a;
+  --rr-red-glow-soft: rgba(177,18,26,0.25);
+  --rr-red-glow-strong: rgba(177,18,26,0.45);
+
+  /* Core palette */
+  --bg0:#050607;
+  --bg1:#07090b;
+  --ink:#e9e6df;
+  --muted:rgba(233,230,223,.62);
+  --line:rgba(233,230,223,.10);
+  --signal:rgba(140,0,0,.9);      /* red is signal only */
+  --signalDim:rgba(140,0,0,.20);
+
+  /* Type */
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+
+  /* Universal brand staple (ALL verticals) */
+  --rr-buoy-url: url("/_plugins/onboarding/assets/buoy_v10.png");
+  --rr-buoy-pos: center 88%;
+  --rr-buoy-size: 520px auto;
+  --rr-buoy-opacity: .26;
+  --rr-buoy-filter: saturate(.9) contrast(.95) brightness(.9);
+
+  /* Overlay tuning */
+  --rr-overlay-opacity: 1;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:var(--serif);
+
+  /* Base batcave background (NO buoy here) */
+  background:
+    radial-gradient(1200px 700px at 50% 18%, rgba(255,255,255,.055), rgba(0,0,0,0) 60%),
+    radial-gradient(1200px 900px at 50% 120%, rgba(120,0,0,.14), rgba(0,0,0,0) 55%),
+    linear-gradient(#050607, #020203);
+
+  position: relative;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Buoy image layer (separate + controllable, universal) */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background: var(--rr-buoy-url) var(--rr-buoy-pos) / var(--rr-buoy-size) no-repeat;
+  opacity: var(--rr-buoy-opacity);
+  filter: var(--rr-buoy-filter);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Darkening layer so top stays batcave */
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 520px at 50% 12%, rgba(0,0,0,.35), rgba(0,0,0,0) 55%),
+    linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0) 40%, rgba(0,0,0,.55));
+  opacity: var(--rr-overlay-opacity);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure UI sits above the buoy layers */
+.wrap, .rr-shell, .rr-card, main, #app{
+  position: relative;
+  z-index: 2;
+}
+
+.rr-app{
+  min-height:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+           max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+}
+
+.rr-screen{
+  width:min(640px, 100%);
+  /* Dynamic viewport keeps the card centered on mobile when browser chrome changes */
+  min-height:calc(100dvh - 36px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:28px 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 55%);
+}
+
+.rr-space{flex:1 0 40px}
+
+/* Brand stack must be truly centered */
+.rr-brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+/* Brand logo sizing guard (prevents giant logo on mobile) */
+.rr-brand img,
+#rrLogo{
+  display:block;
+  width:140px;
+  max-width:70%;
+  height:auto;
+  max-height:44px;
+  margin:0 auto 8px;
+  object-fit:contain;
+  opacity:.92;
+}
+
+.rr-title{
+  font-size:14px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.rr-quote{
+  max-width:38ch;
+  color:var(--muted);
+  font-style:italic;
+  font-size:16px;
+  line-height:1.5;
+  margin: 0 0 18px 0;
+  transform: translateX(-6px); /* slight “discovered” offset */
+}
+
+.rr-question{
+  font-size:28px;
+  line-height:1.15;
+  letter-spacing:.02em;
+  margin: 0 0 18px 0;
+}
+
+.rr-input{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:stretch;
+}
+
+/* Inputs (shop name, phone, hours, etc.) */
+.rr-input input,
+.rr-input select,
+.rr-input textarea{
+  width:100%;
+  border:1px solid rgba(233,230,223,.18);
+  background:rgba(255,255,255,.02);
+  color:var(--ink);
+  border-radius:14px;
+  padding:14px 14px;
+  font:600 16px/1.1 var(--serif);
+  letter-spacing:.2px;
+}
+
+.rr-input input::placeholder,
+.rr-input textarea::placeholder{
+  color:rgba(233,230,223,.45);
+}
+
+.rr-input input:focus,
+.rr-input select:focus,
+.rr-input textarea:focus{
+  outline:none;
+  border-color:rgba(255,46,46,.55);
+  box-shadow:0 0 0 1px rgba(255,46,46,.35), 0 0 18px rgba(255,46,46,.18);
+}
+
+/* Option buttons */
+.rr-option{
+  position: relative;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:14px 14px;
+  background: rgba(255,255,255,.03);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:18px;
+  line-height:1.2;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .06s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 6px 18px rgba(0,0,0,.45);
+}
+
+.rr-option:hover{
+  border-color: rgba(177,18,26,0.5);
+  background: rgba(255,255,255,.045);
+  box-shadow:
+    0 0 0 1px rgba(177,18,26,0.35),
+    0 10px 34px var(--rr-red-glow-strong);
+}
+
+.rr-option:active{
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 4px 12px rgba(0,0,0,.55);
+}
+
+.rr-option:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(255, 40, 40, .22),
+    0 0 24px rgba(255, 40, 40, .22);
+}
+
+.rr-option[data-selected="true"]{
+  border-color: rgba(255, 40, 40, .55);
+  background: rgba(255, 30, 30, .07);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 40, 40, .18),
+    0 10px 22px rgba(0,0,0,.55),
+    0 0 18px rgba(255, 40, 40, .14);
+}
+
+.rr-option.rr-primary{
+  border-color: rgba(255, 40, 40, .65);
+  background: rgba(255, 30, 30, .09);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 40, 40, .22),
+    inset 0 10px 22px rgba(255, 40, 40, .10),
+    0 0 0 3px rgba(255, 40, 40, .08),
+    0 14px 28px rgba(0,0,0,.55),
+    0 0 26px rgba(255, 40, 40, .18);
+}
+
+.rr-logo{
+  font-size:12px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:rgba(233,230,223,.72);
+}
+
+.rr-slogan{
+  margin-top:6px;
+  font-size:11px;
+  letter-spacing:.20em;
+  text-transform:uppercase;
+  color:rgba(233,230,223,.45);
+}
+
+.rr-established{
+  margin-top: 2px;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(233,230,223,.38);
+  text-shadow: none;
+}
+
+.rr-close{
+  margin-top:14px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:rgba(233,230,223,.70);
+  font-family:var(--serif);
+  font-size:14px;
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;
+}
+
+/* iOS: make hour “open/closed” checkbox visible + tappable */
+#input input[type="checkbox"]{
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  accent-color: var(--rr-red) !important;
+  cursor: pointer;
+  background: rgba(255,255,255,.10);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 10px 24px rgba(0,0,0,.35);
+}
+
+/* Kill Safari yellow autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill{
+  -webkit-text-fill-color: rgba(233,230,223,.95) !important;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,.02) inset !important;
+}
+
+@media (max-width:420px){
+  .rr-question{font-size:24px}
+  .rr-option{font-size:17px}
+}
+
+/* Universal mobile buoy boost (NO duplicate pseudo-elements) */
+@media (max-width: 600px){
+  :root{
+    --rr-buoy-pos: center 90%;
+    --rr-buoy-size: 600px auto;
+    --rr-buoy-opacity: .45;
+    --rr-buoy-filter: saturate(1.1) contrast(1.05) brightness(1.15);
+    --rr-overlay-opacity: .85; /* slightly reduce top darkening */
+  }
+}

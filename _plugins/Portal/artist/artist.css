@@ -1,0 +1,457 @@
+/* portal.css — Batcave mobile-first portals (Artist + Shop Overview)
+   Rules:
+   - Centered alignment
+   - Red = signal only
+   - Pills are dark (never white)
+   - Footer brand always under bottom nav
+*/
+
+:root{
+  --bg:#07080b;
+  --panel:#0c0e13;
+  --panel2:#0a0c11;
+  --stroke:rgba(255,255,255,.08);
+  --stroke2:rgba(255,255,255,.12);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.62);
+  --muted2:rgba(255,255,255,.48);
+  --red:#e11d2e;
+  --red2:rgba(225,29,46,.35);
+  --shadow: 0 12px 40px rgba(0,0,0,.55);
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: radial-gradient(1200px 900px at 50% -20%, rgba(225,29,46,.06), transparent 55%),
+              radial-gradient(900px 700px at 50% 30%, rgba(255,255,255,.04), transparent 55%),
+              var(--bg);
+  font-family: var(--serif);
+  color:var(--text);
+}
+button,
+.tab,
+.pill,
+.ghost,
+.artistLink{
+  font-family: var(--serif);
+}
+.wrap{
+  min-height:100svh;
+  display:flex;
+  justify-content:center;
+  padding:16px 12px 18px;
+}
+
+.shell{
+  width:min(560px, 100%);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.top{
+  padding:14px 14px 8px;
+}
+
+.topRow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.date{
+  font-weight:600;
+  letter-spacing:.2px;
+  color:var(--text);
+  opacity:.95;
+  text-align:center;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.18);
+  box-shadow:none;
+}
+/* Founder buoy semantics */
+.dot.steady{
+  background: var(--red);
+  box-shadow: 0 0 16px rgba(225,29,46,.18);
+  animation: none;
+}
+.dot.urgent{
+  background: var(--red);
+  box-shadow: 0 0 16px rgba(225,29,46,.28);
+  animation: pulse 2.6s ease-in-out infinite;
+}
+
+.dot.on{
+  background: var(--red);
+  box-shadow: 0 0 16px rgba(225,29,46,.28);
+  animation: pulse 2.6s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{ transform:scale(1); opacity:.85; }
+  50%{ transform:scale(1.08); opacity:1; }
+}
+
+.bubbles{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+  margin-top:10px;
+}
+
+.bubble{
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:10px 10px 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.32);
+  cursor:pointer;
+  user-select:none;
+  text-align:center;
+}
+.bubble:focus{ outline:none; border-color:var(--stroke2); }
+.bubble.hot{
+  border-color: rgba(225,29,46,.35);
+  box-shadow: 0 12px 40px rgba(225,29,46,.08), 0 10px 30px rgba(0,0,0,.35);
+}
+.bubbleTitle{
+  font-size:12px;
+  color:var(--muted);
+  letter-spacing:.2px;
+}
+.bubbleCount{
+  margin-top:6px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+
+.main{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  padding:14px 14px 12px;
+  box-shadow: var(--shadow);
+}
+
+.cardHead{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+}
+
+.cardTitle{
+  font-size:13px;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.item{
+  background: rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:12px 12px 10px;
+  text-align:center;
+}
+
+.time{
+  font-weight:700;
+  font-size:14px;
+  color:rgba(255,255,255,.92);
+  margin-bottom:6px;
+  text-align:center;
+}
+
+.primary{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.2px;
+  margin-bottom:4px;
+  text-align:center;
+}
+
+.secondary{
+  font-size:13px;
+  color:var(--muted);
+  text-align:center;
+}
+
+.pillRow{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
+
+.pill{
+  appearance:none;
+  border:1px solid rgba(225,29,46,.45);
+  background: rgba(225,29,46,.08);
+  color: rgba(255,255,255,.92);
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:700;
+  letter-spacing:.2px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  max-width:100%;
+  white-space:nowrap;
+}
+.pill:hover{
+  background: rgba(225,29,46,.12);
+  border-color: rgba(225,29,46,.6);
+}
+
+.bigCenter{
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.4px;
+  margin-top:2px;
+}
+.smallCenter{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted2);
+  margin-top:6px;
+}
+
+.reportLine{
+  text-align:center;
+  font-size:14px;
+  color: rgba(255,255,255,.84);
+  padding:4px 2px 2px;
+}
+
+/* Founder feng shui helpers */
+.centerRow{
+  display:flex;
+  justify-content:center;
+}
+
+.statRow{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  text-align:center;
+}
+
+.stat{
+  flex:1;
+  padding:10px 8px;
+  border-radius:14px;
+  background: rgba(255,255,255,.03);
+}
+
+.statValue{
+  font-weight: 900;
+  letter-spacing:.2px;
+  font-size: 18px;
+}
+
+.statLabel{
+  margin-top:4px;
+  font-size: 11px;
+  opacity:.72;
+}
+
+.clickable{
+  cursor:pointer;
+}
+
+.redFlag{
+  color: rgba(225,29,46,.92);
+  font-weight: 900;
+}
+
+.ghostPill{
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  opacity:.85;
+}
+
+.artistBlock{
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.02);
+  border-radius:16px;
+  padding:12px 12px 10px;
+}
+.artistNameRow{
+  display:flex;
+  justify-content:center;
+  margin-bottom:10px;
+}
+.artistLink{
+  color: rgba(255,255,255,.92);
+  text-decoration:none;
+  font-weight:900;
+  letter-spacing:.2px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+}
+.artistLink:hover{ border-color: rgba(225,29,46,.35); }
+
+.dock{
+  margin-top:10px;
+}
+
+.bottomNav{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:10px 0 8px;
+}
+
+.tab{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.86);
+  border-radius:999px;
+  /* Make bottom nav feel proportionate to the rest of the UI */
+  padding:14px 18px;
+  min-height:48px;
+  font-family: var(--serif);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.2px;
+  cursor:pointer;
+  text-decoration:none;
+}
+.tab.active{
+  border-color: rgba(225,29,46,.40);
+  background: rgba(225,29,46,.10);
+}
+
+.brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:10px 0 0;
+}
+
+.logo{
+  width:170px;
+  height:auto;
+  opacity:.92;
+}
+.slogan{
+  font-size:12px;
+  color: var(--muted2);
+  letter-spacing:.2px;
+  text-align:center;
+}
+
+.backLink{
+  display:none;
+  text-align:center;
+  margin-top:8px;
+}
+.backLink a{
+  color: rgba(255,255,255,.78);
+  text-decoration:none;
+  font-weight:800;
+  letter-spacing:.2px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  padding:8px 12px;
+  border-radius:999px;
+}
+.backLink a:hover{ border-color: rgba(225,29,46,.35); }
+
+/* Sheet */
+.sheet{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  padding:14px 12px;
+  z-index:40;
+}
+.sheet.open{ display:flex; }
+
+.panel{
+  width:min(560px, 100%);
+  background: linear-gradient(180deg, rgba(15,17,24,.98), rgba(10,12,17,.98));
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  padding:14px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.7);
+}
+
+.panelHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.panelTitle{
+  font-weight:900;
+  letter-spacing:.2px;
+}
+.ghost{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.86);
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.refimg{
+  width:100%;
+  border-radius:14px;
+  margin-top:10px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.slogan, .est{
+  font-family: var(--serif);
+  text-transform: uppercase;
+  letter-spacing: .22em;
+  font-weight: 700;
+  text-align: center;
+}
+.est{
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(233,238,246,.44);
+  font-weight: 700;
+  text-align:center;
+}
+.slogan{
+  font-size: 12px;
+  color: rgba(255,255,255,.48);
+}

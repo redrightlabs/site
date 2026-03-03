@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Isla — Shop Onboarding</title>
+<link rel="stylesheet" href="../shared/onboarding.css?v=10" />
+</head>
+<body>
+  <main id="app" class="rr-app" aria-live="polite">
+    <section class="rr-screen" role="region" aria-label="Onboarding screen">
+      <div class="rr-space"></div>
+      <div class="rr-title" id="title"></div>
+      <div class="rr-quote" id="quote"></div>
+      <div class="rr-question" id="question"></div>
+      <div class="rr-input" id="input"></div>
+      <div class="rr-space"></div>
+
+      <div class="rr-brand">
+        <img src="/_plugins/onboarding/shared/assets/redright-logo.png" alt="RedRight" />        <div class="rr-slogan">YOUR PATH TO SAFE HARBOR</div>
+        <div class="rr-established">REDRIGHT LABS · ESTABLISHED 2025</div>
+      </div>
+
+      <button id="closeBtn" class="rr-close" type="button" aria-label="Close and pause">Close</button>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const sp = new URLSearchParams(location.search);
+  if (!sp.get('flow')) {
+    sp.set('flow', 'shop');
+    if (location.search !== `?${sp.toString()}`) {
+      location.replace(`${location.pathname}?${sp.toString()}`);
+    }
+  }
+})();
+</script>
+
+<script>window.RR_DEFAULT_FLOW = "shop";</script>
+<script>window.RR_ONBOARDING_VERTICAL_KEY = "tattoo_v2";</script>
+<script src="./screens.js"></script>
+<script src="../shared/engine.js"></script>
+</body>
+</html>

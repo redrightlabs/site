@@ -1,0 +1,40 @@
+/* Shared RedRight portal styles (base variables and defaults) */
+/*
+   This file centralises common variables for all portal pages.
+   Individual portal stylesheets (shop.css, artist.css) should import this
+   file or rely on the variables defined here. See README for usage.
+*/
+
+:root {
+  /* colour palette */
+  --bg0: #020304;
+  --ink: #070b10;
+  --text: #e9eef6;
+  --muted: rgba(233,238,246,.70);
+  --line: rgba(255,255,255,.10);
+  --rr-red: #ff2b2b;
+  --rr-red-dim: rgba(255,43,43,.12);
+  --rr-red-soft: rgba(255,43,43,.06);
+  /* layout */
+  --radius: 18px;
+  --shadow: 0 30px 90px rgba(0,0,0,.62);
+  --pad: 14px;
+  --maxw: 560px;
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+  /* keep the rest of your vars */
+}
+
+body{
+  margin:0;
+  font-family: var(--serif, ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif);  color: var(--text);/* keep the rest of your background/color the same */
+}
+/* You can add more shared base styles here if needed. */
+.est{
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.48);
+  font-weight: 700;
+  text-align:center;
+}
