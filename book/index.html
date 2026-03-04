@@ -771,8 +771,15 @@ html, body{
   opacity: .35;              /* faint */
   filter: brightness(.85) contrast(.95);
 }
+.logo-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .rr-logo {
-  height: 38px;
+  height: 46px;     /* closer to your original size */
   width: auto;
   display: block;
 }
@@ -790,7 +797,9 @@ html, body{
 
     <main class="panel panel--book" role="main">
       <header class="brand">
-<img class="rr-logo" src="/assets/redright-logo2.png" alt="RedRight">
+<div class="logo-wrap">
+  <img class="rr-logo" src="/assets/redright-logo2.png" alt="RedRight">
+</div>
 <section class="book-hero">
         <div class="book-kicker"><span class="dot"></span> Live demo request</div>
 <h1 class="book-title">See Isla work — live</h1>
