@@ -195,7 +195,7 @@ body{
   display:block;
   margin: 0 auto 8px;
 
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: .24em;
   text-transform: uppercase;
   color: rgba(233,238,246,.62);
@@ -210,7 +210,7 @@ body{
   display:block; /* FORCE 2-LINE FOOTER ALWAYS */
   margin: 0;
 
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: .20em;
   text-transform: uppercase;
 
@@ -241,7 +241,7 @@ body{
   .footer{ padding: 10px 0 6px; }
   .footer .legal-mark{ margin-bottom: 6px; }
   .footer .legal-mark,
-  .footer .footer-links{ font-size: 11px; }
+  .footer .footer-links{ font-size: 12px; }
 }
 /* BOOK PAGE — reduce fog so buoy matches index */
 .panel--book::before{
