@@ -737,18 +737,36 @@ html, body{
 }
 
 
-/* Footer spacing: no extra gap */
+/* Footer (book): readable + consistent */
 .footer{
-  margin-top: 10px;
-  padding-top: 0;
-  padding-bottom: env(safe-area-inset-bottom);
+  margin-top: 14px;
+  padding: 10px 0 env(safe-area-inset-bottom);
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 12px;
+  line-height: 1.45;
 }
-.footer, .footer * {
+.footer, .footer *{
   text-transform: none !important;
   letter-spacing: normal !important;
 }
-.footer .legal-mark{ margin: 0 0 6px; }
-.footer .footer-links{ margin: 0; gap: 14px; }
+.footer .legal-mark{
+  margin: 0 0 8px;
+  opacity: .82;
+}
+.footer .footer-links{
+  margin: 0;
+  gap: 14px;
+  font-size: 12px;
+  opacity: .88;
+}
+.footer .footer-links a{
+  color: rgba(233,238,246,.88);
+  text-decoration: none;
+}
+.footer .footer-links a:hover{
+  text-decoration: underline;
+}
 
 
 @media (max-width: 480px){
