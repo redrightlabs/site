@@ -15,12 +15,12 @@ SOURCE-OF-TRUTH STYLE: Mirrors index.html typography + batcave world layers.  [o
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="canon.css" />
-<link rel="stylesheet" href="shared/index-world.css" />
-<link rel="stylesheet" href="shared/index-page.css" />
-  <style>
-  /* TERMS PAGE (legal)
-   - Uses shared/index-world.css + shared/index-page.css for the world + buoy.
+<link rel="stylesheet" href="/shared/index-world.css" />
+<link rel="stylesheet" href="/shared/index-page.css" />  
+ <link rel="stylesheet" href="/shared/canon.css" />
+ <style>
+/* TERMS PAGE (legal)
+   - Uses /shared/index-world.css + /shared/index-page.css for the world + buoy.
    - Forces stable, readable legal typography (left aligned) on mobile.
    - Keeps headings styled, bullets normal.
 */
@@ -92,7 +92,7 @@ main.panel .copy li{ margin: 8px 0; }
   main.panel .copy{ font-size: 14px; }
   .rule{ width: 78%; }
 }
-  </style>
+</style>
 </head>
 
 <body>
@@ -101,13 +101,11 @@ main.panel .copy li{ margin: 8px 0; }
 
   <div class="wrap">
     <div class="topbar">
-      <a class="pill" href="index.html">Home</a>
-    </div>
+<a class="pill" href="/index.html">Home</a>    </div>
 
     <main class="panel panel--policy" role="main">
       <header class="brand">
-        <img class="brand-logo" src="assets/redright-logo2.png" alt="RedRight">
-        <p>Your path to safe harbor.</p>
+<img class="brand-logo" src="/assets/redright-logo2.png" alt="RedRight">        <p>Your path to safe harbor.</p>
       </header>
 
      <h1>Terms of Service</h1>
@@ -308,9 +306,9 @@ main.panel .copy li{ margin: 8px 0; }
     <footer class="footer" aria-label="Legal and links">
       <p class="legal-mark">RedRight Labs · Established 2025</p>
       <div class="footer-links">
-        <a href="privacy.html">Privacy</a><span class="sep">|</span>
-        <a href="terms.html">Terms</a><span class="sep">|</span>
-        <a href="contact.html">Contact</a>
+        <a href="/privacy.html">Privacy</a><span class="sep">|</span>
+        <a href="/terms.html">Terms</a><span class="sep">|</span>
+        <a href="/contact.html">Contact</a>
       </div>
     </footer>
   </div>
