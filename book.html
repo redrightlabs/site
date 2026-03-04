@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/canon.css" />
-  <link rel="stylesheet" href="/index-world.css" />
-  <link rel="stylesheet" href="/index-page.css" />
+<link rel="stylesheet" href="/shared/index-world.css" />
+<link rel="stylesheet" href="/shared/index-page.css" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
 
@@ -742,8 +742,12 @@ html, body{
   padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
+.footer, .footer * {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
 .footer .legal-mark{ margin: 0 0 6px; }
-.footer .footer-links{ margin: 0; }
+.footer .footer-links{ margin: 0; gap: 14px;}
 @media (max-width: 480px){
   .sms-checkbox{
     padding-left: 14px;
