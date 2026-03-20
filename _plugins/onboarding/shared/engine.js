@@ -714,7 +714,7 @@ function screenBelongsToActiveFlow(screenId) {
     if (screen.type === "end") {
       (async () => {
         try {
-          const shopId = get(state, "shop.id") || "temp-shop";
+        const shopId = get(state, "shop.id") || crypto.randomUUID();
           const logoUrl = await uploadLogoIfNeeded(state, shopId);
 
           if (logoUrl) set(state, "shop.logo_url", logoUrl);
