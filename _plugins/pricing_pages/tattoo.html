@@ -62,7 +62,7 @@
   position:absolute;
   inset:0;
   pointer-events:none;
-  background: url("../../assets/buoy_v3.png") var(--buoy-x) var(--buoy-y) / var(--buoy-size) no-repeat;
+  background: url("../../assets/buoy_v10.png") var(--buoy-x) var(--buoy-y) / var(--buoy-size) no-repeat;
   opacity: .68;                 /* keep it present but not loud */
   filter: contrast(1.08) saturate(.95) brightness(.95);
 }
@@ -316,26 +316,43 @@
       text-transform: uppercase;
       color: rgba(233,238,246,.40);
     }
+.plate-helper{
+    min-height: 34px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    text-align:center;
+    font-size: 11px;
+    line-height: 1.35;
+    letter-spacing: .08em;
+    text-transform: none;
+    color: rgba(233,238,246,.44);
+    margin-top: 10px;
+  }
 
     /* === Annual emphasis: glow behind (dominant choice) === */
-    .plate--annual{
-      overflow: visible;
-    }
+   .plate--annual{
+  overflow: visible;
+  border-color: rgba(255,43,43,.18);
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.42),
+    0 0 0 1px rgba(255,43,43,.10);
+  transform: translateY(-2px);
+}
     .plate--annual::before{
-      content:"";
-      position:absolute;
-      /* asymmetry so it feels like a beacon behind the primary choice */
-      inset:-44px -96px -60px -14px;
-      border-radius: 34px;
-      pointer-events:none;
-      z-index:-1;
-      background:
-        radial-gradient(760px 380px at 50% -4%, rgba(255,43,43,.07), transparent 72%),
-        radial-gradient(940px 540px at 38% 54%, rgba(255,43,43,.14), transparent 74%),
-        radial-gradient(520px 360px at 70% 36%, rgba(255,43,43,.09), transparent 76%);
-      filter: blur(34px);
-      opacity: .95;
-    }
+  content:"";
+  position:absolute;
+  inset:-52px -110px -72px -20px;
+  border-radius: 36px;
+  pointer-events:none;
+  z-index:-1;
+  background:
+    radial-gradient(820px 420px at 50% -6%, rgba(255,43,43,.09), transparent 72%),
+    radial-gradient(980px 560px at 38% 54%, rgba(255,43,43,.18), transparent 74%),
+    radial-gradient(560px 380px at 70% 36%, rgba(255,43,43,.12), transparent 76%);
+  filter: blur(36px);
+  opacity: 1;
+}
 
     /* ===== CTA ===== */
     .cta{
@@ -343,6 +360,8 @@
       width: 100%;
       border-radius: 16px;
       padding: 14px 14px;
+      min-height: 58px;
+      line-height: 1.15;
       background: rgba(0,0,0,.18);
       color: rgba(233,238,246,.92);
       font-family: var(--serif);
@@ -350,6 +369,9 @@
       font-weight: 950;
       letter-spacing: .14em;
       text-transform: uppercase;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       cursor: pointer;
       user-select: none;
       border: 1px solid rgba(255,255,255,.10);
@@ -407,14 +429,26 @@
         linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.10));
     }
     #rrLogo{
-      display:block;
-      width: 220px; /* bigger */
-      max-width: 70vw;
-      height:auto;
-      margin: 0 auto;
-      opacity: .82;
-      filter: drop-shadow(0 16px 44px rgba(0,0,0,.45));
-    }
+        display:block;
+        width: 220px;
+        max-width: 70vw;
+        height:auto;
+        margin: 0 auto;
+        opacity: .88;
+        filter: drop-shadow(0 16px 44px rgba(0,0,0,.45));
+        -webkit-mask-image: radial-gradient(ellipse at center,
+          rgba(0,0,0,1) 62%,
+          rgba(0,0,0,.92) 74%,
+          rgba(0,0,0,0) 100%);
+        mask-image: radial-gradient(ellipse at center,
+          rgba(0,0,0,1) 62%,
+          rgba(0,0,0,.92) 74%,
+          rgba(0,0,0,0) 100%);
+        -webkit-mask-repeat:no-repeat;
+        mask-repeat:no-repeat;
+        -webkit-mask-size:100% 100%;
+        mask-size:100% 100%;
+      }
     .rr-slogan{
       margin:0;
       font-size: 9px;
@@ -463,8 +497,8 @@
                 even when it’s busy, the work feels calm.
               </p>
 
-              <div class="line-strong-onboarding" id="m2m_onboarding">$3,000 onboarding absorbed (paid up front)</div>
-              <div class="plate-ghost" id="m2m_equiv">$21,000 total / year</div>
+              <div class="line-strong-onboarding" id="m2m_onboarding">$3,000 onboarding paid up front</div>              <div class="plate-ghost" id="m2m_equiv">$21,000 total / year</div>
+              <div class="plate-helper" id="m2m_helper">Month-to-month service. Cancel per Terms.</div>
             </div>
 
             <button class="cta" id="btn_m2m" type="button">Start month-to-month</button>
@@ -477,16 +511,16 @@
 
             <div class="plate-body">
               <div class="annual-badge-group">
-                <p class="plate-quote plate-quote--badge">Most owners choose this</p>
-                <div class="line-commitment">12-month commitment</div>
-              </div>
+              <p class="plate-quote plate-quote--badge">Most owners choose annual</p>
+              <div class="line-commitment">12-month commitment</div>              </div>
 
               <div class="line-strong-onboarding">Onboarding absorbed</div>
               <div class="plate-ghost" id="annual_equiv">$14,400 total / year</div>
+              <div class="plate-helper" id="annual_helper">12-month service commitment. Billed monthly. Renews per Terms.</div>
             </div>
 
-            <button class="cta cta--primary" id="btn_annual" type="button">Continue with annual coverage</button>
-          </article>
+          <button class="cta cta--primary" id="btn_annual" type="button">Choose annual coverage</button>
+</article>
 
         </section>
 
@@ -509,42 +543,42 @@
   const PRICING = {
     tattoo: {
       label: 'Tattoo',
-      month: { price: '$1,500 / month', onboarding: '$3,000 onboarding absorbed (paid up front)', annualEq: '$21,000 total / year' },
+      month: { price: '$1,500 / month', onboarding: '$3,000 onboarding paid up front', annualEq: '$21,000 total / year' },
       annual:{ price: '$1,200 / month', onboarding: 'Onboarding absorbed', annualEq: '$14,400 total / year' }
     },
     doggrooming: {
       label: 'Dog Grooming',
-      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding absorbed (paid up front)', annualEq: '$16,400 total / year' },
+      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding paid up front', annualEq: '$16,400 total / year' },
       annual:{ price: '$800 / month', onboarding: 'Onboarding absorbed', annualEq: '$9,600 total / year' }
     },
     dental: {
       label: 'Dental',
-      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding absorbed (paid up front)', annualEq: '$33,500 total / year' },
+      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding paid up front', annualEq: '$33,500 total / year' },
       annual:{ price: '$2,000 / month', onboarding: 'Onboarding absorbed', annualEq: '$24,000 total / year' }
     },
     medspa: {
       label: 'Med Spa',
-      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding absorbed (paid up front)', annualEq: '$40,000 total / year' },
+      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding paid up front', annualEq: '$40,000 total / year' },
       annual:{ price: '$2,400 / month', onboarding: 'Onboarding absorbed', annualEq: '$28,800 total / year' }
     },
     physicaltherapy: {
       label: 'Physical Therapy',
-      month: { price: '$2,000 / month', onboarding: '$3,000 onboarding absorbed (paid up front)', annualEq: '$27,000 total / year' },
+      month: { price: '$2,000 / month', onboarding: '$3,000 onboarding paid up front', annualEq: '$27,000 total / year' },
       annual:{ price: '$1,600 / month', onboarding: 'Onboarding absorbed', annualEq: '$19,200 total / year' }
     },
     legal: {
       label: 'Legal',
-      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding absorbed (paid up front)', annualEq: '$33,500 total / year' },
+      month: { price: '$2,500 / month', onboarding: '$3,500 onboarding paid up front', annualEq: '$33,500 total / year' },
       annual:{ price: '$2,000 / month', onboarding: 'Onboarding absorbed', annualEq: '$24,000 total / year' }
     },
     plasticsurgery: {
       label: 'Plastic Surgery',
-      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding absorbed (paid up front)', annualEq: '$40,000 total / year' },
+      month: { price: '$3,000 / month', onboarding: '$4,000 onboarding paid up front', annualEq: '$40,000 total / year' },
       annual:{ price: '$2,400 / month', onboarding: 'Onboarding absorbed', annualEq: '$28,800 total / year' }
     },
     nailsalon: {
       label: 'Nail Salon',
-      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding absorbed (paid up front)', annualEq: '$16,400 total / year' },
+      month: { price: '$1,200 / month', onboarding: '$2,000 onboarding paid up front', annualEq: '$16,400 total / year' },
       annual:{ price: '$800 / month', onboarding: 'Onboarding absorbed', annualEq: '$9,600 total / year' }
     }
   };
@@ -571,16 +605,20 @@
     const m2mPrice = document.getElementById('m2m_price');
     const m2mOnb   = document.getElementById('m2m_onboarding');
     const m2mEq    = document.getElementById('m2m_equiv');
+    const m2mHelper = document.getElementById('m2m_helper');
 
     const annPrice = document.getElementById('annual_price');
     const annEq    = document.getElementById('annual_equiv');
+    const annHelper = document.getElementById('annual_helper');
 
     if(m2mPrice) m2mPrice.innerHTML = data.month.price.replace(' / month',' <span>/ month</span>');
     if(m2mOnb)   m2mOnb.textContent = data.month.onboarding;
     if(m2mEq)    m2mEq.textContent  = data.month.annualEq;
+    if(m2mHelper) m2mHelper.textContent = 'Month-to-month service. Cancel per Terms.';
 
     if(annPrice) annPrice.innerHTML = data.annual.price.replace(' / month',' <span>/ month</span>');
     if(annEq)    annEq.textContent  = data.annual.annualEq;
+    if(annHelper) annHelper.textContent = '12-month service commitment. Billed monthly. Renews per Terms.';
   }
 
   function hook(id, choice){

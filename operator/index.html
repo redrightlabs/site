@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Operator Home · RedRight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#07080b;
+      --panel:#0f1217;
+      --text:#efe8df;
+      --muted:#a0a9b5;
+      --line:rgba(255,255,255,.08);
+      --accent:#ff4d4d;
+      --accent-line:rgba(255,77,77,.24);
+      --radius:22px;
+      --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+      --hero: "Cormorant Garamond", Garamond, Georgia, serif;
+      --sans:"Inter", sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:
+        radial-gradient(90% 50% at 50% -10%, rgba(255,77,77,.10), transparent 42%),
+        linear-gradient(180deg, #06070a 0%, #090b0f 100%);
+      color:var(--text);
+      font-family:var(--sans);
+    }
+
+    body{
+      min-height:100vh;
+      padding-bottom:120px;
+    }
+
+    .shell{
+        width:min(100%, 540px);
+        margin:0 auto;
+        padding:18px 16px 32px;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        position:relative;
+    }
+
+    .shell::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        pointer-events:none;
+        background:
+        radial-gradient(42% 18% at 50% 8%, rgba(255,77,77,.12), transparent 75%),
+        radial-gradient(55% 22% at 50% 88%, rgba(255,77,77,.08), transparent 78%);
+        filter:blur(18px);
+        opacity:.9;
+    }
+
+    .card,
+    .footer-lockup{
+        position:relative;
+        z-index:1;
+    }
+
+    .card{
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255,77,77,.08), transparent 42%),
+    linear-gradient(180deg, rgba(17,19,23,.96), rgba(13,15,19,.98));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.46),
+    0 0 32px rgba(255,77,77,.08),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 0 28px rgba(255,77,77,.035);
+}
+
+    .status-card{
+      padding:18px 18px 16px;
+    }
+
+    .status-inner{
+      width:100%;
+      max-width:360px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:10px;
+    }
+
+    .business-logo-wrap{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:
+    radial-gradient(100% 100% at 50% 20%, rgba(255,77,77,.18), rgba(255,77,77,.06)),
+    rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    0 0 28px rgba(255,77,77,.18),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.business-logo{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.business-logo-fallback{
+  font-family:var(--sans);
+  font-size:22px;
+  font-weight:700;
+  color:rgba(255,255,255,.92);
+  letter-spacing:-.02em;
+}
+
+    .beacon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      width:100%;
+      color:#ffdede;
+      font-family:var(--sans);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .beacon-dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background:var(--accent);
+    }
+
+    .beacon-dot.is-alert{
+      animation:beaconBlink 1.15s infinite;
+      box-shadow:0 0 14px rgba(255,77,77,.85);
+    }
+
+    .beacon-dot.is-calm{
+      opacity:.72;
+      box-shadow:0 0 8px rgba(255,77,77,.45);
+    }
+
+    @keyframes beaconBlink{
+      0%{ opacity:1; transform:scale(1); }
+      50%{ opacity:.28; transform:scale(.9); }
+      100%{ opacity:1; transform:scale(1); }
+    }
+
+    .business-name{
+  margin:2px 0 0;
+  color:rgba(255,255,255,.98);
+  font-family:var(--sans);
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:-.03em;
+  line-height:1.02;
+}
+
+    .status-title{
+  margin:0;
+  font-family:var(--hero);
+  font-size:34px;
+  line-height:.96;
+  font-weight:700;
+  letter-spacing:.01em;
+  text-wrap:balance;
+}
+
+    .status-copy{
+      margin:0;
+      color:rgba(235,239,245,.84);
+      font-family:var(--serif);
+      font-size:15px;
+      line-height:1.38;
+      max-width:28ch;
+      text-wrap:balance;
+    }
+
+    .cta-row{
+      display:flex;
+      justify-content:center;
+      width:100%;
+      margin-top:2px;
+    }
+
+    .cta{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--accent-line);
+      background:linear-gradient(180deg, rgba(255,77,77,.22), rgba(255,77,77,.10));
+      color:#fff0f0;
+      font-family:var(--sans);
+      font-size:12px;
+      font-weight:700;
+      line-height:1;
+      text-decoration:none;
+      box-shadow:0 8px 20px rgba(255,77,77,.12);
+    }
+
+    .section-card{
+      padding:16px 16px 14px;
+      text-align:center;
+    }
+
+    .kicker{
+      margin:0 0 6px;
+      font-family:var(--serif);
+      color:rgba(233,238,246,.72);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.20em;
+    }
+
+    .section-title{
+      margin:0;
+      font-family:var(--sans);
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:-.02em;
+      line-height:1.1;
+    }
+
+    .money-number{
+      margin:10px 0 0;
+      font-family:var(--hero);
+      font-size:48px;
+      line-height:.95;
+      font-weight:700;
+      letter-spacing:-.03em;
+    }
+
+    .money-label{
+      margin:6px 0 0;
+      font-family:var(--sans);
+      font-size:14px;
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+
+    .money-sub{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-family:var(--serif);
+      font-size:14px;
+      line-height:1.35;
+    }
+
+    .output-tally{
+      margin:10px 0 0;
+      color:rgba(235,239,245,.84);
+      font-family:var(--sans);
+      font-size:13px;
+      font-weight:600;
+      line-height:1.35;
+    }
+
+    .load-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-top:12px;
+        text-align:center;
+    }
+
+    .load-metric{
+        padding:12px 12px 10px;
+        border-radius:16px;
+        background:rgba(255,255,255,.025);
+        border:1px solid rgba(255,255,255,.05);
+        text-align:center;
+    }
+
+    .load-number{
+      margin:0 0 4px;
+      font-family:var(--sans);
+      font-size:22px;
+      font-weight:700;
+      letter-spacing:-.04em;
+      line-height:1;
+    }
+
+    .load-label{
+      margin:0;
+      color:var(--muted);
+      font-family:var(--sans);
+      font-size:12px;
+      line-height:1.3;
+    }
+
+    .footer-lockup{
+      text-align:center;
+      padding:4px 0 2px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .footer-brand{
+      font-family:var(--hero);
+      font-size:24px;
+      line-height:1;
+      letter-spacing:.04em;
+      color:rgba(233,238,246,.88);
+    }
+
+    .footer-tag{
+      font-family:var(--serif);
+      font-size:11px;
+      letter-spacing:.20em;
+      text-transform:uppercase;
+      color:rgba(233,238,246,.52);
+    }
+
+    .loading{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+      text-align:center;
+    }
+
+    .nav{
+      position:fixed;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%);
+      width:min(calc(100% - 28px), 540px);
+      z-index:20;
+    }
+
+    .nav-inner{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0, 1fr));
+      gap:6px;
+      padding:10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      background:rgba(11,13,16,.96);
+      box-shadow:0 22px 60px rgba(0,0,0,.40);
+    }
+
+    .nav-link{
+      min-height:54px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      border-radius:14px;
+      color:var(--muted);
+      text-decoration:none;
+      font-family:var(--sans);
+      font-size:11px;
+      font-weight:600;
+    }
+
+    .nav-link.active{
+      color:var(--text);
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .nav-icon{
+      font-size:16px;
+      line-height:1;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card status-card" id="status-card">
+      <div class="loading">Loading status…</div>
+    </section>
+
+    <section class="card section-card" id="money-card">
+      <div class="loading">Loading value…</div>
+    </section>
+
+    <section class="card section-card" id="output-card">
+      <div class="loading">Loading Isla output…</div>
+    </section>
+
+    <section class="card section-card" id="today-card">
+      <div class="loading">Loading today…</div>
+    </section>
+
+    <footer class="footer-lockup">
+      <div class="footer-brand">REDRIGHT</div>
+      <div class="footer-tag">Your path to safe harbor</div>
+    </footer>
+  </main>
+
+  <nav class="nav" aria-label="Operator navigation">
+    <div class="nav-inner">
+      <a class="nav-link active" href="/operator/index.html"><span class="nav-icon">⌂</span><span>Home</span></a>
+      <a class="nav-link" href="/operator/projects.html"><span class="nav-icon">◫</span><span>Projects</span></a>
+      <a class="nav-link" href="/operator/calendar.html"><span class="nav-icon">☷</span><span>Calendar</span></a>
+      <a class="nav-link" href="/operator/team.html"><span class="nav-icon">◌</span><span>Team</span></a>
+      <a class="nav-link" href="/operator/settings.html"><span class="nav-icon">⚙</span><span>Settings</span></a>
+    </div>
+  </nav>
+
+  <script>
+    window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard";
+
+    const FALLBACK_OPERATOR_DATA = {
+      shopName: "Black Harbor Tattoo",
+       logoUrl: "",
+      impact: {
+        influencedRevenue: "$740",
+        lifecycleActions: "6",
+        attentionCount: "1"
+      },
+      recentActions: [
+        { title: "CareWatch sent" },
+        { title: "Review request sent" },
+        { title: "Rebooking nudge sent" },
+        { title: "CareWatch sent" },
+        { title: "Review request sent" },
+        { title: "CareWatch sent" }
+      ],
+      activeProjects: [
+        { stateClass: "is-done" },
+        { stateClass: "is-upcoming" }
+      ]
+    };
+
+    const els = {
+      status: document.getElementById("status-card"),
+      money: document.getElementById("money-card"),
+      output: document.getElementById("output-card"),
+      today: document.getElementById("today-card")
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderStatus(data) {
+  const businessName = data.shopName || "Your Business";
+  const logoUrl = data.logoUrl || data.shopLogoUrl || "";
+  const attentionCount = Number(data?.impact?.attentionCount || 0);
+  const actionsCount = Number(data?.impact?.lifecycleActions || 0);
+
+  let title = "";
+  let copy = "";
+  let cta = "";
+
+  if (attentionCount > 0) {
+    title = "One thing needs you";
+    copy = "1 item still needs to be closed out. Everything else is handled for you.";
+    cta = "Handle it";
+  } else if (actionsCount > 0) {
+    title = "All clear";
+    copy = `Nothing important needs you right now. Isla already handled ${actionsCount} things for you today.`;
+    cta = "View today";
+  } else {
+    title = "All clear";
+    copy = "Nothing important needs you right now.";
+    cta = "View today";
+  }
+
+  const alertClass = attentionCount > 0 ? "is-alert" : "is-calm";
+  const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
+
+  const logoMarkup = logoUrl
+    ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)} logo"></div>`
+    : `<div class="business-logo-wrap business-logo-fallback">${escapeHtml(businessName.charAt(0))}</div>`;
+
+  els.status.innerHTML = `
+    <div class="status-inner">
+      <div class="beacon">
+        <span class="beacon-dot ${alertClass}"></span>
+        ${escapeHtml(beaconText)}
+      </div>
+
+      ${logoMarkup}
+
+      <p class="business-name">${escapeHtml(businessName)}</p>
+      <h1 class="status-title">${escapeHtml(title)}</h1>
+      <p class="status-copy">${escapeHtml(copy)}</p>
+
+      <div class="cta-row">
+        <a class="cta" href="#">${escapeHtml(cta)}</a>
+      </div>
+    </div>
+  `;
+}
+
+    function renderMoney(data) {
+      const impact = data.impact || {};
+      const revenueLabel = impact.influencedRevenue || "$0";
+      const actionsCount = Number(impact.lifecycleActions || 0);
+
+      els.money.innerHTML = `
+        <p class="kicker">What Isla added</p>
+        <div class="money-number">${escapeHtml(revenueLabel)}</div>
+        <p class="money-label">Added by Isla today</p>
+        <p class="money-sub">${actionsCount} client conversations moved forward</p>      `;
+    }
+
+    function renderOutput(data) {
+      const actions = Array.isArray(data.recentActions) ? data.recentActions : [];
+      const total = actions.length;
+      const reviewCount = actions.filter((item) => /review/i.test(item.title || "")).length;
+      const rebookingCount = actions.filter((item) => /rebook/i.test(item.title || "")).length;
+      const followupCount = Math.max(0, total - reviewCount - rebookingCount);
+
+      els.output.innerHTML = `
+        <p class="kicker">What Isla handled</p>
+        <h2 class="section-title">Isla handled ${total} things lately</h2>
+        <p class="output-tally">Follow-ups ${followupCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
+      `;
+    }
+
+    function renderToday(data) {
+      const projects = Array.isArray(data.activeProjects) ? data.activeProjects : [];
+      const today = projects.length;
+      const finished = projects.filter((p) => p.stateClass === "is-done").length;
+      const open = Math.max(0, today - finished);
+      const week = today * 3;
+
+      els.today.innerHTML = `
+        <p class="kicker">Today</p>
+        <h2 class="section-title">Your day at a glance</h2>
+        <div class="load-grid">
+          <div class="load-metric">
+            <p class="load-number">${today}</p>
+            <p class="load-label">Appointments today</p>
+          </div>
+          <div class="load-metric">
+            <p class="load-number">${week}</p>
+            <p class="load-label">Scheduled this week</p>
+          </div>
+          <div class="load-metric">
+            <p class="load-number">${open}</p>
+            <p class="load-label">Still open today</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderView(data) {
+      renderStatus(data);
+      renderMoney(data);
+      renderOutput(data);
+      renderToday(data);
+    }
+
+    async function loadOperatorData() {
+      if (!window.OPERATOR_DATA_URL) return FALLBACK_OPERATOR_DATA;
+
+      const response = await fetch(window.OPERATOR_DATA_URL, {
+        headers: { Accept: "application/json" }
+      });
+
+      if (!response.ok) throw new Error(`Operator data fetch failed: ${response.status}`);
+      return response.json();
+    }
+
+    (async function init() {
+      try {
+        const data = await loadOperatorData();
+        renderView(data || FALLBACK_OPERATOR_DATA);
+      } catch (error) {
+        console.error("Operator view load failed:", error);
+        renderView(FALLBACK_OPERATOR_DATA);
+      }
+    })();
+  </script>
+</body>
+</html>

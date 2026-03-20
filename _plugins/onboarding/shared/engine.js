@@ -87,6 +87,10 @@ if (ACTIVE_FLOW !== "artist" && ACTIVE_FLOW !== "shop") ACTIVE_FLOW = "shop";
   const $closeBtn = el("closeBtn");
 
   const hasUI = !!($title && $quote && $question && $input);
+  // Session-only draft assets (do not persist to localStorage)
+const SESSION_FILES = {
+  shopLogo: null,
+};
 
   function assertUI() {
     if (hasUI) return true;
@@ -139,6 +143,71 @@ if (ACTIVE_FLOW !== "artist" && ACTIVE_FLOW !== "shop") ACTIVE_FLOW = "shop";
     state[key] = value;
     saveState(state);
   }
+
+  function setLogoDraft(state, file) {
+  if (!file) return;
+
+  // Keep the real File in memory for this browser session only.
+  SESSION_FILES.shopLogo = file;
+
+  // Persist only lightweight metadata in localStorage-backed state.
+  set(state, "shop.logo.asset_id", `local://${file.name}`);
+  try {
+    const previewUrl = URL.createObjectURL(file);
+    set(state, "shop.logo.preview_url", previewUrl);
+  } catch (e) {
+    console.warn("[RR Onboarding] Failed to create logo preview URL", e);
+  }
+}
+
+  async function uploadLogoIfNeeded(state, shopId) {
+  const file = SESSION_FILES.shopLogo;
+  if (!file) return get(state, "shop.logo_url") || null;
+
+  const base64Logo = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const payload = {
+    ...state,
+    shop: {
+      ...(state.shop || {}),
+      id: shopId,
+      name: get(state, "shop.name") || get(state, "shop.business_name") || "Unnamed Business",
+      logo: {
+        file: base64Logo,
+      },
+    },
+  };
+
+  const res = await fetch("/supabase/functions/save-onboarding", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`save-onboarding failed: ${res.status} ${text}`);
+  }
+
+  const result = await res.json();
+
+  if (result?.logoUrl) {
+    set(state, "shop.logo_url", result.logoUrl);
+  }
+
+  if (result?.shopId) {
+    set(state, "shop.id", result.shopId);
+  }
+
+  return result?.logoUrl || null;
+}
 
   // -------------------------
   // UI builders
@@ -643,17 +712,34 @@ function screenBelongsToActiveFlow(screenId) {
     setMultiline($question, screen.question);
 
     if (screen.type === "end") {
-  // End screens must remain operable: keep Close visible.
-  if ($closeBtn) {
-    $closeBtn.style.display = "";
-    $closeBtn.textContent = "Close";
-    $closeBtn.dataset.mode = "done";
-  }
-  clearInput();
-  delete state._last_screen;
-  saveState(state);
-  return;
-}
+      (async () => {
+        try {
+          const shopId = get(state, "shop.id") || "temp-shop";
+          const logoUrl = await uploadLogoIfNeeded(state, shopId);
+
+          if (logoUrl) set(state, "shop.logo_url", logoUrl);
+          if (!get(state, "shop.id")) set(state, "shop.id", shopId);
+
+          console.log("ONBOARDING SAVED:", {
+            shopId: get(state, "shop.id"),
+            logoUrl: get(state, "shop.logo_url"),
+          });
+        } catch (e) {
+          console.error("Finalization failed:", e);
+        }
+      })();
+
+      if ($closeBtn) {
+        $closeBtn.style.display = "";
+        $closeBtn.textContent = "Close";
+        $closeBtn.dataset.mode = "done";
+      }
+
+      clearInput();
+      delete state._last_screen;
+      saveState(state);
+      return;
+    }
 
 if ($closeBtn) {
   $closeBtn.style.display = "";
@@ -826,6 +912,7 @@ if ($closeBtn) {
     const fieldId = screen.upload?.field_id;
     const required = !!screen.upload?.required;
     const existing = fieldId ? get(state, fieldId) : "";
+    const existingPreview = get(state, "shop.logo.preview_url") || "";
 
     const inp = document.createElement("input");
     inp.type = "file";
@@ -836,14 +923,30 @@ if ($closeBtn) {
     inp.style.fontSize = "15px";
     inp.style.padding = "10px 2px";
 
-    if (existing) $input.appendChild(mkNote(`Current: ${existing}`));
-    $input.appendChild(inp);
+if (existing) $input.appendChild(mkNote("Logo selected for this onboarding session."));
+
+if (existingPreview) {
+  const img = document.createElement("img");
+  img.src = existingPreview;
+  img.alt = "Selected logo preview";
+  img.style.width = "84px";
+  img.style.height = "84px";
+  img.style.objectFit = "cover";
+  img.style.borderRadius = "18px";
+  img.style.border = "1px solid rgba(233,230,223,.10)";
+  img.style.margin = "4px auto 10px";
+  img.style.display = "block";
+  $input.appendChild(img);
+} 
+   $input.appendChild(inp);
 
     const cont = mkBtn("Continue", { primary: true });
     cont.addEventListener("click", () => {
       const file = inp.files && inp.files[0];
       if (required && !file && !existing) return alert("Please upload a logo.");
-      if (file && fieldId) set(state, fieldId, `local://${file.name}`); // placeholder token
+      if (file && fieldId) {
+        setLogoDraft(state, file);
+      }
       goNext(screen, state);
     });
 

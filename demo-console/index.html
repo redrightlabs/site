@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Isla Live System Console</title>
+
+<link rel="stylesheet" href="console.css">
+
+</head>
+
+<body>
+
+<div class="console">
+
+<!-- HEADER -->
+
+<header class="console-header">
+
+<div class="header-left">
+<div class="isla-beacon"></div>
+<div class="system-title">ISLA LIVE SYSTEM</div>
+</div>
+
+<div class="header-center">
+  <div class="status-cluster">
+    <span class="status-short status-pill" id="status-live">Live</span>
+    <span class="status-sep">·</span>
+    <span class="status-short status-pill" id="status-msg">Messaging Ready</span>
+    <span class="status-sep">·</span>
+    <span class="status-short status-pill" id="status-cal">Calendar Synced</span>
+  </div>
+</div>
+
+<div class="header-right">
+<div class="demo-number">Demo Line</div>
+<div class="phone-number">(843) 555-0182</div>
+<div class="call-instruction">Call to begin</div>
+</div>
+
+</header>
+
+
+
+<!-- MAIN OPERATIONS AREA -->
+
+<div class="journey-rail">
+  <div class="journey-step active">Call Intake</div>
+  <div class="journey-step">Discovery</div>
+  <div class="journey-step">Review Packet</div>
+  <div class="journey-step">ProjectFlow</div>
+  <div class="journey-step">Confirmation</div>
+  <div class="journey-step">Arrival</div>
+  <div class="journey-step">CareWatch</div>
+  <div class="journey-step">Portfolio</div>
+</div>
+
+<div class="console-main">
+  <div class="calendar">
+    <div class="calendar-heading">
+  <h3>ProjectFlow Planner</h3>
+  <div class="planner-sub">Multi-session scheduling + Isla actions</div>
+</div>
+<div class="calendar-grid month-grid" id="calendar-grid"></div>
+  </div>
+
+  <div class="operations">
+    <h3>Live Operations</h3>
+    <div class="operations-log" id="operations-log">
+      <div class="log-entry">System initialized</div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- CONTROL STRIP -->
+
+<div class="console-controls">
+  <div class="controls">
+    <button class="control-btn" id="mode-demo">Demo</button>
+    <button class="control-btn" id="mode-live">Live</button>
+    <button class="control-btn">24-Hour Prep</button>
+    <button class="control-btn">Arrival / HERE</button>
+    <button class="control-btn" id="done-trigger">Done?</button>
+    <button class="control-btn">CareWatch</button>
+    <button class="control-btn">Review Request</button>
+    <button class="control-btn">Portfolio</button>
+  </div>
+
+  <div class="revenue">
+    <div class="revenue-label">Estimated Revenue Coordinated</div>
+    <div class="revenue-value">$0</div>
+  </div>
+
+  <div class="signature">
+    <img class="brand-logo" src="../assets/redright-logo.png" alt="RedRight">
+    <div class="tagline">Your path to safe harbor</div>
+  </div>
+</div>
+
+</div>
+
+<script src="../js/createProject.js"></script>
+<script src="console.js"></script>
+
+</body>
+</html>

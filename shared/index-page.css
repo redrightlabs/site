@@ -267,3 +267,27 @@ body{
     will-change: auto !important;    /* <-- REMOVE will-change */
   }
 }
+/* ===== ORION FONT LOCK (DASHBOARD) ===== */
+
+h1, h2, h3 {
+  font-family: var(--hero) !important;
+  letter-spacing: 0.01em;
+}
+
+body, p, span, div {
+  font-family: var(--serif) !important;
+}
+
+/* tighten numbers + stats */
+.stat, .metric, .value {
+  font-family: var(--serif) !important;
+  letter-spacing: 0.02em;
+}
+
+/* labels feel premium */
+.section-label, .eyebrow {
+  font-family: var(--serif);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
