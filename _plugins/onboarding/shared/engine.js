@@ -183,7 +183,7 @@ const SESSION_FILES = {
     },
   };
 
-  const res = await fetch("/supabase/functions/save-onboarding", {
+  const res = await fetch("https://uwydiqltvchlmjvzwkal.supabase.co/functions/v1/save-onboarding", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
