@@ -421,15 +421,18 @@
   </nav>
 
   <script>
-    window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard";
-
+    window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard?shopId=LATEST";
     const FALLBACK_OPERATOR_DATA = {
       shopName: "Black Harbor Tattoo",
-       logoUrl: "",
+      rosterCount: 3,
+      hoursMode: "weekly",
+      ownerIsProvider: false,
+      logoUrl: "",
       impact: {
         influencedRevenue: "$740",
         lifecycleActions: "6",
-        attentionCount: "1"
+        attentionCount: "1",
+        teamSize: "3"
       },
       recentActions: [
         { title: "CareWatch sent" },
@@ -466,10 +469,13 @@
   const logoUrl = data.logoUrl || data.shopLogoUrl || "";
   const attentionCount = Number(data?.impact?.attentionCount || 0);
   const actionsCount = Number(data?.impact?.lifecycleActions || 0);
+  const rosterCount = Number(data?.rosterCount || data?.impact?.teamSize || 0);
+  const hoursMode = data?.hoursMode || "";
 
   let title = "";
   let copy = "";
   let cta = "";
+  let supportLine = "";
 
   if (attentionCount > 0) {
     title = "One thing needs you";
@@ -484,6 +490,12 @@
     copy = "Nothing important needs you right now.";
     cta = "View today";
   }
+
+  const supportBits = [];
+  if (rosterCount > 0) supportBits.push(`${rosterCount} on your team`);
+  if (hoursMode === "weekly") supportBits.push("hours configured");
+  if (hoursMode === "varies") supportBits.push("hours vary week to week");
+  supportLine = supportBits.join(" • ");
 
   const alertClass = attentionCount > 0 ? "is-alert" : "is-calm";
   const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
@@ -504,7 +516,7 @@
       <p class="business-name">${escapeHtml(businessName)}</p>
       <h1 class="status-title">${escapeHtml(title)}</h1>
       <p class="status-copy">${escapeHtml(copy)}</p>
-
+      ${supportLine ? `<p class="output-tally">${escapeHtml(supportLine)}</p>` : ""}
       <div class="cta-row">
         <a class="cta" href="#">${escapeHtml(cta)}</a>
       </div>
@@ -516,12 +528,14 @@
       const impact = data.impact || {};
       const revenueLabel = impact.influencedRevenue || "$0";
       const actionsCount = Number(impact.lifecycleActions || 0);
+      const teamSize = Number(impact.teamSize || data.rosterCount || 0);
 
       els.money.innerHTML = `
         <p class="kicker">What Isla added</p>
         <div class="money-number">${escapeHtml(revenueLabel)}</div>
         <p class="money-label">Added by Isla today</p>
-        <p class="money-sub">${actionsCount} client conversations moved forward</p>      `;
+        <p class="money-sub">${actionsCount} client conversations moved forward</p>
+        ${teamSize > 0 ? `<p class="output-tally">${teamSize} team members connected</p>` : ""}      `;
     }
 
     function renderOutput(data) {
@@ -544,6 +558,8 @@
       const finished = projects.filter((p) => p.stateClass === "is-done").length;
       const open = Math.max(0, today - finished);
       const week = today * 3;
+      const rosterCount = Number(data?.rosterCount || 0);
+      const weekCount = Number.isFinite(Number(data?.thisWeekCount)) ? Number(data.thisWeekCount) : week;
 
       els.today.innerHTML = `
         <p class="kicker">Today</p>
@@ -554,7 +570,7 @@
             <p class="load-label">Appointments today</p>
           </div>
           <div class="load-metric">
-            <p class="load-number">${week}</p>
+            <p class="load-number">${weekCount}</p>
             <p class="load-label">Scheduled this week</p>
           </div>
           <div class="load-metric">
@@ -562,6 +578,7 @@
             <p class="load-label">Still open today</p>
           </div>
         </div>
+        ${rosterCount > 0 ? `<p class="output-tally">${rosterCount} team members in system</p>` : ""}
       `;
     }
 
