@@ -86,6 +86,24 @@ function titleCase(value: string) {
     .join(" ");
 }
 
+function verticalLabelFromValue(vertical?: string | null) {
+  const normalized = String(vertical || "").trim().toLowerCase();
+
+  if (normalized === "tattoo" || normalized === "tattoo_v2") {
+    return "Tattoo Operator · Shop Portal";
+  }
+
+  if (normalized === "medspa") {
+    return "MedSpa Operator · Shop Portal";
+  }
+
+  if (normalized === "dental") {
+    return "Dental Operator · Shop Portal";
+  }
+
+  return "Operator · Shop Portal";
+}
+
 function summarizeProject(project: any) {
   const chips: string[] = [];
 
@@ -190,6 +208,22 @@ function buildAttention(projects: any[], latestRun: any) {
 }
 
 async function buildOperatorDashboardPayload() {
+  const shops = await fetchJson("/rest/v1/shops?select=id,name,logo_url,vertical,created_at&order=created_at.desc&limit=1");
+  const shop = Array.isArray(shops) ? shops[0] : null;
+
+  const shopId = shop?.id;
+
+  let shopSettings = null;
+  let roster = [] as any[];
+
+  if (shopId) {
+    const settingsRows = await fetchJson(`/rest/v1/shop_settings?shop_id=eq.${shopId}&select=hours_mode,hours_template,owner_is_provider,updated_at&limit=1`);
+    shopSettings = Array.isArray(settingsRows) ? settingsRows[0] : null;
+
+    const rosterRows = await fetchJson(`/rest/v1/shop_roster?shop_id=eq.${shopId}&select=id,name,phone,role`);
+    roster = Array.isArray(rosterRows) ? rosterRows : [];
+  }
+
   const workerRuns = await fetchJson("/rest/v1/worker_runs?worker_name=eq.process-due-actions&order=created_at.desc&limit=10");
   const latestRun = Array.isArray(workerRuns) ? workerRuns[0] : null;
 
@@ -221,8 +255,14 @@ async function buildOperatorDashboardPayload() {
   const attentionItems = buildAttention(projects, latestRun);
 
   return {
-    shopName: "Black Harbor Tattoo",
-    verticalLabel: "Tattoo Operator · Shop Portal",
+    shopId: shop?.id || null,
+    shopName: shop?.name || "Your Business",
+    logoUrl: shop?.logo_url || "",
+    verticalLabel: verticalLabelFromValue(shop?.vertical),
+    hoursMode: shopSettings?.hours_mode || null,
+    hoursTemplate: shopSettings?.hours_template || null,
+    ownerIsProvider: shopSettings?.owner_is_provider ?? null,
+    rosterCount: roster.length,
     engine: {
       status: latestRun?.status === "error" ? "Attention" : "Running",
       lastRunLabel: timeAgoLabel(latestRun?.ran_at),
@@ -235,6 +275,7 @@ async function buildOperatorDashboardPayload() {
       influencedRevenue: `$${(lifecycleActionCount * 120).toLocaleString()}`,
       lifecycleActions: String(lifecycleActionCount),
       attentionCount: String(attentionItems.filter((item) => item.chipClass).length),
+      teamSize: String(roster.length),
     },
     recentActions,
     nextActions: buildNextActions(projects),
