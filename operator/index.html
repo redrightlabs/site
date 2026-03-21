@@ -264,6 +264,7 @@
         0 0 32px rgba(255,77,77,.08),
         inset 0 1px 0 rgba(255,255,255,.04);
       padding:18px 18px 16px;
+      max-height:min(80vh, 760px);
     }
 
     .handle-topline{
@@ -370,12 +371,18 @@
     }
 
     .activity-list{
-      margin-top:16px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
+  margin-top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow:auto;
+  padding-right:2px;
+}
+.section-action-row{
+  display:flex;
+  justify-content:center;
+  margin-top:12px;
+}
     .activity-item{
       padding:12px 12px 10px;
       border-radius:16px;
@@ -770,7 +777,7 @@
       const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
       const actions = Array.isArray(data?.recentActions) ? data.recentActions : [];
 
-      els.activityTitle.textContent = "Here’s what Isla handled today.";
+      els.activityTitle.textContent = `Here’s what Isla handled${actions.length ? ` (${actions.length})` : ""}.`;
       els.activityCopy.textContent = actions.length
         ? "A fuller look at what moved forward for the shop."
         : "Nothing has been logged yet today.";
@@ -847,11 +854,11 @@
     cta = "Handle it";
     currentStatusAction = "attention";
   } else if (isHandling) {
-    title = "Handled";
-    copy = attentionItem.subtitle || "Isla is already taking care of this for you.";
-    cta = "";
-    currentStatusAction = "";
-  } else if (actionsCount > 0) {
+  title = "All clear";
+  copy = attentionItem.subtitle || "Isla already has this in motion for you.";
+  cta = "";
+  currentStatusAction = "";
+} else if (actionsCount > 0) {
     title = "All clear";
     copy = `Nothing important needs you right now. Isla already handled ${actionsCount} things for you today.`;
     cta = "See activity";
@@ -906,18 +913,32 @@
     }
 
     function renderOutput(data) {
-      const actions = Array.isArray(data.recentActions) ? data.recentActions : [];
-      const total = actions.length;
-      const reviewCount = actions.filter((item) => /review/i.test(item.title || "")).length;
-      const rebookingCount = actions.filter((item) => /rebook/i.test(item.title || "")).length;
-      const followupCount = Math.max(0, total - reviewCount - rebookingCount);
+  const actions = Array.isArray(data.recentActions) ? data.recentActions : [];
+  const total = actions.length;
+  const reviewCount = actions.filter((item) => /review/i.test(item.title || "")).length;
+  const rebookingCount = actions.filter((item) => /rebook/i.test(item.title || "")).length;
+  const followupCount = Math.max(0, total - reviewCount - rebookingCount);
+  const showActivityButton = total > 0;
 
-      els.output.innerHTML = `
-        <p class="kicker">What Isla handled</p>
-        <h2 class="section-title">Isla handled ${total} things lately</h2>
-        <p class="output-tally">Follow-ups ${followupCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
-      `;
-    }
+  els.output.innerHTML = `
+    <p class="kicker">What Isla handled</p>
+    <h2 class="section-title">Isla handled ${total} things lately</h2>
+    <p class="output-tally">Follow-ups ${followupCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
+    ${showActivityButton ? `
+    <div class="section-action-row">
+      <button class="cta-button" type="button" id="activity-trigger">View details</button>
+    </div>
+    ` : ""}
+  `;
+
+  const activityTrigger = document.getElementById("activity-trigger");
+  if (activityTrigger) {
+    activityTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      openActivityFlow();
+    });
+  }
+}
 
     function renderToday(data) {
       const projects = Array.isArray(data.activeProjects) ? data.activeProjects : [];
