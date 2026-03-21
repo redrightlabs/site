@@ -572,13 +572,8 @@
   <div class="handle-overlay" id="handle-overlay" aria-hidden="true">
     <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="handle-title">
       <p class="handle-topline">Handle it</p>
-      <h2 class="handle-title" id="handle-title">One item needs you</h2>
-      <p class="handle-copy" id="handle-copy">Tell Isla what to do next.</p>
-
-      <div class="handle-panel">
-        <p class="handle-label">Situation</p>
-        <p class="handle-value" id="handle-situation">An appointment still needs to be closed out.</p>
-      </div>
+      <h2 class="handle-title" id="handle-title">Appointment close-out still open</h2>
+      <p class="handle-copy" id="handle-copy">An appointment hasn’t been closed out yet.</p>
 
       <div class="handle-panel">
         <p class="handle-label">Recommended action</p>
@@ -640,7 +635,6 @@
       handleOverlay: document.getElementById("handle-overlay"),
       handleTitle: document.getElementById("handle-title"),
       handleCopy: document.getElementById("handle-copy"),
-      handleSituation: document.getElementById("handle-situation"),
       handleRecommendation: document.getElementById("handle-recommendation"),
       handleCancel: document.getElementById("handle-cancel"),
       handleConfirm: document.getElementById("handle-confirm"),
@@ -667,9 +661,9 @@
       const attentionCount = Number(data?.impact?.attentionCount || 0);
       if (attentionCount > 0) {
         return [{
-          title: "Appointment needs decision",
+          title: "Appointment close-out still open",
           body: "An appointment hasn’t been closed out yet.",
-          recommendation: "Send it to Isla so she can close it out and move it forward.",
+          recommendation: "Send it to Isla so she can close out the appointment and move the project forward.",
           actionLabel: "Send to Isla"
         }];
       }
@@ -694,11 +688,10 @@
       };
 
       currentHandleItem = item;
-      els.handleTitle.textContent = item.title || "Needs your decision";
-      els.handleCopy.textContent = item.body || "An item is waiting on your decision.";
-      els.handleSituation.textContent = item.title || "An appointment still needs your decision.";
-      els.handleRecommendation.textContent = item.recommendation || "Mark the project complete and move Isla forward.";
-      els.handleConfirm.textContent = item.actionLabel || "Mark handled";
+      els.handleTitle.textContent = item.title || "Appointment close-out still open";
+      els.handleCopy.textContent = item.body || "An appointment hasn’t been closed out yet.";
+      els.handleRecommendation.textContent = item.recommendation || "Send it to Isla so she can close out the appointment and move the project forward.";
+      els.handleConfirm.textContent = item.actionLabel || "Send to Isla";
       els.handleResult.textContent = "";
       els.handleOverlay.classList.add("is-open");
       els.handleOverlay.setAttribute("aria-hidden", "false");
