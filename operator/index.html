@@ -755,6 +755,7 @@ function getActionsSinceLastLook(data) {
     let currentOperatorData = null;
     let currentHandleItem = null;
     let currentStatusAction = "";
+    let currentActivityMode = "new";
 
     function getAttentionItems(data) {
   const attentionCount = Number(data?.impact?.attentionCount || 0);
@@ -809,13 +810,20 @@ function getActionsSinceLastLook(data) {
   els.activityOverlay.classList.remove("is-open");
   els.activityOverlay.setAttribute("aria-hidden", "true");
   els.activityList.innerHTML = "";
-  setActivityLastViewedAt(new Date().toISOString());
+
+  if (currentActivityMode === "new") {
+    setActivityLastViewedAt(new Date().toISOString());
+  }
+
+  const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
+  renderOutput(data);
 }
 
 function openActivityFlow(mode = "new") {
   const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
   const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
   const actions = mode === "today" ? allActions : getActionsSinceLastLook(data);
+  currentActivityMode = mode;
 
   if (mode === "today") {
     els.activityTitle.textContent = `Here’s what Isla handled today${actions.length ? ` (${actions.length})` : ""}.`;
@@ -975,7 +983,7 @@ function openActivityFlow(mode = "new") {
       const reviewCount = Number(breakdown.review || 0);
       const rebookingCount = Number(breakdown.rebooking || 0);
       const newCount = newActions.length;
-      const showTodayButton = totalToday > 0;
+      const showTodayButton = true;
       const showNewButton = newCount > 0;
 
       els.output.innerHTML = `
