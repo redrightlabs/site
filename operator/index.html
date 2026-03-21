@@ -573,7 +573,7 @@
     <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="handle-title">
       <p class="handle-topline">Handle it</p>
       <h2 class="handle-title" id="handle-title">One item needs you</h2>
-      <p class="handle-copy" id="handle-copy">Review what happened and clear it in one step.</p>
+      <p class="handle-copy" id="handle-copy">Tell Isla what to do next.</p>
 
       <div class="handle-panel">
         <p class="handle-label">Situation</p>
@@ -587,7 +587,7 @@
 
       <div class="handle-actions">
         <button class="handle-secondary" type="button" id="handle-cancel">Not now</button>
-        <button class="handle-primary" type="button" id="handle-confirm">Mark handled</button>
+        <button class="handle-primary" type="button" id="handle-confirm">Send to Isla</button>
       </div>
 
       <p class="handle-result" id="handle-result"></p>
@@ -668,9 +668,9 @@
       if (attentionCount > 0) {
         return [{
           title: "Appointment close-out still open",
-          body: "One appointment still needs to be marked complete before Isla can move on.",
-          recommendation: "Mark the project complete and clear today’s last open item.",
-          actionLabel: "Mark handled"
+          body: "One appointment still needs your decision.",
+          recommendation: "Tell Isla to send the close-out follow-up and move the project forward.",
+          actionLabel: "Send to Isla"
         }];
       }
 
@@ -690,13 +690,13 @@
         title: "Everything is clear",
         body: "There is nothing urgent waiting on you right now.",
         recommendation: "You can stay in Home or move into Projects for detail.",
-        actionLabel: "Handled"
+        actionLabel: "Close"
       };
 
       currentHandleItem = item;
       els.handleTitle.textContent = item.title || "One item needs you";
-      els.handleCopy.textContent = item.body || "Review what happened and clear it in one step.";
-      els.handleSituation.textContent = item.body || "An appointment still needs to be closed out.";
+      els.handleCopy.textContent = item.body || "Tell Isla what to do next.";
+      els.handleSituation.textContent = item.title || "An appointment still needs your decision.";
       els.handleRecommendation.textContent = item.recommendation || "Mark the project complete and move Isla forward.";
       els.handleConfirm.textContent = item.actionLabel || "Mark handled";
       els.handleResult.textContent = "";
@@ -857,11 +857,11 @@
         return;
       }
 
-      els.handleResult.textContent = "Handled ✔ Isla can move forward.";
+      els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
 
       window.setTimeout(() => {
         closeHandleFlow();
-      }, 900);
+      }, 1100);
     });
 
     (async function init() {
