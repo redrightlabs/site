@@ -812,20 +812,27 @@ function getActionsSinceLastLook(data) {
   setActivityLastViewedAt(new Date().toISOString());
 }
 
-    function openActivityFlow() {
+function openActivityFlow(mode = "new") {
   const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
   const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
-  const actions = getActionsSinceLastLook(data);
+  const actions = mode === "today" ? allActions : getActionsSinceLastLook(data);
 
-  els.activityTitle.textContent = actions.length
-    ? `Here’s what Isla has handled since your last look (${actions.length}).`
-    : "Nothing new since your last look.";
+  if (mode === "today") {
+    els.activityTitle.textContent = `Here’s what Isla handled today${actions.length ? ` (${actions.length})` : ""}.`;
+    els.activityCopy.textContent = actions.length
+      ? "An expanded look at everything Isla moved forward today."
+      : "Nothing has been logged yet today.";
+  } else {
+    els.activityTitle.textContent = actions.length
+      ? `Here’s what Isla has handled since your last look (${actions.length}).`
+      : "Nothing new since your last look.";
 
-  els.activityCopy.textContent = actions.length
-    ? "An expanded look at what moved forward for the shop."
-    : (allActions.length
-        ? "You’re already caught up."
-        : "Nothing has been logged yet today.");
+    els.activityCopy.textContent = actions.length
+      ? "An expanded look at what moved forward for the shop."
+      : (allActions.length
+          ? "You’re already caught up."
+          : "Nothing has been logged yet today.");
+  }
 
   els.activityList.innerHTML = actions.length
     ? actions.map((item) => `
@@ -837,8 +844,10 @@ function getActionsSinceLastLook(data) {
     `).join("")
     : `
       <div class="activity-item">
-        <p class="activity-title">Nothing new to review</p>
-        <p class="activity-subtitle">Once Isla handles more work, it will appear here until you’ve looked.</p>
+        <p class="activity-title">${mode === "today" ? "Nothing logged yet today" : "Nothing new to review"}</p>
+        <p class="activity-subtitle">${mode === "today"
+          ? "As Isla handles work today, it will show up here."
+          : "Once Isla handles more work, it will appear here until you’ve looked."}</p>
       </div>
     `;
 
@@ -966,25 +975,35 @@ function getActionsSinceLastLook(data) {
       const reviewCount = Number(breakdown.review || 0);
       const rebookingCount = Number(breakdown.rebooking || 0);
       const newCount = newActions.length;
-      const showActivityButton = newCount > 0;
+      const showTodayButton = totalToday > 0;
+      const showNewButton = newCount > 0;
 
       els.output.innerHTML = `
         <p class="kicker">What Isla handled</p>
         <h2 class="section-title">Isla handled ${totalToday} things today</h2>
         <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
         ${newCount > 0 ? `<p class="output-tally">${newCount} new since your last look</p>` : `<p class="output-tally">You’re all caught up</p>`}
-        ${showActivityButton ? `
-        <div class="section-action-row">
-          <button class="cta-button" type="button" id="activity-trigger">View new activity</button>
+        ${(showTodayButton || showNewButton) ? `
+        <div class="section-action-row" style="gap:10px; flex-wrap:wrap;">
+          ${showTodayButton ? `<button class="cta-button" type="button" id="activity-today-trigger">View today</button>` : ""}
+          ${showNewButton ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ""}
         </div>
         ` : ""}
       `;
+
+      const activityTodayTrigger = document.getElementById("activity-today-trigger");
+      if (activityTodayTrigger) {
+        activityTodayTrigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          openActivityFlow("today");
+        });
+      }
 
       const activityTrigger = document.getElementById("activity-trigger");
       if (activityTrigger) {
         activityTrigger.addEventListener("click", (event) => {
           event.preventDefault();
-          openActivityFlow();
+          openActivityFlow("new");
         });
       }
     }
