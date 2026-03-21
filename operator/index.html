@@ -498,11 +498,6 @@
     cta = "View today";
   }
 
-  const supportBits = [];
-  if (rosterCount > 0) supportBits.push(`${rosterCount} on your team`);
-  if (hoursMode === "weekly") supportBits.push("hours configured");
-  if (hoursMode === "varies") supportBits.push("hours vary week to week");
-  supportLine = supportBits.join(" • ");
 
   const alertClass = attentionCount > 0 ? "is-alert" : "is-calm";
   const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
@@ -523,7 +518,6 @@
       <p class="business-name">${escapeHtml(businessName)}</p>
       <h1 class="status-title">${escapeHtml(title)}</h1>
       <p class="status-copy">${escapeHtml(copy)}</p>
-      ${supportLine ? `<p class="output-tally">${escapeHtml(supportLine)}</p>` : ""}
       <div class="cta-row">
         <a class="cta" href="#">${escapeHtml(cta)}</a>
       </div>
@@ -542,7 +536,7 @@
         <div class="money-number">${escapeHtml(revenueLabel)}</div>
         <p class="money-label">Added by Isla today</p>
         <p class="money-sub">${actionsCount} client conversations moved forward</p>
-        ${teamSize > 0 ? `<p class="output-tally">${teamSize} team members connected</p>` : ""}      `;
+      `;
     }
 
     function renderOutput(data) {
@@ -585,7 +579,6 @@
             <p class="load-label">Still open today</p>
           </div>
         </div>
-        ${rosterCount > 0 ? `<p class="output-tally">${rosterCount} team members in system</p>` : ""}
       `;
     }
 
