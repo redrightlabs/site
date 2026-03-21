@@ -369,6 +369,48 @@
       font-weight:600;
     }
 
+    .activity-list{
+      margin-top:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .activity-item{
+      padding:12px 12px 10px;
+      border-radius:16px;
+      background:rgba(255,255,255,.025);
+      border:1px solid rgba(255,255,255,.05);
+      text-align:left;
+    }
+
+    .activity-title{
+      margin:0;
+      color:rgba(255,255,255,.96);
+      font-family:var(--sans);
+      font-size:14px;
+      font-weight:700;
+      line-height:1.3;
+    }
+
+    .activity-subtitle{
+      margin:4px 0 0;
+      color:rgba(235,239,245,.78);
+      font-family:var(--serif);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .activity-time{
+      margin:6px 0 0;
+      color:rgba(233,238,246,.56);
+      font-family:var(--sans);
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
     .section-card{
       padding:16px 16px 14px;
       text-align:center;
@@ -584,6 +626,20 @@
     </div>
   </div>
 
+  <div class="handle-overlay" id="activity-overlay" aria-hidden="true">
+    <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="activity-title">
+      <p class="handle-topline">Today</p>
+      <h2 class="handle-title" id="activity-title">Here’s what Isla handled today.</h2>
+      <p class="handle-copy" id="activity-copy">A fuller look at what moved forward for the shop.</p>
+
+      <div class="activity-list" id="activity-list"></div>
+
+      <div class="handle-actions">
+        <button class="handle-secondary" type="button" id="activity-close">Close</button>
+      </div>
+    </div>
+  </div>
+
   <nav class="nav" aria-label="Operator navigation">
     <div class="nav-inner">
       <a class="nav-link active" href="/operator/index.html"><span class="nav-icon">⌂</span><span>Home</span></a>
@@ -634,7 +690,12 @@
   handleCancel: document.getElementById("handle-cancel"),
   handleConfirm: document.getElementById("handle-confirm"),
   handleResult: document.getElementById("handle-result"),
-  handleTrigger: null
+  handleTrigger: null,
+  activityOverlay: document.getElementById("activity-overlay"),
+  activityTitle: document.getElementById("activity-title"),
+  activityCopy: document.getElementById("activity-copy"),
+  activityList: document.getElementById("activity-list"),
+  activityClose: document.getElementById("activity-close")
 };
 
     function escapeHtml(value) {
@@ -648,9 +709,12 @@
 
     let currentOperatorData = null;
     let currentHandleItem = null;
+    let currentStatusAction = "";
 
     function getAttentionItems(data) {
   const attentionCount = Number(data?.impact?.attentionCount || 0);
+  const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
+  const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
 
   if (Array.isArray(data?.attentionItems) && data.attentionItems.length) {
     return data.attentionItems.map((item) => {
@@ -694,15 +758,48 @@
         els.handleConfirm.disabled = false;
         els.handleConfirm.textContent = "Send to Isla";
         currentHandleItem = null;
-}
+    }
+
+    function closeActivityFlow() {
+      els.activityOverlay.classList.remove("is-open");
+      els.activityOverlay.setAttribute("aria-hidden", "true");
+      els.activityList.innerHTML = "";
+    }
+
+    function openActivityFlow() {
+      const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
+      const actions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+
+      els.activityTitle.textContent = "Here’s what Isla handled today.";
+      els.activityCopy.textContent = actions.length
+        ? "A fuller look at what moved forward for the shop."
+        : "Nothing has been logged yet today.";
+
+      els.activityList.innerHTML = actions.length
+        ? actions.map((item) => `
+          <div class="activity-item">
+            <p class="activity-title">${escapeHtml(item.title || "Activity logged")}</p>
+            <p class="activity-subtitle">${escapeHtml(item.subtitle || "Isla moved something forward.")}</p>
+            <p class="activity-time">${escapeHtml(item.timeLabel || "Today")}</p>
+          </div>
+        `).join("")
+        : `
+          <div class="activity-item">
+            <p class="activity-title">Nothing logged yet</p>
+            <p class="activity-subtitle">As Isla handles work, it will show up here.</p>
+          </div>
+        `;
+
+      els.activityOverlay.classList.add("is-open");
+      els.activityOverlay.setAttribute("aria-hidden", "false");
+    }
 
     function openHandleFlow() {
       const items = getAttentionItems(currentOperatorData || FALLBACK_OPERATOR_DATA);
-      const item = items[0] || {
-        title: "Nothing needs your attention right now.",
-        body: "You're clear.",
-        actionLabel: "Close"
-};
+      const item = items[0] || null;
+      if (!item) {
+        return;
+      }
 
       currentHandleItem = item;
       els.handleTitle.textContent = item.title || "An appointment hasn't been closed out yet.";
@@ -714,20 +811,28 @@
     }
 
     function wireHandleFlow() {
-        const trigger = document.getElementById("handle-trigger");
-        els.handleTrigger = trigger || null;
-        if (trigger) {
+      const trigger = document.getElementById("handle-trigger");
+      els.handleTrigger = trigger || null;
+      if (trigger) {
         trigger.addEventListener("click", (event) => {
-        event.preventDefault();
-        openHandleFlow();
-    });
-  }
-}
+          event.preventDefault();
+          if (currentStatusAction === "attention") {
+            openHandleFlow();
+            return;
+          }
+          if (currentStatusAction === "activity") {
+            openActivityFlow();
+          }
+        });
+      }
+    }
 
     function renderStatus(data) {
   const businessName = data.shopName || "Your Business";
   const logoUrl = data.logoUrl || data.shopLogoUrl || "";
   const attentionCount = Number(data?.impact?.attentionCount || 0);
+  const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
+  const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
   const actionsCount = Number(data?.impact?.lifecycleActions || 0);
   const rosterCount = Number(data?.rosterCount || data?.impact?.teamSize || 0);
   const hoursMode = data?.hoursMode || "";
@@ -735,22 +840,28 @@
   let title = "";
   let copy = "";
   let cta = "";
-  let supportLine = "";
 
-  if (attentionCount > 0) {
+  if (attentionCount > 0 && !isHandling) {
     title = "One thing needs you";
     copy = "1 item still needs to be closed out. Everything else is handled for you.";
     cta = "Handle it";
+    currentStatusAction = "attention";
+  } else if (isHandling) {
+    title = "Handled";
+    copy = attentionItem.subtitle || "Isla is already taking care of this for you.";
+    cta = "";
+    currentStatusAction = "";
   } else if (actionsCount > 0) {
     title = "All clear";
     copy = `Nothing important needs you right now. Isla already handled ${actionsCount} things for you today.`;
-    cta = "View today";
+    cta = "See activity";
+    currentStatusAction = "activity";
   } else {
     title = "All clear";
     copy = "Nothing important needs you right now.";
-    cta = "View today";
+    cta = "";
+    currentStatusAction = "";
   }
-
 
   const alertClass = attentionCount > 0 ? "is-alert" : "is-calm";
   const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
@@ -771,9 +882,11 @@
       <p class="business-name">${escapeHtml(businessName)}</p>
       <h1 class="status-title">${escapeHtml(title)}</h1>
       <p class="status-copy">${escapeHtml(copy)}</p>
+      ${cta ? `
       <div class="cta-row">
         <button class="cta-button" type="button" id="handle-trigger">${escapeHtml(cta)}</button>
       </div>
+      ` : ""}
     </div>
   `;
 }
@@ -859,6 +972,12 @@
 
     els.handleOverlay.addEventListener("click", (event) => {
       if (event.target === els.handleOverlay) closeHandleFlow();
+    });
+
+    els.activityClose.addEventListener("click", closeActivityFlow);
+
+    els.activityOverlay.addEventListener("click", (event) => {
+      if (event.target === els.activityOverlay) closeActivityFlow();
     });
 
     els.handleConfirm.addEventListener("click", async () => {
