@@ -575,10 +575,7 @@
       <h2 class="handle-title" id="handle-title">Appointment close-out still open</h2>
       <p class="handle-copy" id="handle-copy">An appointment hasn’t been closed out yet.</p>
 
-      <div class="handle-panel">
-        <p class="handle-label">Recommended action</p>
-        <p class="handle-value" id="handle-recommendation">Mark the project complete and move Isla forward.</p>
-      </div>
+      <div class="handle-panel" style="display:none;" id="handle-panel"></div>
 
       <div class="handle-actions">
         <button class="handle-secondary" type="button" id="handle-cancel">Not now</button>
@@ -654,21 +651,37 @@
     let currentHandleItem = null;
 
     function getAttentionItems(data) {
+      // Prefer real attention items from backend
       if (Array.isArray(data?.attentionItems) && data.attentionItems.length) {
-        return data.attentionItems;
+        return data.attentionItems.map((item) => {
+          const artist = item.artistName || item.artist || "";
+          const title = artist
+            ? `${artist} has an appointment that hasn’t been closed out.`
+            : "An appointment hasn't been closed out yet.";
+
+          return {
+            title,
+            body: "Have Isla close it out?",
+            recommendation: "",
+            actionLabel: "Send to Isla"
+          };
+        });
       }
 
-      const attentionCount = Number(data?.impact?.attentionCount || 0);
-      if (attentionCount > 0) {
-        return [{
-          title: "Appointment close-out still open",
-          body: "An appointment hasn’t been closed out yet.",
-          recommendation: "Send it to Isla so she can close out the appointment and move the project forward.",
-          actionLabel: "Send to Isla"
-        }];
-      }
+      // Fallback: try to derive artist from roster
+      const roster = Array.isArray(data?.roster) ? data.roster : [];
+      const firstArtist = roster.find(r => r?.name)?.name || "";
 
-      return [];
+      const title = firstArtist
+        ? `${firstArtist} has an appointment that hasn’t been closed out.`
+        : "An appointment hasn't been closed out yet.";
+
+      return [{
+        title,
+        body: "Have Isla close it out?",
+        recommendation: "",
+        actionLabel: "Send to Isla"
+      }];
     }
 
     function closeHandleFlow() {
@@ -683,14 +696,14 @@
       const item = items[0] || {
         title: "Everything is clear",
         body: "There is nothing urgent waiting on you right now.",
-        recommendation: "You can stay in Home or move into Projects for detail.",
+        recommendation: "",
         actionLabel: "Close"
       };
 
       currentHandleItem = item;
-      els.handleTitle.textContent = item.title || "Appointment close-out still open";
-      els.handleCopy.textContent = item.body || "An appointment hasn’t been closed out yet.";
-      els.handleRecommendation.textContent = item.recommendation || "Send it to Isla so she can close out the appointment and move the project forward.";
+      els.handleTitle.textContent = item.title || "An appointment hasn't been closed out yet.";
+      els.handleCopy.textContent = item.body || "Have Isla close it out?";
+      els.handleRecommendation.textContent = "";
       els.handleConfirm.textContent = item.actionLabel || "Send to Isla";
       els.handleResult.textContent = "";
       els.handleOverlay.classList.add("is-open");
