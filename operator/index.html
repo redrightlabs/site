@@ -336,7 +336,12 @@
       gap:10px;
       margin-top:16px;
     }
-
+    .handle-actions.is-single{
+  grid-template-columns:1fr;
+  max-width:280px;
+  margin-left:auto;
+  margin-right:auto;
+}
     .handle-secondary,
     .handle-primary{
       min-height:46px;
@@ -641,9 +646,9 @@
 
       <div class="activity-list" id="activity-list"></div>
 
-      <div class="handle-actions">
-        <button class="handle-secondary" type="button" id="activity-close">Close</button>
-      </div>
+      <div class="handle-actions is-single">
+      <button class="handle-secondary" type="button" id="activity-close">Close</button>
+    </div>
     </div>
   </div>
 
@@ -779,8 +784,8 @@
 
       els.activityTitle.textContent = `Here’s what Isla handled${actions.length ? ` (${actions.length})` : ""}.`;
       els.activityCopy.textContent = actions.length
-        ? "A fuller look at what moved forward for the shop."
-        : "Nothing has been logged yet today.";
+  ? "An expanded look at what moved forward for the shop."
+  : "Nothing has been logged yet today.";
 
       els.activityList.innerHTML = actions.length
         ? actions.map((item) => `
@@ -855,7 +860,7 @@
     currentStatusAction = "attention";
   } else if (isHandling) {
   title = "All clear";
-  copy = attentionItem.subtitle || "Isla already has this in motion for you.";
+  copy = "Isla has everything handled for you right now.";
   cta = "";
   currentStatusAction = "";
 } else if (actionsCount > 0) {
