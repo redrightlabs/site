@@ -640,15 +640,29 @@
 
   <div class="handle-overlay" id="activity-overlay" aria-hidden="true">
     <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="activity-title">
-      <p class="handle-topline">Today</p>
-      <h2 class="handle-title" id="activity-title">Here’s what Isla handled today.</h2>
-      <p class="handle-copy" id="activity-copy">A fuller look at what moved forward for the shop.</p>
+      <p class="handle-topline">New activity</p>
+      <h2 class="handle-title" id="activity-title">Here’s what Isla has handled since your last look.</h2>
+      <p class="handle-copy" id="activity-copy">An expanded look at what moved forward for the shop.</p>
 
       <div class="activity-list" id="activity-list"></div>
 
       <div class="handle-actions is-single">
-      <button class="handle-secondary" type="button" id="activity-close">Close</button>
+        <button class="handle-secondary" type="button" id="activity-close">Close</button>
+      </div>
     </div>
+  </div>
+
+  <div class="handle-overlay" id="today-overlay" aria-hidden="true">
+    <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="today-title">
+      <p class="handle-topline">Today</p>
+      <h2 class="handle-title" id="today-title">Here’s what Isla handled today.</h2>
+      <p class="handle-copy" id="today-copy">An expanded look at everything Isla moved forward today.</p>
+
+      <div class="activity-list" id="today-list"></div>
+
+      <div class="handle-actions is-single">
+        <button class="handle-secondary" type="button" id="today-close">Close</button>
+      </div>
     </div>
   </div>
 
@@ -713,7 +727,13 @@
   activityTitle: document.getElementById("activity-title"),
   activityCopy: document.getElementById("activity-copy"),
   activityList: document.getElementById("activity-list"),
-  activityClose: document.getElementById("activity-close")
+  activityClose: document.getElementById("activity-close"),
+  todayOverlay: document.getElementById("today-overlay"),
+  todayTitle: document.getElementById("today-title"),
+  todayCopy: document.getElementById("today-copy"),
+  todayList: document.getElementById("today-list"),
+  todayClose: document.getElementById("today-close")
+
 };
 
     function escapeHtml(value) {
@@ -755,7 +775,7 @@ function getActionsSinceLastLook(data) {
     let currentOperatorData = null;
     let currentHandleItem = null;
     let currentStatusAction = "";
-    let currentActivityMode = "new";
+   
 
     function getAttentionItems(data) {
   const attentionCount = Number(data?.impact?.attentionCount || 0);
@@ -806,41 +826,29 @@ function getActionsSinceLastLook(data) {
         currentHandleItem = null;
     }
 
-    function closeActivityFlow() {
+   function closeActivityFlow() {
   els.activityOverlay.classList.remove("is-open");
   els.activityOverlay.setAttribute("aria-hidden", "true");
   els.activityList.innerHTML = "";
-
-  if (currentActivityMode === "new") {
-    setActivityLastViewedAt(new Date().toISOString());
-  }
+  setActivityLastViewedAt(new Date().toISOString());
 
   const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
   renderOutput(data);
 }
-
-function openActivityFlow(mode = "new") {
+function openActivityFlow() {
   const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
   const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
-  const actions = mode === "today" ? allActions : getActionsSinceLastLook(data);
-  currentActivityMode = mode;
+  const actions = getActionsSinceLastLook(data);
 
-  if (mode === "today") {
-    els.activityTitle.textContent = `Here’s what Isla handled today${actions.length ? ` (${actions.length})` : ""}.`;
-    els.activityCopy.textContent = actions.length
-      ? "An expanded look at everything Isla moved forward today."
-      : "Nothing has been logged yet today.";
-  } else {
-    els.activityTitle.textContent = actions.length
-      ? `Here’s what Isla has handled since your last look (${actions.length}).`
-      : "Nothing new since your last look.";
+  els.activityTitle.textContent = actions.length
+    ? `Here’s what Isla has handled since your last look (${actions.length}).`
+    : "Nothing new since your last look.";
 
-    els.activityCopy.textContent = actions.length
-      ? "An expanded look at what moved forward for the shop."
-      : (allActions.length
-          ? "You’re already caught up."
-          : "Nothing has been logged yet today.");
-  }
+  els.activityCopy.textContent = actions.length
+    ? "An expanded look at what moved forward for the shop."
+    : (allActions.length
+        ? "You’re already caught up."
+        : "Nothing has been logged yet today.");
 
   els.activityList.innerHTML = actions.length
     ? actions.map((item) => `
@@ -852,15 +860,47 @@ function openActivityFlow(mode = "new") {
     `).join("")
     : `
       <div class="activity-item">
-        <p class="activity-title">${mode === "today" ? "Nothing logged yet today" : "Nothing new to review"}</p>
-        <p class="activity-subtitle">${mode === "today"
-          ? "As Isla handles work today, it will show up here."
-          : "Once Isla handles more work, it will appear here until you’ve looked."}</p>
+        <p class="activity-title">Nothing new to review</p>
+        <p class="activity-subtitle">Once Isla handles more work, it will appear here until you’ve looked.</p>
       </div>
     `;
 
   els.activityOverlay.classList.add("is-open");
   els.activityOverlay.setAttribute("aria-hidden", "false");
+}
+
+function closeTodayFlow() {
+  els.todayOverlay.classList.remove("is-open");
+  els.todayOverlay.setAttribute("aria-hidden", "true");
+  els.todayList.innerHTML = "";
+}
+
+function openTodayFlow() {
+  const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
+  const actions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+
+  els.todayTitle.textContent = `Here’s what Isla handled today${actions.length ? ` (${actions.length})` : ""}.`;
+  els.todayCopy.textContent = actions.length
+    ? "An expanded look at everything Isla moved forward today."
+    : "Nothing has been logged yet today.";
+
+  els.todayList.innerHTML = actions.length
+    ? actions.map((item) => `
+      <div class="activity-item">
+        <p class="activity-title">${escapeHtml(item.title || "Activity logged")}</p>
+        <p class="activity-subtitle">${escapeHtml(item.subtitle || "Isla moved something forward.")}</p>
+        <p class="activity-time">${escapeHtml(item.timeLabel || "Today")}</p>
+      </div>
+    `).join("")
+    : `
+      <div class="activity-item">
+        <p class="activity-title">Nothing logged yet today</p>
+        <p class="activity-subtitle">As Isla handles work today, it will show up here.</p>
+      </div>
+    `;
+
+  els.todayOverlay.classList.add("is-open");
+  els.todayOverlay.setAttribute("aria-hidden", "false");
 }
 
     function openHandleFlow() {
@@ -879,22 +919,22 @@ function openActivityFlow(mode = "new") {
       els.handleOverlay.setAttribute("aria-hidden", "false");
     }
 
-    function wireHandleFlow() {
-      const trigger = document.getElementById("handle-trigger");
-      els.handleTrigger = trigger || null;
-      if (trigger) {
-        trigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          if (currentStatusAction === "attention") {
-            openHandleFlow();
-            return;
-          }
-          if (currentStatusAction === "activity") {
-            openActivityFlow();
-          }
-        });
+function wireHandleFlow() {
+  const trigger = document.getElementById("handle-trigger");
+  els.handleTrigger = trigger || null;
+  if (trigger) {
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (currentStatusAction === "attention") {
+        openHandleFlow();
+        return;
       }
-    }
+      if (currentStatusAction === "activity") {
+        openActivityFlow();
+      }
+    });
+  }
+}
 
     function renderStatus(data) {
   const businessName = data.shopName || "Your Business";
@@ -975,46 +1015,48 @@ function openActivityFlow(mode = "new") {
     }
 
     function renderOutput(data) {
-      const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
-      const newActions = getActionsSinceLastLook(data);
-      const totalToday = allActions.length;
-      const breakdown = data?.dailyBreakdown || {};
-      const carewatchCount = Number(breakdown.carewatch || 0);
-      const reviewCount = Number(breakdown.review || 0);
-      const rebookingCount = Number(breakdown.rebooking || 0);
-      const newCount = newActions.length;
-      const showTodayButton = true;
-      const showNewButton = newCount > 0;
+  const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+  const newActions = getActionsSinceLastLook(data);
+  const totalToday = allActions.length;
+  const breakdown = data?.dailyBreakdown || {};
+  const carewatchCount = Number(breakdown.carewatch || 0);
+  const reviewCount = Number(breakdown.review || 0);
+  const rebookingCount = Number(breakdown.rebooking || 0);
+  const newCount = newActions.length;
+  const showTodayButton = true;
+  const showNewButton = newCount > 0;
 
-      els.output.innerHTML = `
-        <p class="kicker">What Isla handled</p>
-        <h2 class="section-title">Isla handled ${totalToday} things today</h2>
-        <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
-        ${newCount > 0 ? `<p class="output-tally">${newCount} new since your last look</p>` : `<p class="output-tally">You’re all caught up</p>`}
-        ${(showTodayButton || showNewButton) ? `
-        <div class="section-action-row" style="gap:10px; flex-wrap:wrap;">
-          ${showTodayButton ? `<button class="cta-button" type="button" id="activity-today-trigger">View today</button>` : ""}
-          ${showNewButton ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ""}
-        </div>
-        ` : ""}
-      `;
+  els.output.innerHTML = `
+    <p class="kicker">What Isla handled</p>
+    <h2 class="section-title">Isla handled ${totalToday} things today</h2>
+    <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
+    ${newCount > 0 ? `<p class="output-tally">${newCount} new since your last look</p>` : `<p class="output-tally">You’re all caught up</p>`}
+    ${(showTodayButton || showNewButton) ? `
+    <div class="section-action-row" style="gap:10px; flex-wrap:wrap;">
+      ${showTodayButton ? `<button class="cta-button" type="button" id="activity-today-trigger">View today</button>` : ""}
+      ${showNewButton ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ""}
+    </div>
+    ` : ""}
+  `;
 
-      const activityTodayTrigger = document.getElementById("activity-today-trigger");
-      if (activityTodayTrigger) {
-        activityTodayTrigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          openActivityFlow("today");
-        });
-      }
+  const activityTodayTrigger = document.getElementById("activity-today-trigger");
+  if (activityTodayTrigger) {
+    activityTodayTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      openTodayFlow();
+    });
+  }
 
-      const activityTrigger = document.getElementById("activity-trigger");
-      if (activityTrigger) {
-        activityTrigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          openActivityFlow("new");
-        });
-      }
-    }
+  const activityTrigger = document.getElementById("activity-trigger");
+  if (activityTrigger) {
+    activityTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      openActivityFlow();
+    });
+  }
+}
+
+   
 
     function renderToday(data) {
       const projects = Array.isArray(data.activeProjects) ? data.activeProjects : [];
@@ -1076,7 +1118,11 @@ function openActivityFlow(mode = "new") {
     els.activityOverlay.addEventListener("click", (event) => {
       if (event.target === els.activityOverlay) closeActivityFlow();
     });
+    els.todayClose.addEventListener("click", closeTodayFlow);
 
+    els.todayOverlay.addEventListener("click", (event) => {
+      if (event.target === els.todayOverlay) closeTodayFlow();
+    });
     els.handleConfirm.addEventListener("click", async () => {
   if (!currentHandleItem) {
     closeHandleFlow();
