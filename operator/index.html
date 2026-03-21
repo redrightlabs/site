@@ -665,6 +665,7 @@
   <script>
     window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard?shopId=LATEST";
     window.ISLA_ACTION_URL = "https://uwydiqltvchlmjvzwkal.supabase.co/functions/v1/confirm-project-done";
+    const ACTIVITY_LAST_VIEWED_KEY = "rr_operator_activity_last_viewed_at";
     const FALLBACK_OPERATOR_DATA = {
       shopName: "Black Harbor Tattoo",
       rosterCount: 3,
@@ -718,7 +719,34 @@
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
     }
+function getActivityLastViewedAt() {
+  try {
+    return localStorage.getItem(ACTIVITY_LAST_VIEWED_KEY) || "";
+  } catch {
+    return "";
+  }
+}
 
+function setActivityLastViewedAt(value) {
+  try {
+    localStorage.setItem(ACTIVITY_LAST_VIEWED_KEY, value);
+  } catch {}
+}
+
+function getActionsSinceLastLook(data) {
+  const actions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+  const lastViewedAt = getActivityLastViewedAt();
+  if (!lastViewedAt) return actions;
+
+  const lastViewedMs = new Date(lastViewedAt).getTime();
+  if (Number.isNaN(lastViewedMs)) return actions;
+
+  return actions.filter((item) => {
+    const createdMs = new Date(item?.createdAt || 0).getTime();
+    if (Number.isNaN(createdMs)) return true;
+    return createdMs > lastViewedMs;
+  });
+}
     let currentOperatorData = null;
     let currentHandleItem = null;
     let currentStatusAction = "";
@@ -773,38 +801,45 @@
     }
 
     function closeActivityFlow() {
-      els.activityOverlay.classList.remove("is-open");
-      els.activityOverlay.setAttribute("aria-hidden", "true");
-      els.activityList.innerHTML = "";
-    }
+  els.activityOverlay.classList.remove("is-open");
+  els.activityOverlay.setAttribute("aria-hidden", "true");
+  els.activityList.innerHTML = "";
+  setActivityLastViewedAt(new Date().toISOString());
+}
 
     function openActivityFlow() {
-      const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
-      const actions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+  const data = currentOperatorData || FALLBACK_OPERATOR_DATA;
+  const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+  const actions = getActionsSinceLastLook(data);
 
-      els.activityTitle.textContent = `Here’s what Isla handled${actions.length ? ` (${actions.length})` : ""}.`;
-      els.activityCopy.textContent = actions.length
-  ? "An expanded look at what moved forward for the shop."
-  : "Nothing has been logged yet today.";
+  els.activityTitle.textContent = actions.length
+    ? `Here’s what Isla has handled since your last look (${actions.length}).`
+    : "Nothing new since your last look.";
 
-      els.activityList.innerHTML = actions.length
-        ? actions.map((item) => `
-          <div class="activity-item">
-            <p class="activity-title">${escapeHtml(item.title || "Activity logged")}</p>
-            <p class="activity-subtitle">${escapeHtml(item.subtitle || "Isla moved something forward.")}</p>
-            <p class="activity-time">${escapeHtml(item.timeLabel || "Today")}</p>
-          </div>
-        `).join("")
-        : `
-          <div class="activity-item">
-            <p class="activity-title">Nothing logged yet</p>
-            <p class="activity-subtitle">As Isla handles work, it will show up here.</p>
-          </div>
-        `;
+  els.activityCopy.textContent = actions.length
+    ? "An expanded look at what moved forward for the shop."
+    : (allActions.length
+        ? "You’re already caught up."
+        : "Nothing has been logged yet today.");
 
-      els.activityOverlay.classList.add("is-open");
-      els.activityOverlay.setAttribute("aria-hidden", "false");
-    }
+  els.activityList.innerHTML = actions.length
+    ? actions.map((item) => `
+      <div class="activity-item">
+        <p class="activity-title">${escapeHtml(item.title || "Activity logged")}</p>
+        <p class="activity-subtitle">${escapeHtml(item.subtitle || "Isla moved something forward.")}</p>
+        <p class="activity-time">${escapeHtml(item.timeLabel || "Today")}</p>
+      </div>
+    `).join("")
+    : `
+      <div class="activity-item">
+        <p class="activity-title">Nothing new to review</p>
+        <p class="activity-subtitle">Once Isla handles more work, it will appear here until you’ve looked.</p>
+      </div>
+    `;
+
+  els.activityOverlay.classList.add("is-open");
+  els.activityOverlay.setAttribute("aria-hidden", "false");
+}
 
     function openHandleFlow() {
       const items = getAttentionItems(currentOperatorData || FALLBACK_OPERATOR_DATA);
@@ -918,7 +953,7 @@
     }
 
     function renderOutput(data) {
-  const actions = Array.isArray(data.recentActions) ? data.recentActions : [];
+  const actions = getActionsSinceLastLook(data);
   const total = actions.length;
   const reviewCount = actions.filter((item) => /review/i.test(item.title || "")).length;
   const rebookingCount = actions.filter((item) => /rebook/i.test(item.title || "")).length;
@@ -927,7 +962,7 @@
 
   els.output.innerHTML = `
     <p class="kicker">What Isla handled</p>
-    <h2 class="section-title">Isla handled ${total} things lately</h2>
+    <h2 class="section-title">Isla handled ${total} things since your last look</h2>
     <p class="output-tally">Follow-ups ${followupCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
     ${showActivityButton ? `
     <div class="section-action-row">

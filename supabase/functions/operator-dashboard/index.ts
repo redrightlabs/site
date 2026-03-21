@@ -168,8 +168,22 @@ function buildNextActions(projects: any[]) {
     }));
 }
 
-function buildAttention(projects: any[], latestRun: any) {
+function buildAttention(projects: any[], latestRun: any, queuedActions: any[] = []) {
   const items: any[] = [];
+
+  const queuedCloseout = queuedActions.find((action) => action?.action_type === "closeout");
+  if (queuedCloseout) {
+    const artistLabel = queuedCloseout.artist_name
+      ? `${queuedCloseout.artist_name}’s appointment is already queued for close-out.`
+      : "An appointment is already queued for close-out.";
+
+    return [{
+      title: "Isla is handling this",
+      subtitle: artistLabel,
+      chipLabel: "Queued",
+      chipClass: "",
+    }];
+  }
 
   const overdueCompletion = projects.find((project) => {
     if (!project.completion_check_planned_at) return false;
@@ -224,6 +238,12 @@ async function buildOperatorDashboardPayload() {
     roster = Array.isArray(rosterRows) ? rosterRows : [];
   }
 
+  let queuedActions = [] as any[];
+  if (shopId) {
+    const queuedRows = await fetchJson(`/rest/v1/isla_actions?shop_id=eq.${shopId}&status=eq.queued&select=id,action_type,artist_name,title,message,status,created_at&order=created_at.desc&limit=10`);
+    queuedActions = Array.isArray(queuedRows) ? queuedRows : [];
+  }
+
   const workerRuns = await fetchJson("/rest/v1/worker_runs?worker_name=eq.process-due-actions&order=created_at.desc&limit=10");
   const latestRun = Array.isArray(workerRuns) ? workerRuns[0] : null;
 
@@ -236,10 +256,11 @@ async function buildOperatorDashboardPayload() {
     const clientName = event?.event_payload?.client_name || "Client";
 
     return {
-      title: `${actionName} sent → ${clientName}`,
-      subtitle: event?.event_payload?.message || "Lifecycle action logged by Isla.",
-      timeLabel: timeAgoLabel(event.created_at),
-    };
+  title: `${actionName} sent → ${clientName}`,
+  subtitle: event?.event_payload?.message || "Lifecycle action logged by Isla.",
+  timeLabel: timeAgoLabel(event.created_at),
+  createdAt: event.created_at,
+};
   });
 
   const activeProjects = projects.slice(0, 8).map((project: any) => ({
@@ -252,7 +273,7 @@ async function buildOperatorDashboardPayload() {
   }));
 
   const lifecycleActionCount = recentActions.length;
-  const attentionItems = buildAttention(projects, latestRun);
+  const attentionItems = buildAttention(projects, latestRun, queuedActions);
 
   return {
     shopId: shop?.id || null,
@@ -263,6 +284,20 @@ async function buildOperatorDashboardPayload() {
     hoursTemplate: shopSettings?.hours_template || null,
     ownerIsProvider: shopSettings?.owner_is_provider ?? null,
     rosterCount: roster.length,
+    roster: roster.map((person: any) => ({
+      id: person.id,
+      name: person.name,
+      role: person.role,
+    })),
+    queuedActions: queuedActions.map((action: any) => ({
+      id: action.id,
+      actionType: action.action_type,
+      artistName: action.artist_name,
+      title: action.title,
+      message: action.message,
+      status: action.status,
+      createdAt: action.created_at,
+    })),
     engine: {
       status: latestRun?.status === "error" ? "Attention" : "Running",
       lastRunLabel: timeAgoLabel(latestRun?.ran_at),
