@@ -679,13 +679,18 @@
         teamSize: "3"
       },
       recentActions: [
-        { title: "CareWatch sent" },
-        { title: "Review request sent" },
-        { title: "Rebooking nudge sent" },
-        { title: "CareWatch sent" },
-        { title: "Review request sent" },
-        { title: "CareWatch sent" }
+        { title: "CareWatch sent", subtitle: "Healing follow-up sent.", timeLabel: "Today", createdAt: new Date().toISOString() },
+        { title: "Review request sent", subtitle: "Review request sent.", timeLabel: "Today", createdAt: new Date().toISOString() },
+        { title: "Rebooking nudge sent", subtitle: "Rebooking follow-up sent.", timeLabel: "Today", createdAt: new Date().toISOString() },
+        { title: "CareWatch sent", subtitle: "Healing follow-up sent.", timeLabel: "Today", createdAt: new Date().toISOString() },
+        { title: "Review request sent", subtitle: "Review request sent.", timeLabel: "Today", createdAt: new Date().toISOString() },
+        { title: "CareWatch sent", subtitle: "Healing follow-up sent.", timeLabel: "Today", createdAt: new Date().toISOString() }
       ],
+      dailyBreakdown: {
+        carewatch: 3,
+        review: 2,
+        rebooking: 1
+      },
       activeProjects: [
         { stateClass: "is-done" },
         { stateClass: "is-upcoming" }
@@ -953,32 +958,36 @@ function getActionsSinceLastLook(data) {
     }
 
     function renderOutput(data) {
-  const actions = getActionsSinceLastLook(data);
-  const total = actions.length;
-  const reviewCount = actions.filter((item) => /review/i.test(item.title || "")).length;
-  const rebookingCount = actions.filter((item) => /rebook/i.test(item.title || "")).length;
-  const followupCount = Math.max(0, total - reviewCount - rebookingCount);
-  const showActivityButton = total > 0;
+      const allActions = Array.isArray(data?.recentActions) ? data.recentActions : [];
+      const newActions = getActionsSinceLastLook(data);
+      const totalToday = allActions.length;
+      const breakdown = data?.dailyBreakdown || {};
+      const carewatchCount = Number(breakdown.carewatch || 0);
+      const reviewCount = Number(breakdown.review || 0);
+      const rebookingCount = Number(breakdown.rebooking || 0);
+      const newCount = newActions.length;
+      const showActivityButton = newCount > 0;
 
-  els.output.innerHTML = `
-    <p class="kicker">What Isla handled</p>
-    <h2 class="section-title">Isla handled ${total} things since your last look</h2>
-    <p class="output-tally">Follow-ups ${followupCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
-    ${showActivityButton ? `
-    <div class="section-action-row">
-      <button class="cta-button" type="button" id="activity-trigger">View details</button>
-    </div>
-    ` : ""}
-  `;
+      els.output.innerHTML = `
+        <p class="kicker">What Isla handled</p>
+        <h2 class="section-title">Isla handled ${totalToday} things today</h2>
+        <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
+        ${newCount > 0 ? `<p class="output-tally">${newCount} new since your last look</p>` : `<p class="output-tally">You’re all caught up</p>`}
+        ${showActivityButton ? `
+        <div class="section-action-row">
+          <button class="cta-button" type="button" id="activity-trigger">View new activity</button>
+        </div>
+        ` : ""}
+      `;
 
-  const activityTrigger = document.getElementById("activity-trigger");
-  if (activityTrigger) {
-    activityTrigger.addEventListener("click", (event) => {
-      event.preventDefault();
-      openActivityFlow();
-    });
-  }
-}
+      const activityTrigger = document.getElementById("activity-trigger");
+      if (activityTrigger) {
+        activityTrigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          openActivityFlow();
+        });
+      }
+    }
 
     function renderToday(data) {
       const projects = Array.isArray(data.activeProjects) ? data.activeProjects : [];
