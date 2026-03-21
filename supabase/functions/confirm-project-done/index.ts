@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://redrightlabs.com",
@@ -22,11 +23,35 @@ serve(async (req) => {
     const message = body?.body ? String(body.body) : "Have Isla close it out?";
     const source = body?.source ? String(body.source) : "operator-home";
 
-    const actionId = crypto.randomUUID();
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     const queuedAt = new Date().toISOString();
 
+    const { data, error } = await supabase
+      .from("isla_actions")
+      .insert({
+        shop_id: shopId,
+        shop_name: shopName,
+        action_type: actionType,
+        artist_name: artistName,
+        title,
+        message,
+        source,
+        status: "queued",
+        created_at: queuedAt,
+      })
+      .select("id, status, created_at")
+      .single();
+
+    if (error) {
+      throw new Error(`isla_actions insert failed: ${error.message}`);
+    }
+
     console.log("ISLA ACTION QUEUED", {
-      actionId,
+      actionId: data.id,
       shopId,
       shopName,
       actionType,
@@ -34,15 +59,15 @@ serve(async (req) => {
       title,
       message,
       source,
-      queuedAt,
+      queuedAt: data.created_at,
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        actionId,
-        queuedAt,
-        status: "queued",
+        actionId: data.id,
+        queuedAt: data.created_at,
+        status: data.status,
       }),
       {
         headers: {
