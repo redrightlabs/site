@@ -273,6 +273,11 @@ async function buildOperatorDashboardPayload() {
   }));
 
   const lifecycleActionCount = recentActions.length;
+  const dailyBreakdown = {
+    carewatch: recentActions.filter((item: any) => /carewatch|cw1|cw2|cw3/i.test(item.title || "")).length,
+    review: recentActions.filter((item: any) => /review/i.test(item.title || "")).length,
+    rebooking: recentActions.filter((item: any) => /rebook/i.test(item.title || "")).length,
+  };
   const attentionItems = buildAttention(projects, latestRun, queuedActions);
 
   return {
@@ -313,6 +318,7 @@ async function buildOperatorDashboardPayload() {
       teamSize: String(roster.length),
     },
     recentActions,
+    dailyBreakdown,
     nextActions: buildNextActions(projects),
     activeProjects,
     attention: attentionItems,
