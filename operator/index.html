@@ -480,6 +480,46 @@
       line-height:1.35;
     }
 
+    .output-split{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:14px;
+      text-align:left;
+    }
+
+    .output-panel{
+      padding:14px 14px 12px;
+      border-radius:18px;
+      background:rgba(255,255,255,.025);
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .output-panel-title{
+      margin:0;
+      color:rgba(255,255,255,.96);
+      font-family:var(--sans);
+      font-size:14px;
+      font-weight:700;
+      line-height:1.3;
+      text-align:left;
+    }
+
+    .output-panel-copy{
+      margin:6px 0 0;
+      color:rgba(235,239,245,.78);
+      font-family:var(--serif);
+      font-size:13px;
+      line-height:1.35;
+      text-align:left;
+    }
+
+    .output-panel-actions{
+      display:flex;
+      justify-content:flex-start;
+      margin-top:10px;
+    }
+
     .load-grid{
         display:grid;
         grid-template-columns:repeat(3, minmax(0, 1fr));
@@ -1023,20 +1063,30 @@ function wireHandleFlow() {
   const reviewCount = Number(breakdown.review || 0);
   const rebookingCount = Number(breakdown.rebooking || 0);
   const newCount = newActions.length;
-  const showTodayButton = true;
-  const showNewButton = newCount > 0;
 
   els.output.innerHTML = `
     <p class="kicker">What Isla handled</p>
-    <h2 class="section-title">Isla handled ${totalToday} things today</h2>
-    <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
-    ${newCount > 0 ? `<p class="output-tally">${newCount} new since your last look</p>` : `<p class="output-tally">You’re all caught up</p>`}
-    ${(showTodayButton || showNewButton) ? `
-    <div class="section-action-row" style="gap:10px; flex-wrap:wrap;">
-      ${showTodayButton ? `<button class="cta-button" type="button" id="activity-today-trigger">View today</button>` : ""}
-      ${showNewButton ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ""}
+    <h2 class="section-title">Two ways to view Isla’s work</h2>
+
+    <div class="output-split">
+      <div class="output-panel">
+        <p class="output-panel-title">Today’s total</p>
+        <p class="output-panel-copy">Isla handled ${totalToday} things today.</p>
+        <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
+        <div class="output-panel-actions">
+          <button class="cta-button" type="button" id="activity-today-trigger">View today</button>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <p class="output-panel-title">Since your last look</p>
+        <p class="output-panel-copy">${newCount > 0 ? `${newCount} new actions are waiting for review.` : `You’re all caught up.`}</p>
+        ${newCount > 0 ? `<p class="output-tally">New activity clears after you review it.</p>` : ``}
+        <div class="output-panel-actions">
+          ${newCount > 0 ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ``}
+        </div>
+      </div>
     </div>
-    ` : ""}
   `;
 
   const activityTodayTrigger = document.getElementById("activity-today-trigger");
