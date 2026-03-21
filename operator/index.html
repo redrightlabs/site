@@ -596,6 +596,7 @@
 
   <script>
     window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard?shopId=LATEST";
+    window.ISLA_ACTION_URL = "https://uwydiqltvchlmjvzwkal.supabase.co/functions/v1/confirm-project-done";
     const FALLBACK_OPERATOR_DATA = {
       shopName: "Black Harbor Tattoo",
       rosterCount: 3,
@@ -623,17 +624,18 @@
     };
 
     const els = {
-      status: document.getElementById("status-card"),
-      money: document.getElementById("money-card"),
-      output: document.getElementById("output-card"),
-      today: document.getElementById("today-card"),
-      handleOverlay: document.getElementById("handle-overlay"),
-      handleTitle: document.getElementById("handle-title"),
-      handleCopy: document.getElementById("handle-copy"),
-      handleCancel: document.getElementById("handle-cancel"),
-      handleConfirm: document.getElementById("handle-confirm"),
-      handleResult: document.getElementById("handle-result")
-    };
+  status: document.getElementById("status-card"),
+  money: document.getElementById("money-card"),
+  output: document.getElementById("output-card"),
+  today: document.getElementById("today-card"),
+  handleOverlay: document.getElementById("handle-overlay"),
+  handleTitle: document.getElementById("handle-title"),
+  handleCopy: document.getElementById("handle-copy"),
+  handleCancel: document.getElementById("handle-cancel"),
+  handleConfirm: document.getElementById("handle-confirm"),
+  handleResult: document.getElementById("handle-result"),
+  handleTrigger: null
+};
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -648,49 +650,59 @@
     let currentHandleItem = null;
 
     function getAttentionItems(data) {
-      if (Array.isArray(data?.attentionItems) && data.attentionItems.length) {
-        return data.attentionItems.map((item) => {
-          const artist = item.artistName || item.artist || "";
-          const title = artist
-            ? `${artist} has an appointment that hasn’t been closed out.`
-            : "An appointment hasn't been closed out yet.";
+  const attentionCount = Number(data?.impact?.attentionCount || 0);
 
-          return {
-            title,
-            body: "Have Isla close it out?",
-            actionLabel: "Send to Isla"
-          };
-        });
-      }
-
-      const roster = Array.isArray(data?.roster) ? data.roster : [];
-      const firstArtist = roster.find((r) => r?.name)?.name || "";
-
-      const title = firstArtist
-        ? `${firstArtist} has an appointment that hasn’t been closed out.`
+  if (Array.isArray(data?.attentionItems) && data.attentionItems.length) {
+    return data.attentionItems.map((item) => {
+      const artistName = item.artistName || item.artist || "";
+      const title = artistName
+        ? `${artistName} has an appointment that hasn’t been closed out.`
         : "An appointment hasn't been closed out yet.";
 
-      return [{
+      return {
+        artistName,
         title,
         body: "Have Isla close it out?",
         actionLabel: "Send to Isla"
-      }];
-    }
+      };
+    });
+  }
+
+  if (attentionCount <= 0) {
+    return [];
+  }
+
+  const roster = Array.isArray(data?.roster) ? data.roster : [];
+  const firstArtist = roster.find((r) => r?.name)?.name || "";
+
+  const title = firstArtist
+    ? `${firstArtist} has an appointment that hasn’t been closed out.`
+    : "An appointment hasn't been closed out yet.";
+
+  return [{
+    artistName: firstArtist,
+    title,
+    body: "Have Isla close it out?",
+    actionLabel: "Send to Isla"
+  }];
+}
 
     function closeHandleFlow() {
-      els.handleOverlay.classList.remove("is-open");
-      els.handleOverlay.setAttribute("aria-hidden", "true");
-      els.handleResult.textContent = "";
-      currentHandleItem = null;
-    }
+        els.handleOverlay.classList.remove("is-open");
+        els.handleOverlay.setAttribute("aria-hidden", "true");
+        els.handleResult.textContent = "";
+        els.handleConfirm.disabled = false;
+        els.handleConfirm.textContent = "Send to Isla";
+        currentHandleItem = null;
+}
 
     function openHandleFlow() {
       const items = getAttentionItems(currentOperatorData || FALLBACK_OPERATOR_DATA);
       const item = items[0] || {
-        title: "An appointment hasn't been closed out yet.",
-        body: "Have Isla close it out?",
-        actionLabel: "Send to Isla"
-      };
+        title: "Nothing needs your attention right now.",
+        body: "You're clear.",
+        actionLabel: "Close"
+};
 
       currentHandleItem = item;
       els.handleTitle.textContent = item.title || "An appointment hasn't been closed out yet.";
@@ -702,14 +714,15 @@
     }
 
     function wireHandleFlow() {
-      const trigger = document.getElementById("handle-trigger");
-      if (trigger) {
+        const trigger = document.getElementById("handle-trigger");
+        els.handleTrigger = trigger || null;
+        if (trigger) {
         trigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          openHandleFlow();
-        });
-      }
-    }
+        event.preventDefault();
+        openHandleFlow();
+    });
+  }
+}
 
     function renderStatus(data) {
   const businessName = data.shopName || "Your Business";
@@ -848,18 +861,53 @@
       if (event.target === els.handleOverlay) closeHandleFlow();
     });
 
-    els.handleConfirm.addEventListener("click", () => {
-      if (!currentHandleItem) {
-        closeHandleFlow();
-        return;
-      }
+    els.handleConfirm.addEventListener("click", async () => {
+  if (!currentHandleItem) {
+    closeHandleFlow();
+    return;
+  }
 
-      els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
+  try {
+    els.handleConfirm.disabled = true;
+    els.handleConfirm.textContent = "Sending...";
+    els.handleResult.textContent = "";
 
-      window.setTimeout(() => {
-        closeHandleFlow();
-      }, 1100);
+    const payload = {
+      shopId: currentOperatorData?.shopId || null,
+      shopName: currentOperatorData?.shopName || "",
+      actionType: "closeout",
+      artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
+      title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
+      body: currentHandleItem.body || "Have Isla close it out?",
+      source: "operator-home"
+    };
+
+    const response = await fetch(window.ISLA_ACTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
+
+    const result = await response.json();
+
+    if (!response.ok || result?.success !== true) {
+      throw new Error(result?.error || `Action request failed: ${response.status}`);
+    }
+
+    els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
+
+    window.setTimeout(() => {
+      closeHandleFlow();
+    }, 1100);
+  } catch (error) {
+    console.error("Send to Isla failed:", error);
+    els.handleConfirm.disabled = false;
+    els.handleConfirm.textContent = "Send to Isla";
+    els.handleResult.textContent = "Could not reach Isla right now.";
+  }
+});
 
     (async function init() {
       try {

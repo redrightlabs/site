@@ -1,164 +1,71 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://redrightlabs.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const supabaseUrl = "https://uwydiqltvchlmjvzwkal.supabase.co";
-
-function getServiceRoleKey() {
-  const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
-  if (!serviceRoleKey) throw new Error("Missing SERVICE_ROLE_KEY");
-  return serviceRoleKey;
-}
-
-async function getProjectFolderRow(projectFolderId: string) {
-  const serviceRoleKey = getServiceRoleKey();
-
-  const res = await fetch(
-    `${supabaseUrl}/rest/v1/project_folders?project_folder_id=eq.${encodeURIComponent(projectFolderId)}&select=*`,
-    {
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
-    },
-  );
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(`Failed to read project_folders row: ${res.status} ${JSON.stringify(data)}`);
-  }
-
-  return Array.isArray(data) ? data[0] : null;
-}
-
-async function confirmProjectDone(payload: {
-  projectFolderId: string;
-  confirmedBy: string;
-}) {
-  const serviceRoleKey = getServiceRoleKey();
-  const now = new Date();
-
-  const aftercarePlannedAt = new Date(now);
-  aftercarePlannedAt.setHours(aftercarePlannedAt.getHours() + 1);
-  const contactCardPlannedAt = new Date(aftercarePlannedAt);
-
-  const res = await fetch(
-    `${supabaseUrl}/rest/v1/project_folders?project_folder_id=eq.${encodeURIComponent(payload.projectFolderId)}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({
-        completion_confirmed_at: now.toISOString(),
-        completion_confirmed_by: payload.confirmedBy,
-        aftercare_planned_at: aftercarePlannedAt.toISOString(),
-        contact_card_planned_at: contactCardPlannedAt.toISOString(),
-        escalation_flag: false,
-      }),
-    },
-  );
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(`Failed to confirm project done: ${res.status} ${JSON.stringify(data)}`);
-  }
-
-  return Array.isArray(data) ? data[0] : data;
-}
-
-Deno.serve(async (req: Request) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      {
-        status: 405,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-  }
-
   try {
-    const { projectFolderId, confirmedBy } = await req.json();
+    const body = await req.json();
 
-    if (!projectFolderId || typeof projectFolderId !== "string") {
-      return new Response(
-        JSON.stringify({ error: "Missing projectFolderId" }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
+    const shopId = body?.shopId ? String(body.shopId) : null;
+    const shopName = body?.shopName ? String(body.shopName) : "";
+    const actionType = body?.actionType ? String(body.actionType) : "closeout";
+    const artistName = body?.artistName ? String(body.artistName) : "";
+    const title = body?.title ? String(body.title) : "An appointment hasn't been closed out yet.";
+    const message = body?.body ? String(body.body) : "Have Isla close it out?";
+    const source = body?.source ? String(body.source) : "operator-home";
 
-    const safeConfirmedBy =
-      typeof confirmedBy === "string" && confirmedBy.trim()
-        ? confirmedBy.trim()
-        : "artist";
+    const actionId = crypto.randomUUID();
+    const queuedAt = new Date().toISOString();
 
-    const existingProject = await getProjectFolderRow(projectFolderId);
-
-    if (!existingProject) {
-      return new Response(
-        JSON.stringify({ error: "Project not found" }),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-
-        const doneWriteback = await confirmProjectDone({
-      projectFolderId,
-      confirmedBy: safeConfirmedBy,
+    console.log("ISLA ACTION QUEUED", {
+      actionId,
+      shopId,
+      shopName,
+      actionType,
+      artistName,
+      title,
+      message,
+      source,
+      queuedAt,
     });
-
-    const updatedProject = await getProjectFolderRow(projectFolderId);
 
     return new Response(
       JSON.stringify({
-        ok: true,
-        project: updatedProject,
-        doneWriteback,
+        success: true,
+        actionId,
+        queuedAt,
+        status: "queued",
       }),
       {
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
         },
-      },
+      }
     );
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+  } catch (err) {
+    console.error("confirm-project-done failed", err);
 
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({
+        success: false,
+        error: err instanceof Error ? err.message : "Server error",
+      }),
       {
         status: 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
         },
-      },
+      }
     );
   }
 });
