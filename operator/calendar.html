@@ -24,10 +24,36 @@ body{
   font-family:var(--sans);
 }
 
-.shell{
-  max-width:540px;
-  margin:0 auto;
-  padding:16px;
+  .shell{
+    max-width:540px;
+    margin:0 auto;
+    padding:16px;
+  }
+
+.top-nav{
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding-bottom:10px;
+  background:linear-gradient(#06070a,#090b0f);
+  backdrop-filter:blur(10px);
+}
+.back-top{
+  position:fixed;
+  right:16px;
+  bottom:20px;
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
 
 /* =========================
@@ -77,10 +103,16 @@ body{
   background:rgba(255,77,77,.12);
 }
 
+.day-pill:hover{
+  color:#fff;
+  background:rgba(255,255,255,.05);
+}
+
 .day-dot{
   margin-top:2px;
   font-size:10px;
   color:var(--accent);
+  opacity:.9;
 }
 
 /* =========================
@@ -278,7 +310,7 @@ body{
 
 <body>
 <div class="shell">
-
+  <div class="top-nav">
       <div class="lens-row">
     <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Shop</button>
     <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Artist</button>
@@ -294,13 +326,15 @@ body{
 
   <!-- JUMP CONTROLS -->
   <div class="jump-row">
+    <button class="jump-btn" onclick="scrollToWeek(-1)">← Week</button>
     <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
-    <button class="jump-btn" onclick="scrollToWeek(0)">This Week</button>
-    <button class="jump-btn" onclick="scrollToWeek(1)">Next Week</button>
+    <button class="jump-btn" onclick="scrollToWeek(1)">Week →</button>
+    <button class="jump-btn" onclick="scrollToMonth(1)">+ Month</button>
   </div>
 
   <!-- WEEK STRIP -->
   <div class="week-strip" id="week-strip"></div>
+  </div>
 
   <!-- TIMELINE -->
   <div class="timeline" id="timeline"></div>
@@ -319,6 +353,40 @@ let today = new Date();
 let baseDate = new Date(today);
 let currentLens = "shop";
 let currentArtist = "Jake";
+function getDayActivityDot(date){
+  const dayKey = date.toDateString();
+
+  const shopAppointments = [
+    { date: dayKey, time: "12:00 PM", artist: "Jake" },
+    { date: dayKey, time: "12:00 PM", artist: "Lena" },
+    { date: dayKey, time: "2:30 PM", artist: "Jake" }
+  ];
+
+  const islaActions = [
+    { date: dayKey, time: "12:00 PM", type: "CareWatch" },
+    { date: dayKey, time: "2:30 PM", type: "Review" }
+  ];
+
+  let count = 0;
+
+  if (currentLens === "shop") {
+    count = shopAppointments.length;
+  }
+
+  if (currentLens === "artist") {
+    count = shopAppointments.filter((a) => a.artist === currentArtist).length;
+  }
+
+  if (currentLens === "isla") {
+    count = islaActions.length;
+  }
+
+  if (count === 0) return "";
+  if (count <= 2) return "•";
+  if (count <= 4) return "••";
+  return "•••";
+}
+
 /* =========================
    BUILD WEEK STRIP
 ========================= */
@@ -332,18 +400,46 @@ function buildWeekStrip(){
 
     const el = document.createElement("div");
     el.className = "day-pill";
+    if (d.toDateString() === today.toDateString()) el.classList.add("active");
     el.dataset.date = d.toDateString();
+
+    const dot = getDayActivityDot(d);
 
     el.innerHTML = `
       <div>${DAYS[d.getDay()]}</div>
       <div>${d.getDate()}</div>
-      <div class="day-dot">•</div>
+      <div class="day-dot">${dot}</div>
     `;
 
     el.onclick = () => scrollToDate(d);
 
     stripEl.appendChild(el);
   }
+}
+function setActiveStripDay(dateString) {
+  document.querySelectorAll(".day-pill").forEach((pill) => {
+    pill.classList.toggle("active", pill.dataset.date === dateString);
+  });
+}
+
+function syncStripToScroll() {
+  const daySections = Array.from(document.querySelectorAll(".day-section"));
+  if (!daySections.length) return;
+
+  let closest = daySections[0];
+  let closestDistance = Infinity;
+
+  daySections.forEach((section) => {
+    const rect = section.getBoundingClientRect();
+    const distance = Math.abs(rect.top - 140);
+    if (distance < closestDistance) {
+      closest = section;
+      closestDistance = distance;
+    }
+  });
+
+  const activeDate = closest.id.replace("day-", "");
+  setActiveStripDay(activeDate);
 }
 
 /* =========================
@@ -515,6 +611,7 @@ function setLens(lens, event){
 
   syncArtistFilterVisibility();
   buildTimeline();
+  buildWeekStrip();
 }
 
 function syncArtistFilterVisibility() {
@@ -531,6 +628,7 @@ function syncArtistFilterVisibility() {
 function setArtist(artist) {
   currentArtist = artist;
   buildTimeline();
+  buildWeekStrip();
 }
 
 function wireProjectLinks() {
@@ -554,6 +652,7 @@ function scrollToDate(date){
   const id = "day-"+date.toDateString();
   const el = document.getElementById(id);
   if(el){
+    setActiveStripDay(date.toDateString());
     el.scrollIntoView({behavior:"smooth", block:"start"});
   }
 }
@@ -570,13 +669,38 @@ function scrollToWeek(offset){
   scrollToDate(d);
 }
 
+function scrollToMonth(offset){
+  const d = new Date(today);
+  d.setMonth(today.getMonth() + offset);
+  scrollToDate(d);
+}
+
+let scrollSyncTicking = false;
+window.addEventListener("scroll", () => {
+  if (scrollSyncTicking) return;
+  scrollSyncTicking = true;
+  window.requestAnimationFrame(() => {
+    syncStripToScroll();
+    scrollSyncTicking = false;
+  });
+});
+
 /* =========================
    INIT
 ========================= */
 
+const backTopBtn = document.getElementById("back-to-top");
+if(backTopBtn){
+  backTopBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
 syncArtistFilterVisibility();
 buildWeekStrip();
 buildTimeline();
+syncStripToScroll();
 </script>
+<button id="back-to-top" class="back-top">↑</button>
 </body>
 </html>
