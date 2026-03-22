@@ -127,6 +127,26 @@ body{
   background:rgba(255,77,77,.12);
   border-color:rgba(255,77,77,.18);
 }
+.artist-filter-row{
+  display:none;
+  justify-content:center;
+  margin-bottom:10px;
+}
+
+.artist-filter-row.is-visible{
+  display:flex;
+}
+
+.artist-select{
+  min-width:180px;
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-size:13px;
+  font-family:var(--sans);
+}
 .appt-ghost{
   opacity:.45;
 }
@@ -183,6 +203,13 @@ body{
     <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)">Isla</button>
   </div>
 
+  <div class="artist-filter-row" id="artist-filter-row">
+    <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
+      <option value="Jake">Jake</option>
+      <option value="Lena">Lena</option>
+    </select>
+  </div>
+
   <!-- JUMP CONTROLS -->
   <div class="jump-row">
     <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
@@ -203,6 +230,8 @@ body{
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const timelineEl = document.getElementById("timeline");
 const stripEl = document.getElementById("week-strip");
+const artistFilterRowEl = document.getElementById("artist-filter-row");
+const artistSelectEl = document.getElementById("artist-select");
 
 let today = new Date();
 let baseDate = new Date(today);
@@ -267,13 +296,13 @@ function buildTimeline(){
       {
         type: "CareWatch",
         client: "Miss Mary",
-        detail: "Healing follow-up sent",
+        detail: "Healing check-in scheduled",
         projectUrl: "/operator/projects.html?project=miss-mary-1"
       },
       {
-        type: "Review request",
+        type: "Review",
         client: "John D.",
-        detail: "Review request sent",
+        detail: "Review request queued",
         projectUrl: "/operator/projects.html?project=john-d-1"
       }
     ];
@@ -303,9 +332,9 @@ function buildTimeline(){
 
     const islaMarkup = renderedIsla.map((item) => `
       <div class="isla" data-project-url="${item.projectUrl}">
-        <div>${item.type}</div>
+        <div><strong>${item.type}</strong></div>
         <div>${item.client}</div>
-        <div>${item.detail}</div>
+        <div style="opacity:.7; font-size:11px; letter-spacing:.02em;">${item.detail}</div>
       </div>
     `).join("");
 
@@ -345,6 +374,23 @@ function setLens(lens, event){
     if (btn) btn.classList.add("active");
   }
 
+  syncArtistFilterVisibility();
+  buildTimeline();
+}
+
+function syncArtistFilterVisibility() {
+  if (!artistFilterRowEl) return;
+
+  if (currentLens === "artist") {
+    artistFilterRowEl.classList.add("is-visible");
+    if (artistSelectEl) artistSelectEl.value = currentArtist;
+  } else {
+    artistFilterRowEl.classList.remove("is-visible");
+  }
+}
+
+function setArtist(artist) {
+  currentArtist = artist;
   buildTimeline();
 }
 
@@ -389,9 +435,9 @@ function scrollToWeek(offset){
    INIT
 ========================= */
 
+syncArtistFilterVisibility();
 buildWeekStrip();
 buildTimeline();
-wireProjectLinks();
 </script>
 </body>
 </html>
