@@ -529,7 +529,7 @@
     }
 
     .today-summary-item{
-      padding:14px 14px 12px;
+      padding:16px 14px;
       border-radius:16px;
       background:rgba(255,255,255,.025);
       border:1px solid rgba(255,255,255,.05);
@@ -540,18 +540,12 @@
       margin:0;
       color:rgba(255,255,255,.96);
       font-family:var(--sans);
-      font-size:15px;
+      font-size:16px;
       font-weight:700;
       line-height:1.3;
     }
 
-    .today-summary-copy{
-      margin:6px 0 0;
-      color:rgba(235,239,245,.78);
-      font-family:var(--serif);
-      font-size:13px;
-      line-height:1.35;
-    }
+
 
     .load-grid{
         display:grid;
@@ -954,46 +948,34 @@ function openTodayFlow() {
   const carewatchCount = Number(breakdown.carewatch || 0);
   const reviewCount = Number(breakdown.review || 0);
   const rebookingCount = Number(breakdown.rebooking || 0);
-  const totalToday = carewatchCount + reviewCount + rebookingCount;
 
-  els.todayTitle.textContent = `Today’s activity breakdown${totalToday ? ` (${totalToday})` : ""}.`;
-  els.todayCopy.textContent = totalToday
-    ? "A centered breakdown of everything Isla handled today."
-    : "Nothing has been logged yet today.";
+  els.todayTitle.textContent = "What Isla handled today";
+  els.todayCopy.textContent = "";
 
   const summaryRows = [
     {
-      title: "CareWatch follow-ups",
+      title: "CareWatch",
       count: carewatchCount,
-      copy: carewatchCount === 1 ? "1 CareWatch follow-up sent today." : `${carewatchCount} CareWatch follow-ups sent today.`
     },
     {
-      title: "Review requests",
+      title: "Reviews",
       count: reviewCount,
-      copy: reviewCount === 1 ? "1 review request sent today." : `${reviewCount} review requests sent today.`
     },
     {
-      title: "Rebooking nudges",
+      title: "Rebookings",
       count: rebookingCount,
-      copy: rebookingCount === 1 ? "1 rebooking nudge sent today." : `${rebookingCount} rebooking nudges sent today.`
     }
-  ].filter((row) => row.count > 0);
+  ];
 
-  els.todayList.innerHTML = summaryRows.length
-    ? `<div class="today-summary-list">${summaryRows.map((row) => `
+  els.todayList.innerHTML = `
+    <div class="today-summary-list">
+      ${summaryRows.map((row) => `
         <div class="today-summary-item">
           <p class="today-summary-title">${escapeHtml(row.title)} — ${escapeHtml(String(row.count))}</p>
-          <p class="today-summary-copy">${escapeHtml(row.copy)}</p>
         </div>
-      `).join("")}</div>`
-    : `
-      <div class="today-summary-list">
-        <div class="today-summary-item">
-          <p class="today-summary-title">Nothing logged yet today</p>
-          <p class="today-summary-copy">As Isla handles work today, the daily breakdown will update here.</p>
-        </div>
-      </div>
-    `;
+      `).join("")}
+    </div>
+  `;
 
   els.todayOverlay.classList.add("is-open");
   els.todayOverlay.setAttribute("aria-hidden", "false");
