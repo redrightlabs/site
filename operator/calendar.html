@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Calendar · RedRight</title>
+
+<style>
+:root{
+  --bg:#07080b;
+  --panel:#0f1217;
+  --text:#efe8df;
+  --muted:#a0a9b5;
+  --line:rgba(255,255,255,.08);
+  --accent:#ff4d4d;
+  --radius:18px;
+  --sans:system-ui,-apple-system;
+}
+
+body{
+  margin:0;
+  background:linear-gradient(#06070a,#090b0f);
+  color:var(--text);
+  font-family:var(--sans);
+}
+
+.shell{
+  max-width:540px;
+  margin:0 auto;
+  padding:16px;
+}
+
+/* =========================
+   JUMP CONTROLS
+========================= */
+
+.jump-row{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.jump-btn{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* =========================
+   WEEK STRIP
+========================= */
+
+.week-strip{
+  display:flex;
+  justify-content:space-between;
+  gap:4px;
+  margin-bottom:12px;
+}
+
+.day-pill{
+  flex:1;
+  text-align:center;
+  padding:6px 0;
+  border-radius:10px;
+  font-size:11px;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+.day-pill.active{
+  color:#fff;
+  background:rgba(255,77,77,.12);
+}
+
+.day-dot{
+  margin-top:2px;
+  font-size:10px;
+  color:var(--accent);
+}
+
+/* =========================
+   TIMELINE
+========================= */
+
+.timeline{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.day-section{
+  padding:10px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--panel);
+}
+
+.day-header{
+  font-size:13px;
+  margin-bottom:6px;
+  color:var(--muted);
+}
+
+/* =========================
+   APPOINTMENTS
+========================= */
+
+.appt{
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  margin-bottom:6px;
+  font-size:13px;
+}
+
+.appt:last-child{
+  margin-bottom:0;
+}
+.appt,
+.isla{
+  transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.appt:hover,
+.isla:hover{
+  transform:translateY(-1px);
+}
+
+.appt:active,
+.isla:active{
+  transform:scale(.99);
+}
+/* =========================
+   ISLA BLOCKS
+========================= */
+
+.isla{
+  padding:8px;
+  border-radius:10px;
+  background:rgba(255,77,77,.08);
+  border:1px solid rgba(255,77,77,.2);
+  font-size:12px;
+  margin-bottom:6px;
+}
+</style>
+</head>
+
+<body>
+<div class="shell">
+
+  <!-- JUMP CONTROLS -->
+  <div class="jump-row">
+    <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
+    <button class="jump-btn" onclick="scrollToWeek(0)">This Week</button>
+    <button class="jump-btn" onclick="scrollToWeek(1)">Next Week</button>
+  </div>
+
+  <!-- WEEK STRIP -->
+  <div class="week-strip" id="week-strip"></div>
+
+  <!-- TIMELINE -->
+  <div class="timeline" id="timeline"></div>
+
+</div>
+
+<script>
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const timelineEl = document.getElementById("timeline");
+const stripEl = document.getElementById("week-strip");
+
+let today = new Date();
+let baseDate = new Date(today);
+
+/* =========================
+   BUILD WEEK STRIP
+========================= */
+
+function buildWeekStrip(){
+  stripEl.innerHTML = "";
+
+  for(let i=0;i<7;i++){
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate() - baseDate.getDay() + i);
+
+    const el = document.createElement("div");
+    el.className = "day-pill";
+    el.dataset.date = d.toDateString();
+
+    el.innerHTML = `
+      <div>${DAYS[d.getDay()]}</div>
+      <div>${d.getDate()}</div>
+      <div class="day-dot">•</div>
+    `;
+
+    el.onclick = () => scrollToDate(d);
+
+    stripEl.appendChild(el);
+  }
+}
+
+/* =========================
+   BUILD TIMELINE
+========================= */
+
+function buildTimeline(){
+  timelineEl.innerHTML = "";
+
+  for(let i=-7;i<21;i++){
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate()+i);
+
+    const section = document.createElement("div");
+    section.className = "day-section";
+    section.id = "day-"+d.toDateString();
+
+        section.innerHTML = `
+      <div class="day-header">${d.toDateString()}</div>
+
+      <div class="appt" data-project-url="/operator/projects.html?project=miss-mary-1">
+        <div>12:00 PM</div>
+        <div>Miss Mary</div>
+        <div>Jake</div>
+      </div>
+
+      <div class="appt" data-project-url="/operator/projects.html?project=john-d-1">
+        <div>2:30 PM</div>
+        <div>John D.</div>
+        <div>Lena</div>
+      </div>
+
+      <div class="isla" data-project-url="/operator/projects.html?project=miss-mary-1">
+        <div>CareWatch</div>
+        <div>Miss Mary</div>
+      </div>
+
+      <div class="isla" data-project-url="/operator/projects.html?project=john-d-1">
+        <div>Review request</div>
+        <div>John D.</div>
+      </div>
+    `;
+
+    timelineEl.appendChild(section);
+  }
+}
+function wireProjectLinks() {
+  const items = document.querySelectorAll(".appt[data-project-url], .isla[data-project-url]");
+
+  items.forEach((item) => {
+    item.style.cursor = "pointer";
+    item.addEventListener("click", () => {
+      const url = item.getAttribute("data-project-url");
+      if (url) {
+        window.location.href = url;
+      }
+    });
+  });
+}
+/* =========================
+   NAVIGATION
+========================= */
+
+function scrollToDate(date){
+  const id = "day-"+date.toDateString();
+  const el = document.getElementById(id);
+  if(el){
+    el.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+}
+
+function scrollToDay(type){
+  if(type === "today"){
+    scrollToDate(today);
+  }
+}
+
+function scrollToWeek(offset){
+  const d = new Date(today);
+  d.setDate(today.getDate() + (offset*7));
+  scrollToDate(d);
+}
+
+/* =========================
+   INIT
+========================= */
+
+buildWeekStrip();
+buildTimeline();
+wireProjectLinks();
+</script>
+</body>
+</html>
