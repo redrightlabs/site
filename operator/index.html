@@ -496,6 +496,23 @@
       text-align:center;
     }
 
+    .output-panel.is-today{
+      background:rgba(255,255,255,.022);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    .output-panel.is-new{
+      background:rgba(255,255,255,.028);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    .output-panel.is-new.has-unseen{
+      border-color:rgba(255,77,77,.16);
+      box-shadow:
+        0 0 24px rgba(255,77,77,.08),
+        inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
     .output-panel-title{
       margin:0;
       color:rgba(255,255,255,.96);
@@ -1104,22 +1121,22 @@ function wireHandleFlow() {
 
   els.output.innerHTML = `
     <p class="kicker">What Isla handled</p>
-    <h2 class="section-title">Two ways to view Isla’s work</h2>
+    <h2 class="section-title">What Isla handled</h2>
 
     <div class="output-split">
-      <div class="output-panel">
-        <p class="output-panel-title">Today’s total</p>
-        <p class="output-panel-copy">Isla handled ${totalToday} things today.</p>
+      <div class="output-panel is-today">
+        <p class="output-panel-title">Today</p>
+        <p class="output-panel-copy">${totalToday} things handled today.</p>
         <p class="output-tally">CareWatch ${carewatchCount} • Reviews ${reviewCount} • Rebookings ${rebookingCount}</p>
         <div class="output-panel-actions">
           <button class="cta-button" type="button" id="activity-today-trigger">View today</button>
         </div>
       </div>
 
-      <div class="output-panel">
-        <p class="output-panel-title">Since your last look</p>
-        <p class="output-panel-copy">${newCount > 0 ? `${newCount} new actions are waiting for review.` : `You’re all caught up.`}</p>
-        ${newCount > 0 ? `<p class="output-tally">New activity clears after you review it.</p>` : ``}
+      <div class="output-panel is-new ${newCount > 0 ? `has-unseen` : ``}">
+        <p class="output-panel-title">New activity</p>
+        <p class="output-panel-copy">${newCount > 0 ? `${newCount} new actions waiting.` : `You’re all caught up.`}</p>
+        ${newCount > 0 ? `<p class="output-tally">Clears after you review</p>` : ``}
         <div class="output-panel-actions">
           ${newCount > 0 ? `<button class="cta-button" type="button" id="activity-trigger">View new activity</button>` : ``}
         </div>
