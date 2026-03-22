@@ -105,7 +105,31 @@ body{
   margin-bottom:6px;
   color:var(--muted);
 }
+.lens-row{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:10px;
+}
 
+.lens-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  font-size:12px;
+  cursor:pointer;
+}
+
+.lens-btn.active{
+  color:#fff;
+  background:rgba(255,77,77,.12);
+  border-color:rgba(255,77,77,.18);
+}
+.appt-ghost{
+  opacity:.45;
+}
 /* =========================
    APPOINTMENTS
 ========================= */
@@ -153,6 +177,12 @@ body{
 <body>
 <div class="shell">
 
+      <div class="lens-row">
+    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Shop</button>
+    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Artist</button>
+    <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)">Isla</button>
+  </div>
+
   <!-- JUMP CONTROLS -->
   <div class="jump-row">
     <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
@@ -169,13 +199,15 @@ body{
 </div>
 
 <script>
+
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const timelineEl = document.getElementById("timeline");
 const stripEl = document.getElementById("week-strip");
 
 let today = new Date();
 let baseDate = new Date(today);
-
+let currentLens = "shop";
+let currentArtist = "Jake";
 /* =========================
    BUILD WEEK STRIP
 ========================= */
@@ -214,39 +246,108 @@ function buildTimeline(){
     const d = new Date(baseDate);
     d.setDate(baseDate.getDate()+i);
 
+    const dayLabel = d.toDateString();
+
+    const shopAppointments = [
+      {
+        time: "12:00 PM",
+        client: "Miss Mary",
+        artist: "Jake",
+        projectUrl: "/operator/projects.html?project=miss-mary-1"
+      },
+      {
+        time: "2:30 PM",
+        client: "John D.",
+        artist: "Lena",
+        projectUrl: "/operator/projects.html?project=john-d-1"
+      }
+    ];
+
+    const islaActions = [
+      {
+        type: "CareWatch",
+        client: "Miss Mary",
+        detail: "Healing follow-up sent",
+        projectUrl: "/operator/projects.html?project=miss-mary-1"
+      },
+      {
+        type: "Review request",
+        client: "John D.",
+        detail: "Review request sent",
+        projectUrl: "/operator/projects.html?project=john-d-1"
+      }
+    ];
+
+    let renderedAppointments = shopAppointments;
+    let renderedIsla = [];
+
+    if (currentLens === "artist") {
+      renderedAppointments = shopAppointments.filter((item) => item.artist === currentArtist);
+    }
+
+    if (currentLens === "isla") {
+      renderedAppointments = shopAppointments;
+      renderedIsla = islaActions;
+    }
+
+    const appointmentMarkup = renderedAppointments.map((item) => {
+      const islaGhostClass = currentLens === "isla" ? " appt-ghost" : "";
+      return `
+        <div class="appt${islaGhostClass}" data-project-url="${item.projectUrl}">
+          <div>${item.time}</div>
+          <div>${item.client}</div>
+          <div>${item.artist}</div>
+        </div>
+      `;
+    }).join("");
+
+    const islaMarkup = renderedIsla.map((item) => `
+      <div class="isla" data-project-url="${item.projectUrl}">
+        <div>${item.type}</div>
+        <div>${item.client}</div>
+        <div>${item.detail}</div>
+      </div>
+    `).join("");
+
+    const emptyMarkup =
+      !appointmentMarkup && !islaMarkup
+        ? `<div class="appt" style="opacity:.6;">No activity this day</div>`
+        : "";
+
     const section = document.createElement("div");
     section.className = "day-section";
-    section.id = "day-"+d.toDateString();
+    section.id = "day-"+dayLabel;
 
-        section.innerHTML = `
-      <div class="day-header">${d.toDateString()}</div>
-
-      <div class="appt" data-project-url="/operator/projects.html?project=miss-mary-1">
-        <div>12:00 PM</div>
-        <div>Miss Mary</div>
-        <div>Jake</div>
-      </div>
-
-      <div class="appt" data-project-url="/operator/projects.html?project=john-d-1">
-        <div>2:30 PM</div>
-        <div>John D.</div>
-        <div>Lena</div>
-      </div>
-
-      <div class="isla" data-project-url="/operator/projects.html?project=miss-mary-1">
-        <div>CareWatch</div>
-        <div>Miss Mary</div>
-      </div>
-
-      <div class="isla" data-project-url="/operator/projects.html?project=john-d-1">
-        <div>Review request</div>
-        <div>John D.</div>
-      </div>
+    section.innerHTML = `
+      <div class="day-header">${dayLabel}</div>
+      ${appointmentMarkup}
+      ${islaMarkup}
+      ${emptyMarkup}
     `;
 
     timelineEl.appendChild(section);
   }
+
+  wireProjectLinks();
 }
+
+function setLens(lens, event){
+  currentLens = lens;
+
+  document.querySelectorAll(".lens-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  if (event?.currentTarget) {
+    event.currentTarget.classList.add("active");
+  } else {
+    const btn = document.querySelector(`.lens-btn[data-lens="${lens}"]`);
+    if (btn) btn.classList.add("active");
+  }
+
+  buildTimeline();
+}
+
 function wireProjectLinks() {
   const items = document.querySelectorAll(".appt[data-project-url], .isla[data-project-url]");
 
