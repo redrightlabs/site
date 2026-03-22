@@ -155,15 +155,42 @@ body{
 ========================= */
 
 .appt{
-  padding:10px;
+  padding:10px 12px;
   border-radius:12px;
   background:rgba(255,255,255,.04);
   margin-bottom:6px;
   font-size:13px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
 
 .appt:last-child{
   margin-bottom:0;
+}
+.appt-time{
+  flex:0 0 auto;
+  min-width:70px;
+  color:var(--text);
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.appt-client{
+  flex:1 1 auto;
+  min-width:0;
+  color:var(--text);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.appt-artist{
+  flex:0 0 auto;
+  color:var(--muted);
+  white-space:nowrap;
 }
 .appt,
 .isla{
@@ -323,9 +350,9 @@ function buildTimeline(){
       const islaGhostClass = currentLens === "isla" ? " appt-ghost" : "";
       return `
         <div class="appt${islaGhostClass}" data-project-url="${item.projectUrl}">
-          <div>${item.time}</div>
-          <div>${item.client}</div>
-          <div>${item.artist}</div>
+          <div class="appt-time">${item.time}</div>
+          <div class="appt-client">${item.client}</div>
+          <div class="appt-artist">${item.artist}</div>
         </div>
       `;
     }).join("");
