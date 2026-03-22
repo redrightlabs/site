@@ -348,11 +348,16 @@ const timelineEl = document.getElementById("timeline");
 const stripEl = document.getElementById("week-strip");
 const artistFilterRowEl = document.getElementById("artist-filter-row");
 const artistSelectEl = document.getElementById("artist-select");
-
+const topNavEl = document.querySelector(".top-nav");
 let today = new Date();
 let baseDate = new Date(today);
 let currentLens = "shop";
 let currentArtist = "Jake";
+
+function getTopOffset() {
+  const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
+  return Math.round(navHeight + 10);
+}
 function getDayActivityDot(date){
   const dayKey = date.toDateString();
 
@@ -400,7 +405,7 @@ function buildWeekStrip(){
 
     const el = document.createElement("div");
     el.className = "day-pill";
-    if (d.toDateString() === today.toDateString()) el.classList.add("active");
+    if (d.toDateString() === baseDate.toDateString()) el.classList.add("active");
     el.dataset.date = d.toDateString();
 
     const dot = getDayActivityDot(d);
@@ -431,8 +436,7 @@ function syncStripToScroll() {
 
   daySections.forEach((section) => {
     const rect = section.getBoundingClientRect();
-    const distance = Math.abs(rect.top - 140);
-    if (distance < closestDistance) {
+    const distance = Math.abs(rect.top - getTopOffset());    if (distance < closestDistance) {
       closest = section;
       closestDistance = distance;
     }
@@ -610,8 +614,9 @@ function setLens(lens, event){
   }
 
   syncArtistFilterVisibility();
-  buildTimeline();
-  buildWeekStrip();
+    buildWeekStrip();
+    buildTimeline();
+    syncStripToScroll();
 }
 
 function syncArtistFilterVisibility() {
@@ -627,8 +632,9 @@ function syncArtistFilterVisibility() {
 
 function setArtist(artist) {
   currentArtist = artist;
-  buildTimeline();
   buildWeekStrip();
+  buildTimeline();
+  syncStripToScroll();
 }
 
 function wireProjectLinks() {
@@ -653,27 +659,44 @@ function scrollToDate(date){
   const el = document.getElementById(id);
   if(el){
     setActiveStripDay(date.toDateString());
-    el.scrollIntoView({behavior:"smooth", block:"start"});
+    const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+    window.scrollTo({ top: y, behavior: "smooth" });
   }
 }
 
 function scrollToDay(type){
   if(type === "today"){
-    scrollToDate(today);
+    baseDate = new Date(today);
+    buildWeekStrip();
+    buildTimeline();
+    window.requestAnimationFrame(() => {
+      scrollToDate(today);
+    });
   }
 }
 
 function scrollToWeek(offset){
-  const d = new Date(today);
-  d.setDate(today.getDate() + (offset*7));
-  scrollToDate(d);
+  const next = new Date(baseDate);
+  next.setDate(baseDate.getDate() + (offset * 7));
+  baseDate = next;
+  buildWeekStrip();
+  buildTimeline();
+  window.requestAnimationFrame(() => {
+    scrollToDate(baseDate);
+  });
 }
 
 function scrollToMonth(offset){
-  const d = new Date(today);
-  d.setMonth(today.getMonth() + offset);
-  scrollToDate(d);
+  const next = new Date(baseDate);
+  next.setMonth(baseDate.getMonth() + offset);
+  baseDate = next;
+  buildWeekStrip();
+  buildTimeline();
+  window.requestAnimationFrame(() => {
+    scrollToDate(baseDate);
+  });
 }
+
 
 let scrollSyncTicking = false;
 window.addEventListener("scroll", () => {
