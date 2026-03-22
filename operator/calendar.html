@@ -90,20 +90,49 @@ body{
 .timeline{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:10px;
 }
 
 .day-section{
-  padding:10px;
+  padding:12px 10px 10px;
   border-radius:16px;
   border:1px solid var(--line);
   background:var(--panel);
 }
 
 .day-header{
-  font-size:13px;
-  margin-bottom:6px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:10px;
   color:var(--muted);
+}
+.time-slot{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:8px;
+  align-items:start;
+  margin-bottom:8px;
+}
+
+.time-slot:last-child{
+  margin-bottom:0;
+}
+
+.slot-time{
+  padding-top:8px;
+  color:rgba(233,232,223,.62);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+
+.slot-stack{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 .lens-row{
   display:flex;
@@ -155,10 +184,10 @@ body{
 ========================= */
 
 .appt{
-  padding:10px 12px;
+  padding:9px 10px;
   border-radius:12px;
   background:rgba(255,255,255,.04);
-  margin-bottom:6px;
+  margin-bottom:0;
   font-size:13px;
   display:flex;
   align-items:center;
@@ -211,12 +240,38 @@ body{
 ========================= */
 
 .isla{
-  padding:8px;
-  border-radius:10px;
+  padding:8px 10px;
+  border-radius:12px;
   background:rgba(255,77,77,.08);
   border:1px solid rgba(255,77,77,.2);
   font-size:12px;
-  margin-bottom:6px;
+  margin-bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.isla-type{
+  flex:0 0 auto;
+  font-weight:600;
+  color:#ffdede;
+  white-space:nowrap;
+}
+
+.isla-client{
+  flex:1 1 auto;
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.isla-detail{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:11px;
+  white-space:nowrap;
 }
 </style>
 </head>
@@ -312,25 +367,33 @@ function buildTimeline(){
         projectUrl: "/operator/projects.html?project=miss-mary-1"
       },
       {
-        time: "2:30 PM",
+        time: "12:00 PM",
         client: "John D.",
         artist: "Lena",
         projectUrl: "/operator/projects.html?project=john-d-1"
+      },
+      {
+        time: "2:30 PM",
+        client: "Sarah K.",
+        artist: "Jake",
+        projectUrl: "/operator/projects.html?project=sarah-k-1"
       }
     ];
 
     const islaActions = [
       {
+        time: "12:00 PM",
         type: "CareWatch",
         client: "Miss Mary",
         detail: "Healing check-in scheduled",
         projectUrl: "/operator/projects.html?project=miss-mary-1"
       },
       {
+        time: "2:30 PM",
         type: "Review",
-        client: "John D.",
+        client: "Sarah K.",
         detail: "Review request queued",
-        projectUrl: "/operator/projects.html?project=john-d-1"
+        projectUrl: "/operator/projects.html?project=sarah-k-1"
       }
     ];
 
@@ -346,29 +409,80 @@ function buildTimeline(){
       renderedIsla = islaActions;
     }
 
-    const appointmentMarkup = renderedAppointments.map((item) => {
-      const islaGhostClass = currentLens === "isla" ? " appt-ghost" : "";
-      return `
-        <div class="appt${islaGhostClass}" data-project-url="${item.projectUrl}">
-          <div class="appt-time">${item.time}</div>
-          <div class="appt-client">${item.client}</div>
-          <div class="appt-artist">${item.artist}</div>
-        </div>
-      `;
-    }).join("");
+    const timelineItems = [];
 
-    const islaMarkup = renderedIsla.map((item) => `
-      <div class="isla" data-project-url="${item.projectUrl}">
-        <div><strong>${item.type}</strong></div>
-        <div>${item.client}</div>
-        <div style="opacity:.7; font-size:11px; letter-spacing:.02em;">${item.detail}</div>
-      </div>
-    `).join("");
+    renderedAppointments.forEach((item) => {
+      timelineItems.push({
+        kind: "appointment",
+        time: item.time,
+        projectUrl: item.projectUrl,
+        artist: item.artist,
+        client: item.client,
+        ghost: currentLens === "isla"
+      });
+    });
 
-    const emptyMarkup =
-      !appointmentMarkup && !islaMarkup
-        ? `<div class="appt" style="opacity:.6;">No activity this day</div>`
-        : "";
+    renderedIsla.forEach((item) => {
+      timelineItems.push({
+        kind: "isla",
+        time: item.time,
+        projectUrl: item.projectUrl,
+        type: item.type,
+        client: item.client,
+        detail: item.detail
+      });
+    });
+
+    const timeOrder = {
+      "12:00 PM": 1200,
+      "2:30 PM": 1430,
+      "4:00 PM": 1600,
+      "6:00 PM": 1800
+    };
+
+    timelineItems.sort((a, b) => {
+      const aTime = timeOrder[a.time] || 9999;
+      const bTime = timeOrder[b.time] || 9999;
+      return aTime - bTime;
+    });
+
+    const groupedByTime = new Map();
+    timelineItems.forEach((item) => {
+      if (!groupedByTime.has(item.time)) groupedByTime.set(item.time, []);
+      groupedByTime.get(item.time).push(item);
+    });
+
+    const slotMarkup = timelineItems.length
+      ? Array.from(groupedByTime.entries()).map(([time, items]) => {
+          const inner = items.map((item) => {
+            if (item.kind === "appointment") {
+              const islaGhostClass = item.ghost ? " appt-ghost" : "";
+              return `
+                <div class="appt${islaGhostClass}" data-project-url="${item.projectUrl}">
+                  <div class="appt-time">${item.time}</div>
+                  <div class="appt-client">${item.client}</div>
+                  <div class="appt-artist">${item.artist}</div>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="isla" data-project-url="${item.projectUrl}">
+                <div class="isla-type">${item.type}</div>
+                <div class="isla-client">${item.client}</div>
+                <div class="isla-detail">${item.detail}</div>
+              </div>
+            `;
+          }).join("");
+
+          return `
+            <div class="time-slot">
+              <div class="slot-time">${time}</div>
+              <div class="slot-stack">${inner}</div>
+            </div>
+          `;
+        }).join("")
+      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">No activity this day</div></div></div>`;
 
     const section = document.createElement("div");
     section.className = "day-section";
@@ -376,9 +490,7 @@ function buildTimeline(){
 
     section.innerHTML = `
       <div class="day-header">${dayLabel}</div>
-      ${appointmentMarkup}
-      ${islaMarkup}
-      ${emptyMarkup}
+      ${slotMarkup}
     `;
 
     timelineEl.appendChild(section);
