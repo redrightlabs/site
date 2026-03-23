@@ -392,10 +392,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { minDuration: 220, maxDuration: 320, easing: "easeOutCubic", focusDelay: 140, sweep: false },
-  today: { minDuration: 320, maxDuration: 420, easing: "easeOutQuart", focusDelay: 120, sweep: false },
-  week:  { minDuration: 720, maxDuration: 980, easing: "easeInOutCubic", focusDelay: 170, sweep: true },
-  month: { minDuration: 1380, maxDuration: 1820, easing: "easeInOutSine", focusDelay: 220, sweep: true }
+  tap:   { minDuration: 240, maxDuration: 360, easing: "easeOutCubic", focusDelay: 140, sweep: false },
+  today: { minDuration: 480, maxDuration: 720, easing: "easeOutQuart", focusDelay: 140, sweep: false },
+  week:  { minDuration: 1200, maxDuration: 1650, easing: "easeInOutSine", focusDelay: 190, sweep: true },
+  month: { minDuration: 2600, maxDuration: 3400, easing: "easeInOutSine", focusDelay: 260, sweep: true }
 };
 
 function getTopOffset() {
@@ -503,21 +503,21 @@ function getMotionDuration(motion, fromDate, toDate, pixelDistance){
   const pxDistance = Math.abs(pixelDistance);
 
   if (motion === "month") {
-    const duration = 980 + (dayDistance * 22) + (pxDistance * 0.06);
+    const duration = 1800 + (dayDistance * 38) + (pxDistance * 0.16);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
   if (motion === "week") {
-    const duration = 520 + (dayDistance * 24) + (pxDistance * 0.05);
+    const duration = 900 + (dayDistance * 42) + (pxDistance * 0.10);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
   if (motion === "today") {
-    const duration = 260 + (pxDistance * 0.08);
+    const duration = 360 + (pxDistance * 0.12);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
-  const duration = 180 + (pxDistance * 0.05);
+  const duration = 200 + (pxDistance * 0.06);
   return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
 }
 function getScrollEasing(name, t){
@@ -568,8 +568,8 @@ function sweepWeekStrip(){
       pill.classList.add("pulse");
       window.setTimeout(() => {
         pill.classList.remove("pulse");
-      }, 320);
-    }, index * 36);
+      }, 360);
+    }, index * 54);
   });
 }
 
@@ -661,11 +661,23 @@ function syncStripToScroll() {
 
   const activeDate = closest.id.replace("day-", "");
   const parsed = new Date(activeDate);
-  if (!Number.isNaN(parsed.getTime())) {
-    baseDate = parsed;
+  if (Number.isNaN(parsed.getTime())) return;
+
+  const currentWeekStart = new Date(baseDate);
+  currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+  currentWeekStart.setHours(0, 0, 0, 0);
+
+  const currentWeekEnd = new Date(currentWeekStart);
+  currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+  currentWeekEnd.setHours(23, 59, 59, 999);
+
+  baseDate = parsed;
+
+  if (parsed < currentWeekStart || parsed > currentWeekEnd) {
     buildWeekStrip();
-    setActiveStripDay(activeDate);
   }
+
+  setActiveStripDay(activeDate);
 }
 
 /* =========================
