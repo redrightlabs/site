@@ -152,25 +152,6 @@ body{
   gap:10px;
 }
 
-.timeline.roll-up{
-  animation:timelineRollUp 420ms cubic-bezier(.2,.8,.2,1);
-  will-change:transform, opacity;
-}
-
-.timeline.roll-down{
-  animation:timelineRollDown 420ms cubic-bezier(.2,.8,.2,1);
-  will-change:transform, opacity;
-}
-
-@keyframes timelineRollUp{
-  0%{ transform:translateY(26px); opacity:.82; }
-  100%{ transform:translateY(0); opacity:1; }
-}
-
-@keyframes timelineRollDown{
-  0%{ transform:translateY(-26px); opacity:.82; }
-  100%{ transform:translateY(0); opacity:1; }
-}
 
 .day-section{
   padding:12px 10px 10px;
@@ -496,18 +477,25 @@ function focusDaySection(el){
   setTimeout(()=> el.classList.remove("is-focused"), 520);
 }
 
-function animateTimelineRoll(direction){
-  if(!timelineEl || !direction) return;
 
-  const cls = direction > 0 ? "roll-up" : "roll-down";
+function navigateToDateWithRoll(date, direction){
+  const id = "day-" + date.toDateString();
+  const el = document.getElementById(id);
+  if(!el) return;
 
-  timelineEl.classList.remove("roll-up", "roll-down");
-  void timelineEl.offsetWidth;
-  timelineEl.classList.add(cls);
+  const ds = date.toDateString();
+  setActiveStripDay(ds);
+  pulseActivePill(ds);
 
-  window.setTimeout(() => {
-    timelineEl.classList.remove(cls);
-  }, 420);
+  const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+  const preOffset = direction > 0 ? 120 : -120;
+
+  window.scrollTo({ top: targetY + preOffset, behavior: "auto" });
+
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: targetY, behavior: "smooth" });
+    window.setTimeout(() => focusDaySection(el), 220);
+  });
 }
 
 function syncStripToScroll() {
@@ -771,10 +759,7 @@ function scrollToWeek(offset){
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
-    animateTimelineRoll(lastJumpDirection);
-    window.setTimeout(() => {
-      scrollToDate(baseDate);
-    }, 120);
+    navigateToDateWithRoll(baseDate, lastJumpDirection);
   });
 }
 
@@ -786,10 +771,7 @@ function scrollToMonth(offset){
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
-    animateTimelineRoll(lastJumpDirection);
-    window.setTimeout(() => {
-      scrollToDate(baseDate);
-    }, 120);
+    navigateToDateWithRoll(baseDate, lastJumpDirection);
   });
 }
 
