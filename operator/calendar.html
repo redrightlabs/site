@@ -134,10 +134,11 @@ body{
 }
 
 .day-dot{
-  margin-top:2px;
-  font-size:10px;
-  color:var(--accent);
-  opacity:.9;
+  margin-top:3px;
+  font-size:9px;
+  line-height:1.1;
+  color:rgba(233,232,223,.58);
+  min-height:10px;
 }
 
 /* =========================
@@ -479,7 +480,7 @@ function getTopOffset() {
   const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
   return Math.round(navHeight + 10);
 }
-function getDayActivityDot(date){
+function getDayActivityCount(date){
   const dayKey = date.toDateString();
 
   const shopAppointments = [
@@ -488,29 +489,15 @@ function getDayActivityDot(date){
     { date: dayKey, time: "2:30 PM", artist: "Jake" }
   ];
 
-  const islaActions = [
-    { date: dayKey, time: "12:00 PM", type: "CareWatch" },
-    { date: dayKey, time: "2:30 PM", type: "Review" }
-  ];
-
-  let count = 0;
-
-  if (currentLens === "shop") {
-    count = shopAppointments.length;
-  }
-
   if (currentLens === "artist") {
-    count = shopAppointments.filter((a) => a.artist === currentArtist).length;
+    return shopAppointments.filter((a) => a.artist === currentArtist).length;
   }
 
   if (currentLens === "isla") {
-    count = islaActions.length;
+    return shopAppointments.length;
   }
 
-  if (count === 0) return "";
-  if (count <= 2) return "•";
-  if (count <= 4) return "••";
-  return "•••";
+  return shopAppointments.length;
 }
 
 /* =========================
@@ -529,12 +516,13 @@ function buildWeekStrip(){
     if (d.toDateString() === baseDate.toDateString()) el.classList.add("active");
     el.dataset.date = d.toDateString();
 
-    const dot = getDayActivityDot(d);
+    const count = getDayActivityCount(d);
+    const countLabel = count > 0 ? `${count} appt${count === 1 ? "" : "s"}` : "";
 
     el.innerHTML = `
       <div>${DAYS[d.getDay()]}</div>
       <div>${d.getDate()}</div>
-      <div class="day-dot">${dot}</div>
+      <div class="day-dot">${countLabel}</div>
     `;
 
     el.onclick = () => scrollToDate(d);
@@ -587,6 +575,39 @@ function parseMinutes(timeStr){
 function getNowMinutes(){
   const n = new Date();
   return n.getHours() * 60 + n.getMinutes();
+}
+
+function computeUpNext(){
+  const items = Array.from(document.querySelectorAll('.appt'));
+  const upcoming = [];
+  const nowMin = getNowMinutes();
+
+  items.forEach(el => {
+    const section = el.closest('.day-section');
+    if (!section || !section.classList.contains('is-today')) return;
+
+    const timeEl = el.querySelector('.appt-time');
+    if(!timeEl) return;
+
+    const timeStr = timeEl.textContent;
+    const min = parseMinutes(timeStr);
+
+    if(min >= nowMin){
+      upcoming.push({ el, min, timeStr });
+    }
+  });
+
+  if(!upcoming.length) return null;
+
+  upcoming.sort((a,b)=>a.min-b.min);
+
+  const firstTime = upcoming[0].min;
+  const group = upcoming.filter(i=>i.min===firstTime);
+
+  return {
+    time: group[0].timeStr,
+    count: group.length
+  };
 }
 
 function getMotionDuration(motion, fromDate, toDate, pixelDistance){
@@ -1104,35 +1125,3 @@ syncStripToScroll();
 </script>
 </body>
 </html>
-function computeUpNext(){
-  const now = new Date();
-  const todayKey = today.toDateString();
-
-  const items = Array.from(document.querySelectorAll('.appt'));
-  const upcoming = [];
-
-  items.forEach(el => {
-    const timeEl = el.querySelector('.appt-time');
-    if(!timeEl) return;
-
-    const timeStr = timeEl.textContent;
-    const min = parseMinutes(timeStr);
-    const nowMin = getNowMinutes();
-
-    if(min >= nowMin){
-      upcoming.push({ el, min, timeStr });
-    }
-  });
-
-  if(!upcoming.length) return null;
-
-  upcoming.sort((a,b)=>a.min-b.min);
-
-  const firstTime = upcoming[0].min;
-  const group = upcoming.filter(i=>i.min===firstTime);
-
-  return {
-    time: group[0].timeStr,
-    count: group.length
-  };
-}
