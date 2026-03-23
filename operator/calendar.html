@@ -388,10 +388,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140 },
-  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120 },
-  week:  { duration: 520, easing: "easeInOutCubic", focusDelay: 150 },
-  month: { duration: 720, easing: "easeInOutQuint", focusDelay: 170 }
+  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, leadDays: 0 },
+  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120, leadDays: 0 },
+  week:  { duration: 520, easing: "easeInOutCubic", focusDelay: 150, leadDays: 3 },
+  month: { duration: 780, easing: "easeInOutQuint", focusDelay: 180, leadDays: 10 }
 };
 
 function getTopOffset() {
@@ -518,6 +518,16 @@ function getDayTargetY(date){
   return { el, targetY, dateString: date.toDateString() };
 }
 
+function getLeadTargetY(date, leadDays = 0){
+  if (!leadDays) return null;
+
+  const leadDate = new Date(date);
+  leadDate.setDate(leadDate.getDate() - leadDays);
+
+  const lead = getDayTargetY(leadDate);
+  return lead ? lead.targetY : null;
+}
+
 function animateScrollTo(targetY, { duration, easing, onComplete } = {}){
   const startY = window.scrollY;
   const endY = clampScrollY(targetY);
@@ -568,7 +578,14 @@ function navigateToDate(date, motion = "tap", options = {}){
 
   pulseActivePill(target.dateString, pulse);
 
-  animateScrollTo(target.targetY, {
+  const leadY = getLeadTargetY(date, preset.leadDays || 0);
+  const finalY = target.targetY;
+
+  if (leadY !== null && Math.abs(finalY - leadY) > 24) {
+    window.scrollTo(0, leadY);
+  }
+
+  animateScrollTo(finalY, {
     duration: preset.duration,
     easing: preset.easing,
     onComplete: () => {
