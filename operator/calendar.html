@@ -489,15 +489,15 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
   const baseTravel = Math.max(520, Math.round(window.innerHeight * 0.9));
-  const travel = mode === "month" ? baseTravel * 1.6 : baseTravel;
+  const travel = mode === "month" ? baseTravel * 2.4 : baseTravel;
   const preOffset = direction > 0 ? -travel : travel;
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
   window.scrollTo({ top: preY, behavior: "auto" });
 
-  const delay = mode === "month" ? 10 : 30;
-  const focusDelay = mode === "month" ? 180 : 220;
+  const delay = mode === "month" ? 0 : 30;
+  const focusDelay = mode === "month" ? 140 : 220;
 
   window.setTimeout(() => {
     window.scrollTo({ top: targetY, behavior: "smooth" });
@@ -748,6 +748,13 @@ function scrollToDate(date){
 
 function scrollToDay(type){
   if(type === "today"){
+    const isAlreadyToday = baseDate.toDateString() === today.toDateString();
+
+    if (isAlreadyToday) {
+      scrollToDate(today);
+      return;
+    }
+
     const prev = new Date(baseDate);
     baseDate = new Date(today);
 
