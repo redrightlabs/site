@@ -488,16 +488,13 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   pulseActivePill(ds);
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const baseTravel = Math.max(520, Math.round(window.innerHeight * 0.9));
-  const travel = mode === "month" ? baseTravel * 2.4 : baseTravel;
+  const baseTravel = Math.max(560, Math.round(window.innerHeight * 1.0));
+  const travel = mode === "month" ? baseTravel * 3.2 : baseTravel * 1.15;
   const preOffset = direction > 0 ? -travel : travel;
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
   window.scrollTo({ top: preY, behavior: "auto" });
-
-  const delay = mode === "month" ? 0 : 30;
-  const focusDelay = mode === "month" ? 140 : 220;
 
   function animateScroll(from, to, duration){
     const start = performance.now();
@@ -506,9 +503,9 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
       const t = Math.min(1, (now - start) / duration);
 
       const eased = mode === "month"
-        ? 1 - Math.pow(1 - t, 4)
+        ? 1 - Math.pow(1 - t, 5)
         : (t < 0.5
-            ? 2 * t * t
+            ? 3 * t * t
             : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
       const current = from + (to - from) * eased;
@@ -517,8 +514,9 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
       if (t < 1) {
         requestAnimationFrame(frame);
       } else {
-        window.scrollTo(0, to + (direction > 0 ? 4 : -4));
-        setTimeout(() => window.scrollTo(0, to), 60);
+        const settle = mode === "month" ? 6 : 4;
+        window.scrollTo(0, to + (direction > 0 ? settle : -settle));
+        setTimeout(() => window.scrollTo(0, to), mode === "month" ? 40 : 60);
         focusDaySection(el);
       }
     }
@@ -526,11 +524,8 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
     requestAnimationFrame(frame);
   }
 
-  window.setTimeout(() => {
-    const currentY = window.scrollY;
-    const duration = mode === "month" ? 420 : 520;
-    animateScroll(currentY, targetY, duration);
-  }, delay);
+  const duration = mode === "month" ? 240 : 560;
+  animateScroll(preY, targetY, duration);
 }
 
 function syncStripToScroll() {
