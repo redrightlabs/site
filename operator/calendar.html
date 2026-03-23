@@ -152,42 +152,6 @@ body{
   flex-direction:column;
   gap:10px;
 }
-.timeline.nav-week-forward{
-  animation:navWeekForward 360ms cubic-bezier(.22,.8,.24,1);
-}
-
-.timeline.nav-week-backward{
-  animation:navWeekBackward 360ms cubic-bezier(.22,.8,.24,1);
-}
-
-.timeline.nav-month-forward{
-  animation:navMonthForward 420ms cubic-bezier(.16,.84,.22,1);
-}
-
-.timeline.nav-month-backward{
-  animation:navMonthBackward 420ms cubic-bezier(.16,.84,.22,1);
-}
-
-
-@keyframes navWeekForward{
-  0%{ transform:translateY(-140px); opacity:.92; }
-  100%{ transform:translateY(0); opacity:1; }
-}
-
-@keyframes navWeekBackward{
-  0%{ transform:translateY(140px); opacity:.92; }
-  100%{ transform:translateY(0); opacity:1; }
-}
-
-@keyframes navMonthForward{
-  0%{ transform:translateY(-920px); opacity:.78; }
-  100%{ transform:translateY(0); opacity:1; }
-}
-
-@keyframes navMonthBackward{
-  0%{ transform:translateY(920px); opacity:.78; }
-  100%{ transform:translateY(0); opacity:1; }
-}
 
 
 .day-section{
@@ -514,6 +478,40 @@ function focusDaySection(el){
   setTimeout(()=> el.classList.remove("is-focused"), 520);
 }
 
+function clampScrollY(y){
+  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  return Math.max(0, Math.min(maxY, y));
+}
+
+function animateWindowScroll(from, to, duration, easingName){
+  const start = performance.now();
+
+  function easeValue(t){
+    if (easingName === "month") {
+      return 1 - Math.pow(1 - t, 5);
+    }
+    if (easingName === "today") {
+      return 1 - Math.pow(1 - t, 3);
+    }
+    return t < 0.5
+      ? 2 * t * t
+      : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = easeValue(t);
+    const current = from + (to - from) * eased;
+    window.scrollTo(0, current);
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
 
 function navigateToDateWithRoll(date, direction, mode = "week"){
   const id = "day-" + date.toDateString();
@@ -524,41 +522,41 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   setActiveStripDay(ds);
   pulseActivePill(ds);
 
-  const weekClass = direction > 0 ? "nav-week-forward" : "nav-week-backward";
-  const monthClass = direction > 0 ? "nav-month-forward" : "nav-month-backward";
-  const animClass = mode === "month" ? monthClass : weekClass;
-const animDuration = mode === "month" ? 420 : 360;
-  if (timelineEl) {
-    timelineEl.classList.remove(
-      "nav-week-forward",
-      "nav-week-backward",
-      "nav-month-forward",
-      "nav-month-backward"
-    );
-    void timelineEl.offsetWidth;
-    timelineEl.classList.add(animClass);
-    window.setTimeout(() => {
-      timelineEl.classList.remove(animClass);
-    }, animDuration);
-  }
+  const targetY = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
 
-  const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+  const travel = mode === "month"
+    ? Math.max(window.innerHeight * 2.2, 1200)
+    : mode === "today"
+      ? Math.max(window.innerHeight * 0.55, 320)
+      : Math.max(window.innerHeight * 0.9, 560);
 
-if (mode === "month") {
-  const overshoot = direction > 0 ? -160 : 160;
-  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  const startY = Math.max(0, Math.min(maxY, targetY + overshoot));
+  const duration = mode === "month"
+    ? 260
+    : mode === "today"
+      ? 360
+      : 500;
+
+  const easing = mode === "month"
+    ? "month"
+    : mode === "today"
+      ? "today"
+      : "week";
+
+  const startY = clampScrollY(targetY + (direction > 0 ? -travel : travel));
 
   window.scrollTo({ top: startY, behavior: "auto" });
 
-  window.setTimeout(() => {
-    window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.setTimeout(() => focusDaySection(el), 260);
-  }, 110);
-} else {
-  window.scrollTo({ top: targetY, behavior: "auto" });
-  window.setTimeout(() => focusDaySection(el), 220);
-}
+  window.requestAnimationFrame(() => {
+    animateWindowScroll(startY, targetY, duration, easing);
+    window.setTimeout(() => {
+      const settle = mode === "month" ? 6 : 3;
+      window.scrollTo(0, clampScrollY(targetY + (direction > 0 ? settle : -settle)));
+      window.setTimeout(() => {
+        window.scrollTo(0, targetY);
+        focusDaySection(el);
+      }, mode === "month" ? 40 : 60);
+    }, duration);
+  });
 }
 
 function syncStripToScroll() {
@@ -795,7 +793,7 @@ function scrollToDate(date){
     const ds = date.toDateString();
     setActiveStripDay(ds);
     pulseActivePill(ds);
-    const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+    const y = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
     window.scrollTo({ top: y, behavior: "smooth" });
     // focus after scroll settles
     window.setTimeout(()=> focusDaySection(el), 220);
@@ -810,7 +808,7 @@ function scrollToDay(type){
       const id = "day-" + today.toDateString();
       const el = document.getElementById(id);
       if (el) {
-        const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+        const y = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
         window.scrollTo({ top: y, behavior: "auto" });
         setActiveStripDay(today.toDateString());
         pulseActivePill(today.toDateString());
