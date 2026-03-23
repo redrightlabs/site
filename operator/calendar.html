@@ -488,14 +488,16 @@ function navigateToDateWithRoll(date, direction){
   pulseActivePill(ds);
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const preOffset = direction > 0 ? 120 : -120;
+  const preOffset = direction > 0 ? 180 : -180;
+  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
-  window.scrollTo({ top: targetY + preOffset, behavior: "auto" });
+  window.scrollTo({ top: preY, behavior: "auto" });
 
-  window.requestAnimationFrame(() => {
+  window.setTimeout(() => {
     window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.setTimeout(() => focusDaySection(el), 220);
-  });
+    window.setTimeout(() => focusDaySection(el), 240);
+  }, 34);
 }
 
 function syncStripToScroll() {
@@ -759,7 +761,9 @@ function scrollToWeek(offset){
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
-    navigateToDateWithRoll(baseDate, lastJumpDirection);
+    window.requestAnimationFrame(() => {
+      navigateToDateWithRoll(baseDate, lastJumpDirection);
+    });
   });
 }
 
@@ -771,7 +775,9 @@ function scrollToMonth(offset){
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
-    navigateToDateWithRoll(baseDate, lastJumpDirection);
+    window.requestAnimationFrame(() => {
+      navigateToDateWithRoll(baseDate, lastJumpDirection);
+    });
   });
 }
 
