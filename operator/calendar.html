@@ -401,9 +401,9 @@ const topNavEl = document.querySelector(".top-nav");
 let today = new Date();
 let baseDate = new Date(today);
 const timelineStartDate = new Date(today);
-timelineStartDate.setDate(timelineStartDate.getDate() - 90);
+timelineStartDate.setDate(timelineStartDate.getDate() - 120);
 const timelineEndDate = new Date(today);
-timelineEndDate.setDate(timelineEndDate.getDate() + 180);
+timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "Jake";
 let isProgrammaticScroll = false;
@@ -413,7 +413,7 @@ const MOTION_PRESETS = {
   tap:   { minDuration: 140, maxDuration: 220, easing: "easeOutCubic", focusDelay: 90, sweep: false },
   today: { minDuration: 180, maxDuration: 280, easing: "easeOutQuart", focusDelay: 90, sweep: false },
   week:  { minDuration: 320, maxDuration: 500, easing: "easeOutCubic", focusDelay: 105, sweep: true },
-  month: { minDuration: 300, maxDuration: 480, easing: "easeOutCubic", focusDelay: 95, sweep: true }
+  month: { minDuration: 520, maxDuration: 760, easing: "easeInOutQuart", focusDelay: 110, sweep: true }
 };
 
 function getTopOffset() {
@@ -521,7 +521,7 @@ function getMotionDuration(motion, fromDate, toDate, pixelDistance){
   const pxDistance = Math.abs(pixelDistance);
 
   if (motion === "month") {
-    const duration = 240 + (dayDistance * 2.2) + (pxDistance * 0.006);
+    const duration = 420 + (dayDistance * 6.5) + (pxDistance * 0.018);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
