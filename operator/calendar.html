@@ -145,30 +145,31 @@ body{
   100%{ transform:scale(1); background:rgba(255,77,77,.12); }
 }
 
-.day-section.roll-up{
-  animation:dayRollUp 420ms ease-out both;
-  will-change:transform, opacity;
-}
-
-.day-section.roll-down{
-  animation:dayRollDown 420ms ease-out both;
-  will-change:transform, opacity;
-}
-
-@keyframes dayRollUp{
-  0%{ transform:translateY(14px); opacity:.72; }
-  100%{ transform:translateY(0); opacity:1; }
-}
-
-@keyframes dayRollDown{
-  0%{ transform:translateY(-14px); opacity:.72; }
-  100%{ transform:translateY(0); opacity:1; }
-}
 
 .timeline{
   display:flex;
   flex-direction:column;
   gap:10px;
+}
+
+.timeline.roll-up{
+  animation:timelineRollUp 420ms cubic-bezier(.2,.8,.2,1);
+  will-change:transform, opacity;
+}
+
+.timeline.roll-down{
+  animation:timelineRollDown 420ms cubic-bezier(.2,.8,.2,1);
+  will-change:transform, opacity;
+}
+
+@keyframes timelineRollUp{
+  0%{ transform:translateY(26px); opacity:.82; }
+  100%{ transform:translateY(0); opacity:1; }
+}
+
+@keyframes timelineRollDown{
+  0%{ transform:translateY(-26px); opacity:.82; }
+  100%{ transform:translateY(0); opacity:1; }
 }
 
 .day-section{
@@ -496,28 +497,17 @@ function focusDaySection(el){
 }
 
 function animateTimelineRoll(direction){
-  const sections = Array.from(document.querySelectorAll(".day-section"));
-  if(!sections.length || !direction) return;
+  if(!timelineEl || !direction) return;
 
   const cls = direction > 0 ? "roll-up" : "roll-down";
 
-  sections.forEach((section) => {
-    section.classList.remove("roll-up", "roll-down");
-    void section.offsetWidth;
-  });
+  timelineEl.classList.remove("roll-up", "roll-down");
+  void timelineEl.offsetWidth;
+  timelineEl.classList.add(cls);
 
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      sections.forEach((section, index) => {
-        window.setTimeout(() => {
-          section.classList.add(cls);
-          window.setTimeout(() => {
-            section.classList.remove(cls);
-          }, 420);
-        }, Math.min(index * 22, 160));
-      });
-    });
-  });
+  window.setTimeout(() => {
+    timelineEl.classList.remove(cls);
+  }, 420);
 }
 
 function syncStripToScroll() {
@@ -784,7 +774,7 @@ function scrollToWeek(offset){
     animateTimelineRoll(lastJumpDirection);
     window.setTimeout(() => {
       scrollToDate(baseDate);
-    }, 60);
+    }, 120);
   });
 }
 
@@ -799,7 +789,7 @@ function scrollToMonth(offset){
     animateTimelineRoll(lastJumpDirection);
     window.setTimeout(() => {
       scrollToDate(baseDate);
-    }, 60);
+    }, 120);
   });
 }
 
