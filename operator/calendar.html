@@ -38,6 +38,28 @@ body{
   background:linear-gradient(#06070a,#090b0f);
   backdrop-filter:blur(10px);
 }
+
+.up-next-bar{
+  margin:6px 0 10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  font-size:13px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.up-next-label{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.up-next-value{
+  font-weight:600;
+  color:var(--text);
+}
 .back-top{
   position:fixed;
   right:16px;
@@ -412,6 +434,10 @@ body{
     <button class="jump-btn" onclick="scrollToMonth(1)">+ Month</button>
   </div>
 
+  <div class="up-next-bar" id="up-next-bar" style="display:none;">
+    <div class="up-next-label">Up Next</div>
+    <div class="up-next-value" id="up-next-value"></div>
+  </div>
   <!-- WEEK STRIP -->
   <div class="week-strip" id="week-strip"></div>
   </div>
@@ -760,23 +786,27 @@ function buildTimeline(){
     const currentDate = new Date(d);
     const dayLabel = currentDate.toDateString();
 
+    // Shop appointments with type field
     const shopAppointments = [
       {
         time: "12:00 PM",
         client: "Miss Mary",
         artist: "Jake",
+        type: "Session 2/5",
         projectUrl: "/operator/projects.html?project=miss-mary-1"
       },
       {
         time: "12:00 PM",
         client: "John D.",
         artist: "Lena",
+        type: "Consult",
         projectUrl: "/operator/projects.html?project=john-d-1"
       },
       {
         time: "2:30 PM",
         client: "Sarah K.",
         artist: "Jake",
+        type: "Facial",
         projectUrl: "/operator/projects.html?project=sarah-k-1"
       }
     ];
@@ -819,6 +849,7 @@ function buildTimeline(){
         projectUrl: item.projectUrl,
         artist: item.artist,
         client: item.client,
+        type: item.type,
         ghost: currentLens === "isla"
       });
     });
@@ -882,6 +913,7 @@ function buildTimeline(){
                   <div class="appt-time">${item.time}</div>
                   <div class="appt-client">${item.client}</div>
                   <div class="appt-artist">${item.artist}</div>
+                  <div class="appt-type" style="font-size:11px;color:var(--muted);white-space:nowrap;">${item.type || ''}</div>
                 </div>
               `;
             }
@@ -927,6 +959,18 @@ function buildTimeline(){
   }
 
   wireProjectLinks();
+
+  // --- Up Next bar logic ---
+  const upNext = computeUpNext();
+  const bar = document.getElementById('up-next-bar');
+  const value = document.getElementById('up-next-value');
+
+  if(upNext && bar && value){
+    bar.style.display = 'flex';
+    value.textContent = `${upNext.time} · ${upNext.count} appointment${upNext.count>1?'s':''}`;
+  }else if(bar){
+    bar.style.display = 'none';
+  }
 }
 
 function setLens(lens, event){
@@ -1060,3 +1104,35 @@ syncStripToScroll();
 </script>
 </body>
 </html>
+function computeUpNext(){
+  const now = new Date();
+  const todayKey = today.toDateString();
+
+  const items = Array.from(document.querySelectorAll('.appt'));
+  const upcoming = [];
+
+  items.forEach(el => {
+    const timeEl = el.querySelector('.appt-time');
+    if(!timeEl) return;
+
+    const timeStr = timeEl.textContent;
+    const min = parseMinutes(timeStr);
+    const nowMin = getNowMinutes();
+
+    if(min >= nowMin){
+      upcoming.push({ el, min, timeStr });
+    }
+  });
+
+  if(!upcoming.length) return null;
+
+  upcoming.sort((a,b)=>a.min-b.min);
+
+  const firstTime = upcoming[0].min;
+  const group = upcoming.filter(i=>i.min===firstTime);
+
+  return {
+    time: group[0].timeStr,
+    count: group.length
+  };
+}
