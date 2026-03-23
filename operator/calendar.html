@@ -363,15 +363,25 @@ body{
   white-space:nowrap;
 }
 
-.appt-client{
-  flex:1 1 auto;
-  min-width:0;
-  color:var(--text);
-  font-weight:600;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+  .appt-client{
+    flex:0 1 auto;
+    min-width:0;
+    color:var(--text);
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .appt-type{
+    flex:1 1 auto;
+    min-width:0;
+    color:var(--muted);
+    font-size:11px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 
 .appt-artist{
   flex:0 0 auto;
@@ -984,7 +994,7 @@ function buildTimeline(){
                 <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-time">${item.time}</div>
                   <div class="appt-client">${item.client}</div>
-                  <div class="appt-type" style="font-size:11px;color:var(--muted);white-space:nowrap;">${item.type || ''}</div>
+                  <div class="appt-type">· ${item.type || ''}</div>
                   <div class="appt-artist">${item.artist}</div>
                 </div>
               `;
