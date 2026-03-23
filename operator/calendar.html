@@ -161,12 +161,13 @@ body{
 }
 
 .timeline.nav-month-forward{
-  animation:navMonthForward 240ms cubic-bezier(.18,.9,.2,1);
+  animation:navMonthForward 420ms cubic-bezier(.16,.84,.22,1);
 }
 
 .timeline.nav-month-backward{
-  animation:navMonthBackward 240ms cubic-bezier(.18,.9,.2,1);
+  animation:navMonthBackward 420ms cubic-bezier(.16,.84,.22,1);
 }
+
 
 @keyframes navWeekForward{
   0%{ transform:translateY(-140px); opacity:.92; }
@@ -179,12 +180,12 @@ body{
 }
 
 @keyframes navMonthForward{
-  0%{ transform:translateY(-420px); opacity:.82; }
+  0%{ transform:translateY(-920px); opacity:.78; }
   100%{ transform:translateY(0); opacity:1; }
 }
 
 @keyframes navMonthBackward{
-  0%{ transform:translateY(420px); opacity:.82; }
+  0%{ transform:translateY(920px); opacity:.78; }
   100%{ transform:translateY(0); opacity:1; }
 }
 
@@ -526,8 +527,7 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   const weekClass = direction > 0 ? "nav-week-forward" : "nav-week-backward";
   const monthClass = direction > 0 ? "nav-month-forward" : "nav-month-backward";
   const animClass = mode === "month" ? monthClass : weekClass;
-  const animDuration = mode === "month" ? 240 : 360;
-
+const animDuration = mode === "month" ? 420 : 360;
   if (timelineEl) {
     timelineEl.classList.remove(
       "nav-week-forward",
@@ -542,9 +542,23 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
     }, animDuration);
   }
 
-  const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  window.scrollTo({ top: y, behavior: "auto" });
-  window.setTimeout(() => focusDaySection(el), mode === "month" ? 150 : 220);
+  const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+
+if (mode === "month") {
+  const overshoot = direction > 0 ? -160 : 160;
+  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const startY = Math.max(0, Math.min(maxY, targetY + overshoot));
+
+  window.scrollTo({ top: startY, behavior: "auto" });
+
+  window.setTimeout(() => {
+    window.scrollTo({ top: targetY, behavior: "smooth" });
+    window.setTimeout(() => focusDaySection(el), 260);
+  }, 110);
+} else {
+  window.scrollTo({ top: targetY, behavior: "auto" });
+  window.setTimeout(() => focusDaySection(el), 220);
+}
 }
 
 function syncStripToScroll() {
