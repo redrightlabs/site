@@ -55,6 +55,9 @@ body{
   justify-content:center;
   box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
+.back-top:hover{
+  background:rgba(255,255,255,.08);
+}
 
 /* =========================
    JUMP CONTROLS
@@ -140,6 +143,24 @@ body{
   0%{ transform:scale(1); background:rgba(255,77,77,.12); }
   40%{ transform:scale(1.06); background:rgba(255,77,77,.18); }
   100%{ transform:scale(1); background:rgba(255,77,77,.12); }
+}
+
+.day-section.roll-up{
+  animation:dayRollUp 340ms ease-out;
+}
+
+.day-section.roll-down{
+  animation:dayRollDown 340ms ease-out;
+}
+
+@keyframes dayRollUp{
+  0%{ transform:translateY(14px); opacity:.72; }
+  100%{ transform:translateY(0); opacity:1; }
+}
+
+@keyframes dayRollDown{
+  0%{ transform:translateY(-14px); opacity:.72; }
+  100%{ transform:translateY(0); opacity:1; }
 }
 
 .timeline{
@@ -362,7 +383,9 @@ body{
   <!-- TIMELINE -->
   <div class="timeline" id="timeline"></div>
 
-</div>
+<\/div>
+
+<button id="back-to-top" class="back-top">↑</button>
 
 <script>
 
@@ -376,6 +399,7 @@ let today = new Date();
 let baseDate = new Date(today);
 let currentLens = "shop";
 let currentArtist = "Jake";
+let lastJumpDirection = 0;
 
 function getTopOffset() {
   const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
@@ -467,6 +491,20 @@ function focusDaySection(el){
   el.classList.add("is-focused");
   // remove class after animation to keep DOM clean
   setTimeout(()=> el.classList.remove("is-focused"), 520);
+}
+
+function animateTimelineRoll(direction){
+  const sections = Array.from(document.querySelectorAll(".day-section"));
+  if(!sections.length || !direction) return;
+
+  const cls = direction > 0 ? "roll-up" : "roll-down";
+  sections.forEach((section, index) => {
+    section.classList.remove("roll-up", "roll-down");
+    window.setTimeout(() => {
+      section.classList.add(cls);
+      window.setTimeout(() => section.classList.remove(cls), 340);
+    }, Math.min(index * 18, 120));
+  });
 }
 
 function syncStripToScroll() {
@@ -713,6 +751,7 @@ function scrollToDate(date){
 function scrollToDay(type){
   if(type === "today"){
     baseDate = new Date(today);
+    lastJumpDirection = 0;
     buildWeekStrip();
     buildTimeline();
     window.requestAnimationFrame(() => {
@@ -725,9 +764,11 @@ function scrollToWeek(offset){
   const next = new Date(baseDate);
   next.setDate(baseDate.getDate() + (offset * 7));
   baseDate = next;
+  lastJumpDirection = offset;
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
+    animateTimelineRoll(lastJumpDirection);
     scrollToDate(baseDate);
   });
 }
@@ -736,9 +777,11 @@ function scrollToMonth(offset){
   const next = new Date(baseDate);
   next.setMonth(baseDate.getMonth() + offset);
   baseDate = next;
+  lastJumpDirection = offset;
   buildWeekStrip();
   buildTimeline();
   window.requestAnimationFrame(() => {
+    animateTimelineRoll(lastJumpDirection);
     scrollToDate(baseDate);
   });
 }
@@ -762,6 +805,7 @@ const backTopBtn = document.getElementById("back-to-top");
 if(backTopBtn){
   backTopBtn.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    setActiveStripDay(baseDate.toDateString());
   });
 }
 
@@ -770,6 +814,5 @@ buildWeekStrip();
 buildTimeline();
 syncStripToScroll();
 </script>
-<button id="back-to-top" class="back-top">↑</button>
 </body>
 </html>
