@@ -146,10 +146,46 @@ body{
 }
 
 
+
 .timeline{
   display:flex;
   flex-direction:column;
   gap:10px;
+}
+.timeline.nav-week-forward{
+  animation:navWeekForward 360ms cubic-bezier(.22,.8,.24,1);
+}
+
+.timeline.nav-week-backward{
+  animation:navWeekBackward 360ms cubic-bezier(.22,.8,.24,1);
+}
+
+.timeline.nav-month-forward{
+  animation:navMonthForward 240ms cubic-bezier(.18,.9,.2,1);
+}
+
+.timeline.nav-month-backward{
+  animation:navMonthBackward 240ms cubic-bezier(.18,.9,.2,1);
+}
+
+@keyframes navWeekForward{
+  0%{ transform:translateY(-140px); opacity:.92; }
+  100%{ transform:translateY(0); opacity:1; }
+}
+
+@keyframes navWeekBackward{
+  0%{ transform:translateY(140px); opacity:.92; }
+  100%{ transform:translateY(0); opacity:1; }
+}
+
+@keyframes navMonthForward{
+  0%{ transform:translateY(-420px); opacity:.82; }
+  100%{ transform:translateY(0); opacity:1; }
+}
+
+@keyframes navMonthBackward{
+  0%{ transform:translateY(420px); opacity:.82; }
+  100%{ transform:translateY(0); opacity:1; }
 }
 
 
@@ -487,45 +523,28 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   setActiveStripDay(ds);
   pulseActivePill(ds);
 
-  const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const baseTravel = Math.max(520, Math.round(window.innerHeight * 0.8));
-const travel = mode === "month" ? baseTravel * 5.2 : baseTravel * 0.85;
-const preOffset = direction > 0 ? -travel : travel;
-  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
+  const weekClass = direction > 0 ? "nav-week-forward" : "nav-week-backward";
+  const monthClass = direction > 0 ? "nav-month-forward" : "nav-month-backward";
+  const animClass = mode === "month" ? monthClass : weekClass;
+  const animDuration = mode === "month" ? 240 : 360;
 
-  window.scrollTo({ top: preY, behavior: "auto" });
-
-  function animateScroll(from, to, duration){
-    const start = performance.now();
-
-    function frame(now){
-      const t = Math.min(1, (now - start) / duration);
-
-      const eased = mode === "month"
-        ? 1 - Math.pow(1 - t, 5)
-        : (t < 0.5
-            ? 3 * t * t
-            : 1 - Math.pow(-2 * t + 2, 2) / 2);
-
-      const current = from + (to - from) * eased;
-      window.scrollTo(0, current);
-
-      if (t < 1) {
-        requestAnimationFrame(frame);
-      } else {
-        const settle = mode === "month" ? 8 : 3;
-        window.scrollTo(0, to + (direction > 0 ? settle : -settle));
-        setTimeout(() => window.scrollTo(0, to), mode === "month" ? 40 : 60);
-        focusDaySection(el);
-      }
-    }
-
-    requestAnimationFrame(frame);
+  if (timelineEl) {
+    timelineEl.classList.remove(
+      "nav-week-forward",
+      "nav-week-backward",
+      "nav-month-forward",
+      "nav-month-backward"
+    );
+    void timelineEl.offsetWidth;
+    timelineEl.classList.add(animClass);
+    window.setTimeout(() => {
+      timelineEl.classList.remove(animClass);
+    }, animDuration);
   }
 
-const duration = mode === "month" ? 180 : 420;
-  animateScroll(preY, targetY, duration);
+  const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+  window.scrollTo({ top: y, behavior: "auto" });
+  window.setTimeout(() => focusDaySection(el), mode === "month" ? 150 : 220);
 }
 
 function syncStripToScroll() {
@@ -774,7 +793,15 @@ function scrollToDay(type){
     const isAlreadyToday = baseDate.toDateString() === today.toDateString();
 
     if (isAlreadyToday) {
-      scrollToDate(today);
+      const id = "day-" + today.toDateString();
+      const el = document.getElementById(id);
+      if (el) {
+        const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
+        window.scrollTo({ top: y, behavior: "auto" });
+        setActiveStripDay(today.toDateString());
+        pulseActivePill(today.toDateString());
+        focusDaySection(el);
+      }
       return;
     }
 
@@ -789,7 +816,7 @@ function scrollToDay(type){
 
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        navigateToDateWithRoll(baseDate, direction, "week");
+        navigateToDateWithRoll(baseDate, direction, "today");
       });
     });
   }
