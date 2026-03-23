@@ -189,32 +189,65 @@ body{
   color:#ffdede;
   border:1px solid rgba(255,77,77,.25);
 }
-.time-slot{
-  display:grid;
-  grid-template-columns:56px 1fr;
-  gap:8px;
-  align-items:start;
-  margin-bottom:8px;
-}
+  .time-slot{
+    display:grid;
+    grid-template-columns:56px 1fr;
+    gap:8px;
+    align-items:start;
+    margin-bottom:8px;
+  }
 
-.time-slot:last-child{
-  margin-bottom:0;
-}
+  .time-slot:last-child{
+    margin-bottom:0;
+  }
 
-.slot-time{
-  padding-top:8px;
-  color:rgba(233,232,223,.62);
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.04em;
-  white-space:nowrap;
-}
+  .slot-time{
+    padding-top:8px;
+    color:rgba(233,232,223,.62);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.04em;
+    white-space:nowrap;
+  }
 
-.slot-stack{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
+  .slot-stack{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  /* === NOW / NEXT UP Awareness Layer === */
+  .now-marker{
+    position:relative;
+    margin:6px 0;
+    height:0;
+  }
+  .now-marker::before{
+    content:"";
+    position:absolute;
+    left:56px; /* aligns with content column after time */
+    right:0;
+    top:-1px;
+    border-top:1px dashed rgba(255,77,77,.45);
+  }
+  .now-chip{
+    position:absolute;
+    left:0;
+    top:-8px;
+    font-size:10px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:rgba(255,77,77,.14);
+    color:#ffdede;
+    border:1px solid rgba(255,77,77,.25);
+  }
+  .is-next{
+    border-color:rgba(255,77,77,.35) !important;
+    box-shadow:0 0 0 1px rgba(255,77,77,.12) inset;
+  }
+  .is-past{
+    opacity:.55;
+  }
 .lens-row{
   display:flex;
   justify-content:center;
@@ -515,6 +548,21 @@ function clamp(value, min, max){
   return Math.max(min, Math.min(max, value));
 }
 
+// === NOW/NEXT helpers ===
+function parseMinutes(timeStr){
+  // "12:00 PM" -> minutes since midnight
+  const [t, mer] = timeStr.split(" ");
+  let [h, m] = t.split(":").map(Number);
+  if (mer === "PM" && h !== 12) h += 12;
+  if (mer === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+function getNowMinutes(){
+  const n = new Date();
+  return n.getHours() * 60 + n.getMinutes();
+}
+
 function getMotionDuration(motion, fromDate, toDate, pixelDistance){
   const preset = MOTION_PRESETS[motion] || MOTION_PRESETS.tap;
   const dayDistance = Math.max(1, Math.abs(Math.round((toDate - fromDate) / 86400000)));
@@ -710,7 +758,6 @@ function buildTimeline(){
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const currentDate = new Date(d);
-
     const dayLabel = currentDate.toDateString();
 
     const shopAppointments = [
@@ -806,13 +853,32 @@ function buildTimeline(){
       groupedByTime.get(item.time).push(item);
     });
 
+    // === Now/Next logic ===
+    const isToday = currentDate.toDateString() === today.toDateString();
+    const nowMin = isToday ? getNowMinutes() : null;
+    let nextMarked = false;
+
     const slotMarkup = timelineItems.length
       ? Array.from(groupedByTime.entries()).map(([time, items]) => {
+          // check if we should insert Now marker before this slot
+          const slotMin = parseMinutes(time);
+          const shouldInsertNow = isToday && nowMin !== null && !nextMarked && slotMin >= nowMin;
+          let nowMarker = '';
+          if (shouldInsertNow) {
+            nowMarker = `<div class="now-marker"><span class="now-chip">Now</span></div>`;
+          }
+
           const inner = items.map((item) => {
+            const itemMin = parseMinutes(item.time);
+            const isPast = isToday && itemMin < nowMin;
+            const isNext = isToday && !nextMarked && itemMin >= nowMin;
+            if (isNext) nextMarked = true;
+
             if (item.kind === "appointment") {
               const islaGhostClass = item.ghost ? " appt-ghost" : "";
+              const stateClass = `${isPast ? ' is-past' : ''}${isNext ? ' is-next' : ''}`;
               return `
-                <div class="appt${islaGhostClass}" data-project-url="${item.projectUrl}">
+                <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-time">${item.time}</div>
                   <div class="appt-client">${item.client}</div>
                   <div class="appt-artist">${item.artist}</div>
@@ -820,8 +886,9 @@ function buildTimeline(){
               `;
             }
 
+            const stateClass = `${isPast ? ' is-past' : ''}${isNext ? ' is-next' : ''}`;
             return `
-              <div class="isla" data-project-url="${item.projectUrl}">
+              <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
                 <div class="isla-client">${item.client}</div>
                 <div class="isla-detail">${item.detail}</div>
@@ -830,6 +897,7 @@ function buildTimeline(){
           }).join("");
 
           return `
+            ${nowMarker}
             <div class="time-slot">
               <div class="slot-time">${time}</div>
               <div class="slot-stack">${inner}</div>
@@ -841,17 +909,17 @@ function buildTimeline(){
     const section = document.createElement("div");
     section.className = "day-section";
     if (currentDate.toDateString() === today.toDateString()) {
-  section.classList.add("is-today");
-}
+      section.classList.add("is-today");
+    }
     section.id = "day-"+dayLabel;
 
     section.innerHTML = `
       <div class="day-header">
-  <div class="title">${dayLabel}</div>
-  ${currentDate.toDateString() === today.toDateString() 
-    ? '<span class="badge-today">Today</span>' 
-    : ''}
-</div>
+        <div class="title">${dayLabel}</div>
+        ${currentDate.toDateString() === today.toDateString() 
+          ? '<span class="badge-today">Today</span>' 
+          : ''}
+      </div>
       ${slotMarkup}
     `;
 
