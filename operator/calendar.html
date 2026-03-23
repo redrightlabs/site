@@ -478,7 +478,7 @@ function focusDaySection(el){
 }
 
 
-function navigateToDateWithRoll(date, direction){
+function navigateToDateWithRoll(date, direction, mode = "week"){
   const id = "day-" + date.toDateString();
   const el = document.getElementById(id);
   if(!el) return;
@@ -488,18 +488,21 @@ function navigateToDateWithRoll(date, direction){
   pulseActivePill(ds);
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const travel = Math.max(520, Math.round(window.innerHeight * 0.9));
-  // Invert overshoot so motion feels forward
+  const baseTravel = Math.max(520, Math.round(window.innerHeight * 0.9));
+  const travel = mode === "month" ? baseTravel * 1.6 : baseTravel;
   const preOffset = direction > 0 ? -travel : travel;
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
   window.scrollTo({ top: preY, behavior: "auto" });
 
+  const delay = mode === "month" ? 10 : 30;
+  const focusDelay = mode === "month" ? 180 : 220;
+
   window.setTimeout(() => {
     window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.setTimeout(() => focusDaySection(el), 220);
-  }, 30);
+    window.setTimeout(() => focusDaySection(el), focusDelay);
+  }, delay);
 }
 
 function syncStripToScroll() {
@@ -745,12 +748,19 @@ function scrollToDate(date){
 
 function scrollToDay(type){
   if(type === "today"){
+    const prev = new Date(baseDate);
     baseDate = new Date(today);
-    lastJumpDirection = 0;
+
+    const direction = baseDate > prev ? 1 : -1;
+
+    lastJumpDirection = direction;
     buildWeekStrip();
     buildTimeline();
+
     window.requestAnimationFrame(() => {
-      scrollToDate(today);
+      window.requestAnimationFrame(() => {
+        navigateToDateWithRoll(baseDate, direction, "week");
+      });
     });
   }
 }
@@ -764,7 +774,7 @@ function scrollToWeek(offset){
   buildTimeline();
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      navigateToDateWithRoll(baseDate, lastJumpDirection);
+      navigateToDateWithRoll(baseDate, lastJumpDirection, "week");
     });
   });
 }
@@ -778,7 +788,7 @@ function scrollToMonth(offset){
   buildTimeline();
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      navigateToDateWithRoll(baseDate, lastJumpDirection);
+      navigateToDateWithRoll(baseDate, lastJumpDirection, "month");
     });
   });
 }
