@@ -256,6 +256,31 @@ body{
     gap:6px;
   }
 
+  .slot-group-meta{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0 0 6px;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:rgba(233,232,223,.58);
+  }
+
+  .slot-group-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:18px;
+    height:18px;
+    padding:0 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);
+    color:rgba(233,232,223,.78);
+  }
+
   /* === NOW / NEXT UP Awareness Layer === */
   .now-marker{
     position:relative;
@@ -1052,12 +1077,16 @@ function buildTimeline(){
               </div>
             `;
           }).join("");
+          const appointmentCount = items.filter((item) => item.kind === "appointment").length;
+          const clusterMeta = appointmentCount > 1
+            ? `<div class="slot-group-meta"><span class="slot-group-count">${appointmentCount}</span><span>${appointmentCount} appointments starting</span></div>`
+            : "";
 
           return `
             ${nowMarker}
             <div class="time-slot">
               <div class="slot-time">${time}</div>
-              <div class="slot-stack">${inner}</div>
+              <div class="slot-stack">${clusterMeta}${inner}</div>
             </div>
           `;
         }).join("")
