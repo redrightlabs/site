@@ -388,10 +388,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, preRollDays: 0, sweep: false, startDistancePx: 0 },
-  today: { duration: 360, easing: "easeOutQuart", focusDelay: 120, preRollDays: 0, sweep: false, startDistancePx: 220 },
-  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, preRollDays: 1, sweep: true, startDistancePx: 0 },
-  month: { duration: 960, easing: "easeInOutQuart", focusDelay: 210, preRollDays: 6, sweep: true, startDistancePx: 520 }
+  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, sweep: false, startDistancePx: 0 },
+  today: { duration: 360, easing: "easeOutQuart", focusDelay: 120, sweep: false, startDistancePx: 180 },
+  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, sweep: true, startDistancePx: 140 },
+  month: { duration: 900, easing: "easeInOutQuart", focusDelay: 210, sweep: true, startDistancePx: 420 }
 };
 
 function getTopOffset() {
@@ -524,15 +524,6 @@ function getDayTargetY(date){
   return { el, targetY, dateString: date.toDateString() };
 }
 
-function getLeadTargetY(date, leadDays = 0){
-  if (!leadDays) return null;
-
-  const leadDate = new Date(date);
-  leadDate.setDate(leadDate.getDate() - leadDays);
-
-  const lead = getDayTargetY(leadDate);
-  return lead ? lead.targetY : null;
-}
 
 function getPreparedStartY(targetY, direction = 1, distancePx = 0){
   if (!distancePx) return null;
@@ -610,7 +601,6 @@ function navigateToDate(date, motion = "tap", options = {}){
   pulseActivePill(target.dateString, pulse);
 
   const finalY = target.targetY;
-  const leadY = getLeadTargetY(date, preset.preRollDays || 0);
   const preparedStartY = getPreparedStartY(finalY, direction, preset.startDistancePx || 0);
 
   const finish = () => {
@@ -620,38 +610,17 @@ function navigateToDate(date, motion = "tap", options = {}){
   };
 
   const canUsePreparedStart = preparedStartY !== null
-    && Math.abs(finalY - preparedStartY) > 80;
+    && Math.abs(finalY - preparedStartY) > 80
+    && Math.abs(window.scrollY - finalY) < 48;
 
-  const canUseLead = leadY !== null
-    && Math.abs(finalY - leadY) > 40
-    && Math.abs(window.scrollY - leadY) > 24;
-
-  if (canUsePreparedStart && Math.abs(window.scrollY - finalY) < 40) {
+  if (canUsePreparedStart) {
     window.scrollTo(0, preparedStartY);
   }
 
-  if (!canUseLead) {
-    animateScrollTo(finalY, {
-      duration: preset.duration,
-      easing: preset.easing,
-      onComplete: finish
-    });
-    return;
-  }
-
-  const firstDuration = Math.round(preset.duration * (motion === "month" ? 0.34 : 0.24));
-  const secondDuration = Math.max(220, preset.duration - firstDuration);
-
-  animateScrollTo(leadY, {
-    duration: firstDuration,
-    easing: "easeOutCubic",
-    onComplete: () => {
-      animateScrollTo(finalY, {
-        duration: secondDuration,
-        easing: preset.easing,
-        onComplete: finish
-      });
-    }
+  animateScrollTo(finalY, {
+    duration: preset.duration,
+    easing: preset.easing,
+    onComplete: finish
   });
 }
 
