@@ -499,9 +499,37 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   const delay = mode === "month" ? 0 : 30;
   const focusDelay = mode === "month" ? 140 : 220;
 
+  function animateScroll(from, to, duration){
+    const start = performance.now();
+
+    function frame(now){
+      const t = Math.min(1, (now - start) / duration);
+
+      const eased = mode === "month"
+        ? 1 - Math.pow(1 - t, 4)
+        : (t < 0.5
+            ? 2 * t * t
+            : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+      const current = from + (to - from) * eased;
+      window.scrollTo(0, current);
+
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        window.scrollTo(0, to + (direction > 0 ? 4 : -4));
+        setTimeout(() => window.scrollTo(0, to), 60);
+        focusDaySection(el);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
   window.setTimeout(() => {
-    window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.setTimeout(() => focusDaySection(el), focusDelay);
+    const currentY = window.scrollY;
+    const duration = mode === "month" ? 420 : 520;
+    animateScroll(currentY, targetY, duration);
   }, delay);
 }
 
