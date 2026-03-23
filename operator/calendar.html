@@ -155,11 +155,6 @@ body{
     background:rgba(255,255,255,.05);
     border:1px solid rgba(255,255,255,.08);
   }
-  .day-count.is-busy{
-    background:rgba(255,77,77,.12);
-    border-color:rgba(255,77,77,.22);
-    color:#ffdede;
-  }
 
 /* =========================
    TIMELINE
@@ -285,9 +280,26 @@ body{
     border:1px solid rgba(255,77,77,.25);
   }
   .is-next{
-    border-color:rgba(255,77,77,.35) !important;
-    box-shadow:0 0 0 1px rgba(255,77,77,.12) inset;
-  }
+  border-color:rgba(255,77,77,.35) !important;
+  box-shadow:0 0 0 1px rgba(255,77,77,.12) inset, 0 8px 24px rgba(0,0,0,.24);
+}
+
+.next-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:8px;
+  padding:2px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#ffdede;
+  background:rgba(255,77,77,.14);
+  border:1px solid rgba(255,77,77,.24);
+  white-space:nowrap;
+}
   .is-past{
     opacity:.55;
   }
@@ -614,7 +626,7 @@ function buildWeekStrip(){
 
     const count = getDayActivityCount(d);
     const countMarkup = count > 0
-      ? `<span class="day-count${count >= 4 ? ' is-busy' : ''}">${count}</span>`
+      ? `<span class="day-count">${count}</span>`
       : "";
 
     el.innerHTML = `
@@ -993,9 +1005,9 @@ function buildTimeline(){
               return `
                 <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-time">${item.time}</div>
-                  <div class="appt-client">${item.client}</div>
-                  <div class="appt-type">· ${item.type || ''}</div>
-                  <div class="appt-artist">${item.artist}</div>
+                    <div class="appt-client">${item.client}</div>
+                    <div class="appt-type">· ${item.type || ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                    <div class="appt-artist">${item.artist}</div>
                 </div>
               `;
             }
