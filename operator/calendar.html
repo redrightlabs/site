@@ -488,7 +488,7 @@ function navigateToDateWithRoll(date, direction){
   pulseActivePill(ds);
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const preOffset = direction > 0 ? 180 : -180;
+  const preOffset = direction > 0 ? 420 : -420;
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
@@ -496,8 +496,8 @@ function navigateToDateWithRoll(date, direction){
 
   window.setTimeout(() => {
     window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.setTimeout(() => focusDaySection(el), 240);
-  }, 34);
+    window.setTimeout(() => focusDaySection(el), 320);
+  }, 60);
 }
 
 function syncStripToScroll() {
