@@ -134,11 +134,10 @@ body{
 }
 
 .day-dot{
-  margin-top:3px;
-  font-size:9px;
-  line-height:1.1;
-  color:rgba(233,232,223,.58);
-  min-height:10px;
+  margin-top:2px;
+  font-size:10px;
+  color:var(--accent);
+  opacity:.9;
 }
 
 /* =========================
@@ -466,6 +465,76 @@ const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "Jake";
+
+function getShopAppointmentsForDate(date){
+  const day = date.getDay();
+  const dayKey = date.toDateString();
+
+  const patterns = {
+    0: [
+      { time: "12:00 PM", client: "Miss Mary", artist: "Jake", type: "Session 2/5", projectUrl: "/operator/projects.html?project=miss-mary-1" }
+    ],
+    1: [
+      { time: "10:00 AM", client: "Alyssa R.", artist: "Jake", type: "Consult", projectUrl: "/operator/projects.html?project=alyssa-r-1" },
+      { time: "12:00 PM", client: "Miss Mary", artist: "Jake", type: "Session 2/5", projectUrl: "/operator/projects.html?project=miss-mary-1" },
+      { time: "12:00 PM", client: "John D.", artist: "Lena", type: "Consult", projectUrl: "/operator/projects.html?project=john-d-1" },
+      { time: "2:30 PM", client: "Sarah K.", artist: "Jake", type: "Facial", projectUrl: "/operator/projects.html?project=sarah-k-1" }
+    ],
+    2: [
+      { time: "11:00 AM", client: "Nina P.", artist: "Lena", type: "Consult", projectUrl: "/operator/projects.html?project=nina-p-1" },
+      { time: "1:30 PM", client: "Chris V.", artist: "Jake", type: "Tattoo 1/3", projectUrl: "/operator/projects.html?project=chris-v-1" }
+    ],
+    3: [
+      { time: "9:30 AM", client: "Erin W.", artist: "Jake", type: "Consult", projectUrl: "/operator/projects.html?project=erin-w-1" },
+      { time: "12:00 PM", client: "Maya T.", artist: "Lena", type: "Facial", projectUrl: "/operator/projects.html?project=maya-t-1" },
+      { time: "12:00 PM", client: "Leo G.", artist: "Jake", type: "Session 1/4", projectUrl: "/operator/projects.html?project=leo-g-1" },
+      { time: "12:00 PM", client: "Paige H.", artist: "Lena", type: "Botox", projectUrl: "/operator/projects.html?project=paige-h-1" },
+      { time: "12:00 PM", client: "Marco S.", artist: "Jake", type: "Consult", projectUrl: "/operator/projects.html?project=marco-s-1" },
+      { time: "12:00 PM", client: "Dana K.", artist: "Lena", type: "Laser", projectUrl: "/operator/projects.html?project=dana-k-1" }
+    ],
+    4: [
+      { time: "10:30 AM", client: "Rachel B.", artist: "Jake", type: "Tattoo 3/5", projectUrl: "/operator/projects.html?project=rachel-b-1" },
+      { time: "1:00 PM", client: "Ivy C.", artist: "Lena", type: "Consult", projectUrl: "/operator/projects.html?project=ivy-c-1" },
+      { time: "3:30 PM", client: "Theo M.", artist: "Jake", type: "Facial", projectUrl: "/operator/projects.html?project=theo-m-1" }
+    ],
+    5: [
+      { time: "11:30 AM", client: "Olivia F.", artist: "Lena", type: "Consult", projectUrl: "/operator/projects.html?project=olivia-f-1" },
+      { time: "2:00 PM", client: "Ben J.", artist: "Jake", type: "Session 4/6", projectUrl: "/operator/projects.html?project=ben-j-1" }
+    ],
+    6: []
+  };
+
+  return (patterns[day] || []).map((item) => ({ ...item, date: dayKey }));
+}
+
+function getIslaActionsForDate(date, appointments){
+  const dayKey = date.toDateString();
+  const actions = [];
+
+  appointments.forEach((appt) => {
+    if (appt.time === "12:00 PM") {
+      actions.push({
+        date: dayKey,
+        time: appt.time,
+        type: "CareWatch",
+        client: appt.client,
+        detail: "Healing check-in scheduled",
+        projectUrl: appt.projectUrl
+      });
+    } else {
+      actions.push({
+        date: dayKey,
+        time: appt.time,
+        type: "Review",
+        client: appt.client,
+        detail: "Review request queued",
+        projectUrl: appt.projectUrl
+      });
+    }
+  });
+
+  return actions.slice(0, Math.min(actions.length, 3));
+}
 let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
@@ -480,14 +549,16 @@ function getTopOffset() {
   const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
   return Math.round(navHeight + 10);
 }
-function getDayActivityCount(date){
-  const dayKey = date.toDateString();
+function getDayActivityDot(date){
+  const count = getDayActivityCount(date);
+  if (count === 0) return "";
+  if (count <= 2) return "•";
+  if (count <= 4) return "••";
+  return "•••";
+}
 
-  const shopAppointments = [
-    { date: dayKey, time: "12:00 PM", artist: "Jake" },
-    { date: dayKey, time: "12:00 PM", artist: "Lena" },
-    { date: dayKey, time: "2:30 PM", artist: "Jake" }
-  ];
+function getDayActivityCount(date){
+  const shopAppointments = getShopAppointmentsForDate(date);
 
   if (currentLens === "artist") {
     return shopAppointments.filter((a) => a.artist === currentArtist).length;
@@ -516,13 +587,12 @@ function buildWeekStrip(){
     if (d.toDateString() === baseDate.toDateString()) el.classList.add("active");
     el.dataset.date = d.toDateString();
 
-    const count = getDayActivityCount(d);
-    const countLabel = count > 0 ? `${count} appt${count === 1 ? "" : "s"}` : "";
+    const dot = getDayActivityDot(d);
 
     el.innerHTML = `
       <div>${DAYS[d.getDay()]}</div>
       <div>${d.getDate()}</div>
-      <div class="day-dot">${countLabel}</div>
+      <div class="day-dot">${dot}</div>
     `;
 
     el.onclick = () => scrollToDate(d);
@@ -575,39 +645,6 @@ function parseMinutes(timeStr){
 function getNowMinutes(){
   const n = new Date();
   return n.getHours() * 60 + n.getMinutes();
-}
-
-function computeUpNext(){
-  const items = Array.from(document.querySelectorAll('.appt'));
-  const upcoming = [];
-  const nowMin = getNowMinutes();
-
-  items.forEach(el => {
-    const section = el.closest('.day-section');
-    if (!section || !section.classList.contains('is-today')) return;
-
-    const timeEl = el.querySelector('.appt-time');
-    if(!timeEl) return;
-
-    const timeStr = timeEl.textContent;
-    const min = parseMinutes(timeStr);
-
-    if(min >= nowMin){
-      upcoming.push({ el, min, timeStr });
-    }
-  });
-
-  if(!upcoming.length) return null;
-
-  upcoming.sort((a,b)=>a.min-b.min);
-
-  const firstTime = upcoming[0].min;
-  const group = upcoming.filter(i=>i.min===firstTime);
-
-  return {
-    time: group[0].timeStr,
-    count: group.length
-  };
 }
 
 function getMotionDuration(motion, fromDate, toDate, pixelDistance){
@@ -807,47 +844,8 @@ function buildTimeline(){
     const currentDate = new Date(d);
     const dayLabel = currentDate.toDateString();
 
-    // Shop appointments with type field
-    const shopAppointments = [
-      {
-        time: "12:00 PM",
-        client: "Miss Mary",
-        artist: "Jake",
-        type: "Session 2/5",
-        projectUrl: "/operator/projects.html?project=miss-mary-1"
-      },
-      {
-        time: "12:00 PM",
-        client: "John D.",
-        artist: "Lena",
-        type: "Consult",
-        projectUrl: "/operator/projects.html?project=john-d-1"
-      },
-      {
-        time: "2:30 PM",
-        client: "Sarah K.",
-        artist: "Jake",
-        type: "Facial",
-        projectUrl: "/operator/projects.html?project=sarah-k-1"
-      }
-    ];
-
-    const islaActions = [
-      {
-        time: "12:00 PM",
-        type: "CareWatch",
-        client: "Miss Mary",
-        detail: "Healing check-in scheduled",
-        projectUrl: "/operator/projects.html?project=miss-mary-1"
-      },
-      {
-        time: "2:30 PM",
-        type: "Review",
-        client: "Sarah K.",
-        detail: "Review request queued",
-        projectUrl: "/operator/projects.html?project=sarah-k-1"
-      }
-    ];
+    const shopAppointments = getShopAppointmentsForDate(currentDate);
+    const islaActions = getIslaActionsForDate(currentDate, shopAppointments);
 
     let renderedAppointments = shopAppointments;
     let renderedIsla = [];
@@ -1125,3 +1123,35 @@ syncStripToScroll();
 </script>
 </body>
 </html>
+function computeUpNext(){
+  const now = new Date();
+  const todayKey = today.toDateString();
+
+  const items = Array.from(document.querySelectorAll('.appt'));
+  const upcoming = [];
+
+  items.forEach(el => {
+    const timeEl = el.querySelector('.appt-time');
+    if(!timeEl) return;
+
+    const timeStr = timeEl.textContent;
+    const min = parseMinutes(timeStr);
+    const nowMin = getNowMinutes();
+
+    if(min >= nowMin){
+      upcoming.push({ el, min, timeStr });
+    }
+  });
+
+  if(!upcoming.length) return null;
+
+  upcoming.sort((a,b)=>a.min-b.min);
+
+  const firstTime = upcoming[0].min;
+  const group = upcoming.filter(i=>i.min===firstTime);
+
+  return {
+    time: group[0].timeStr,
+    count: group.length
+  };
+}
