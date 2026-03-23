@@ -146,11 +146,13 @@ body{
 }
 
 .day-section.roll-up{
-  animation:dayRollUp 340ms ease-out;
+  animation:dayRollUp 420ms ease-out both;
+  will-change:transform, opacity;
 }
 
 .day-section.roll-down{
-  animation:dayRollDown 340ms ease-out;
+  animation:dayRollDown 420ms ease-out both;
+  will-change:transform, opacity;
 }
 
 @keyframes dayRollUp{
@@ -498,12 +500,23 @@ function animateTimelineRoll(direction){
   if(!sections.length || !direction) return;
 
   const cls = direction > 0 ? "roll-up" : "roll-down";
-  sections.forEach((section, index) => {
+
+  sections.forEach((section) => {
     section.classList.remove("roll-up", "roll-down");
-    window.setTimeout(() => {
-      section.classList.add(cls);
-      window.setTimeout(() => section.classList.remove(cls), 340);
-    }, Math.min(index * 18, 120));
+    void section.offsetWidth;
+  });
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      sections.forEach((section, index) => {
+        window.setTimeout(() => {
+          section.classList.add(cls);
+          window.setTimeout(() => {
+            section.classList.remove(cls);
+          }, 420);
+        }, Math.min(index * 22, 160));
+      });
+    });
   });
 }
 
@@ -769,7 +782,9 @@ function scrollToWeek(offset){
   buildTimeline();
   window.requestAnimationFrame(() => {
     animateTimelineRoll(lastJumpDirection);
-    scrollToDate(baseDate);
+    window.setTimeout(() => {
+      scrollToDate(baseDate);
+    }, 60);
   });
 }
 
@@ -782,7 +797,9 @@ function scrollToMonth(offset){
   buildTimeline();
   window.requestAnimationFrame(() => {
     animateTimelineRoll(lastJumpDirection);
-    scrollToDate(baseDate);
+    window.setTimeout(() => {
+      scrollToDate(baseDate);
+    }, 60);
   });
 }
 
