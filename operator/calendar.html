@@ -488,9 +488,9 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
   pulseActivePill(ds);
 
   const targetY = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
-  const baseTravel = Math.max(560, Math.round(window.innerHeight * 1.0));
-  const travel = mode === "month" ? baseTravel * 3.2 : baseTravel * 1.15;
-  const preOffset = direction > 0 ? -travel : travel;
+  const baseTravel = Math.max(520, Math.round(window.innerHeight * 0.8));
+const travel = mode === "month" ? baseTravel * 5.2 : baseTravel * 0.85;
+const preOffset = direction > 0 ? -travel : travel;
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   const preY = Math.max(0, Math.min(maxY, targetY + preOffset));
 
@@ -514,7 +514,7 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
       if (t < 1) {
         requestAnimationFrame(frame);
       } else {
-        const settle = mode === "month" ? 6 : 4;
+        const settle = mode === "month" ? 8 : 3;
         window.scrollTo(0, to + (direction > 0 ? settle : -settle));
         setTimeout(() => window.scrollTo(0, to), mode === "month" ? 40 : 60);
         focusDaySection(el);
@@ -524,7 +524,7 @@ function navigateToDateWithRoll(date, direction, mode = "week"){
     requestAnimationFrame(frame);
   }
 
-  const duration = mode === "month" ? 240 : 560;
+const duration = mode === "month" ? 180 : 420;
   animateScroll(preY, targetY, duration);
 }
 
