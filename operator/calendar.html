@@ -388,10 +388,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, leadDays: 0 },
-  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120, leadDays: 0 },
-  week:  { duration: 520, easing: "easeInOutCubic", focusDelay: 150, leadDays: 3 },
-  month: { duration: 780, easing: "easeInOutQuint", focusDelay: 180, leadDays: 10 }
+  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, preRollDays: 0, sweep: false },
+  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120, preRollDays: 0, sweep: false },
+  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, preRollDays: 1, sweep: true },
+  month: { duration: 920, easing: "easeInOutQuart", focusDelay: 210, preRollDays: 6, sweep: true }
 };
 
 function getTopOffset() {
@@ -495,6 +495,12 @@ function getScrollEasing(name, t){
     return 1 - Math.pow(1 - t, 4);
   }
 
+  if (name === "easeInOutQuart") {
+    return t < 0.5
+      ? 8 * Math.pow(t, 4)
+      : 1 - Math.pow(-2 * t + 2, 4) / 2;
+  }
+
   if (name === "easeInOutQuint") {
     return t < 0.5
       ? 16 * Math.pow(t, 5)
@@ -526,6 +532,19 @@ function getLeadTargetY(date, leadDays = 0){
 
   const lead = getDayTargetY(leadDate);
   return lead ? lead.targetY : null;
+}
+
+function sweepWeekStrip(){
+  const pills = Array.from(document.querySelectorAll(".day-pill"));
+  pills.forEach((pill, index) => {
+    pill.classList.remove("pulse");
+    window.setTimeout(() => {
+      pill.classList.add("pulse");
+      window.setTimeout(() => {
+        pill.classList.remove("pulse");
+      }, 320);
+    }, index * 36);
+  });
 }
 
 function animateScrollTo(targetY, { duration, easing, onComplete } = {}){
@@ -576,22 +595,45 @@ function navigateToDate(date, motion = "tap", options = {}){
     setActiveStripDay(target.dateString);
   }
 
-  pulseActivePill(target.dateString, pulse);
-
-  const leadY = getLeadTargetY(date, preset.leadDays || 0);
-  const finalY = target.targetY;
-
-  if (leadY !== null && Math.abs(finalY - leadY) > 24) {
-    window.scrollTo(0, leadY);
+  if (preset.sweep) {
+    sweepWeekStrip();
   }
 
-  animateScrollTo(finalY, {
-    duration: preset.duration,
-    easing: preset.easing,
+  pulseActivePill(target.dateString, pulse);
+
+  const leadY = getLeadTargetY(date, preset.preRollDays || 0);
+  const finalY = target.targetY;
+  const canUseLead = leadY !== null
+    && Math.abs(finalY - leadY) > 40
+    && Math.abs(window.scrollY - leadY) > 24;
+
+  const finish = () => {
+    window.setTimeout(() => {
+      focusDaySection(target.el, focus);
+    }, preset.focusDelay);
+  };
+
+  if (!canUseLead) {
+    animateScrollTo(finalY, {
+      duration: preset.duration,
+      easing: preset.easing,
+      onComplete: finish
+    });
+    return;
+  }
+
+  const firstDuration = Math.round(preset.duration * (motion === "month" ? 0.34 : 0.24));
+  const secondDuration = Math.max(220, preset.duration - firstDuration);
+
+  animateScrollTo(leadY, {
+    duration: firstDuration,
+    easing: "easeOutCubic",
     onComplete: () => {
-      window.setTimeout(() => {
-        focusDaySection(target.el, focus);
-      }, preset.focusDelay);
+      animateScrollTo(finalY, {
+        duration: secondDuration,
+        easing: preset.easing,
+        onComplete: finish
+      });
     }
   });
 }
