@@ -15,13 +15,15 @@
   --accent:#ff4d4d;
   --radius:18px;
   --sans:system-ui,-apple-system;
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
+  --hero: "Cormorant Garamond", Garamond, Georgia, serif;
 }
 
 body{
   margin:0;
   background:linear-gradient(#06070a,#090b0f);
   color:var(--text);
-  font-family:var(--sans);
+  font-family:var(--serif);
 }
 
   .shell{
@@ -282,6 +284,28 @@ body{
   .is-next{
   border-color:rgba(255,77,77,.35) !important;
   box-shadow:0 0 0 1px rgba(255,77,77,.12) inset, 0 8px 24px rgba(0,0,0,.24);
+}
+
+.is-current{
+  border-color:rgba(255,77,77,.45) !important;
+  box-shadow:0 0 0 1px rgba(255,77,77,.18) inset, 0 10px 28px rgba(0,0,0,.32);
+}
+
+.current-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:8px;
+  padding:2px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#fff;
+  background:rgba(255,77,77,.28);
+  border:1px solid rgba(255,77,77,.38);
+  white-space:nowrap;
 }
 
 .next-chip{
@@ -981,6 +1005,7 @@ function buildTimeline(){
     const isToday = currentDate.toDateString() === today.toDateString();
     const nowMin = isToday ? getNowMinutes() : null;
     let nextMarked = false;
+    let currentMarked = false;
 
     const slotMarkup = timelineItems.length
       ? sortedTimes.map((time) => {
@@ -995,24 +1020,30 @@ function buildTimeline(){
 
           const inner = items.map((item) => {
             const itemMin = parseMinutes(item.time);
-            const isPast = isToday && itemMin < nowMin;
-            const isNext = isToday && !nextMarked && itemMin >= nowMin;
+
+            // Assume 60-minute duration for now
+            const isCurrent = isToday && !currentMarked && itemMin <= nowMin && (itemMin + 60) > nowMin;
+            if (isCurrent) currentMarked = true;
+
+            const isPast = isToday && itemMin < nowMin && !isCurrent;
+
+            const isNext = isToday && !currentMarked && !nextMarked && itemMin >= nowMin;
             if (isNext) nextMarked = true;
 
             if (item.kind === "appointment") {
               const islaGhostClass = item.ghost ? " appt-ghost" : "";
-              const stateClass = `${isPast ? ' is-past' : ''}${isNext ? ' is-next' : ''}`;
+              const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
               return `
                 <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-time">${item.time}</div>
                     <div class="appt-client">${item.client}</div>
-                    <div class="appt-type">· ${item.type || ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                    <div class="appt-type">· ${item.type || ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
                     <div class="appt-artist">${item.artist}</div>
                 </div>
               `;
             }
 
-            const stateClass = `${isPast ? ' is-past' : ''}${isNext ? ' is-next' : ''}`;
+            const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             return `
               <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
