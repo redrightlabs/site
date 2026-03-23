@@ -392,10 +392,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { minDuration: 180, maxDuration: 260, easing: "easeOutCubic", focusDelay: 110, sweep: false },
-  today: { minDuration: 240, maxDuration: 340, easing: "easeOutQuart", focusDelay: 110, sweep: false },
-  week:  { minDuration: 420, maxDuration: 620, easing: "easeInOutCubic", focusDelay: 130, sweep: true },
-  month: { minDuration: 380, maxDuration: 620, easing: "easeInOutCubic", focusDelay: 110, sweep: true }
+  tap:   { minDuration: 140, maxDuration: 220, easing: "easeOutCubic", focusDelay: 90, sweep: false },
+  today: { minDuration: 180, maxDuration: 280, easing: "easeOutQuart", focusDelay: 90, sweep: false },
+  week:  { minDuration: 320, maxDuration: 500, easing: "easeOutCubic", focusDelay: 105, sweep: true },
+  month: { minDuration: 300, maxDuration: 480, easing: "easeOutCubic", focusDelay: 95, sweep: true }
 };
 
 function getTopOffset() {
@@ -503,21 +503,21 @@ function getMotionDuration(motion, fromDate, toDate, pixelDistance){
   const pxDistance = Math.abs(pixelDistance);
 
   if (motion === "month") {
-    const duration = 320 + (dayDistance * 4) + (pxDistance * 0.012);
+    const duration = 240 + (dayDistance * 2.2) + (pxDistance * 0.006);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
   if (motion === "week") {
-    const duration = 340 + (dayDistance * 10) + (pxDistance * 0.03);
+    const duration = 260 + (dayDistance * 4.5) + (pxDistance * 0.012);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
   if (motion === "today") {
-    const duration = 220 + (pxDistance * 0.05);
+    const duration = 170 + (pxDistance * 0.03);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
-  const duration = 160 + (pxDistance * 0.025);
+  const duration = 130 + (pxDistance * 0.018);
   return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
 }
 function getScrollEasing(name, t){
@@ -568,8 +568,8 @@ function sweepWeekStrip(){
       pill.classList.add("pulse");
       window.setTimeout(() => {
         pill.classList.remove("pulse");
-      }, 240);
-    }, index * 24);
+      }, 180);
+    }, index * 14);
   });
 }
 
