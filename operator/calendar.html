@@ -416,13 +416,6 @@ body{
 .appt:last-child{
   margin-bottom:0;
 }
-.appt-time{
-  flex:0 0 auto;
-  min-width:70px;
-  color:var(--text);
-  font-weight:600;
-  white-space:nowrap;
-}
 
   .appt-client{
     flex:0 1 auto;
@@ -1060,7 +1053,6 @@ function buildTimeline(){
               const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
               return `
                 <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
-                  <div class="appt-time">${item.time}</div>
                     <div class="appt-client">${item.client}</div>
                     <div class="appt-type">· ${item.type || ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
                     <div class="appt-artist">${item.artist}</div>
