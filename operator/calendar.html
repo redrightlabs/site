@@ -160,14 +160,34 @@ body{
   border:1px solid var(--line);
   background:var(--panel);
 }
-
+.day-section.is-today{
+  border-color:rgba(255,77,77,.22);
+  box-shadow:0 0 0 1px rgba(255,77,77,.08) inset, 0 14px 34px rgba(0,0,0,.45);
+}
 .day-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
   font-size:12px;
   font-weight:700;
   letter-spacing:.08em;
   text-transform:uppercase;
   margin-bottom:10px;
   color:var(--muted);
+}
+
+.day-header .title{
+  color:var(--text);
+}
+
+.badge-today{
+  font-size:10px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:rgba(255,77,77,.14);
+  color:#ffdede;
+  border:1px solid rgba(255,77,77,.25);
 }
 .time-slot{
   display:grid;
@@ -247,8 +267,8 @@ body{
 .appt{
   padding:9px 10px;
   border-radius:12px;
-  background:rgba(255,255,255,.04);
-  margin-bottom:0;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.06);
   font-size:13px;
   display:flex;
   align-items:center;
@@ -303,16 +323,14 @@ body{
 .isla{
   padding:8px 10px;
   border-radius:12px;
-  background:rgba(255,77,77,.08);
-  border:1px solid rgba(255,77,77,.2);
+  background:rgba(255,77,77,.10);
+  border:1px solid rgba(255,77,77,.22);
   font-size:12px;
-  margin-bottom:0;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
 }
-
 .isla-type{
   flex:0 0 auto;
   font-weight:600;
@@ -818,14 +836,22 @@ function buildTimeline(){
             </div>
           `;
         }).join("")
-      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">No activity this day</div></div></div>`;
+      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">No scheduled activity</div></div></div>`;
 
     const section = document.createElement("div");
     section.className = "day-section";
+    if (currentDate.toDateString() === today.toDateString()) {
+  section.classList.add("is-today");
+}
     section.id = "day-"+dayLabel;
 
     section.innerHTML = `
-      <div class="day-header">${dayLabel}</div>
+      <div class="day-header">
+  <div class="title">${dayLabel}</div>
+  ${currentDate.toDateString() === today.toDateString() 
+    ? '<span class="badge-today">Today</span>' 
+    : ''}
+</div>
       ${slotMarkup}
     `;
 
