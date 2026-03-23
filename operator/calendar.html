@@ -133,13 +133,33 @@ body{
   background:rgba(255,255,255,.05);
 }
 
-.day-dot{
-  margin-top:3px;
-  font-size:9px;
-  line-height:1.1;
-  color:rgba(233,232,223,.58);
-  min-height:10px;
-}
+  .day-dot{
+    margin-top:4px;
+    min-height:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:700;
+    line-height:1;
+    color:rgba(233,232,223,.82);
+  }
+  .day-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:18px;
+    height:18px;
+    padding:0 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .day-count.is-busy{
+    background:rgba(255,77,77,.12);
+    border-color:rgba(255,77,77,.22);
+    color:#ffdede;
+  }
 
 /* =========================
    TIMELINE
@@ -551,13 +571,6 @@ function getTopOffset() {
   const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
   return Math.round(navHeight + 10);
 }
-function getDayActivityDot(date){
-  const count = getDayActivityCount(date);
-  if (count === 0) return "";
-  if (count <= 2) return "•";
-  if (count <= 4) return "••";
-  return "•••";
-}
 
 function getDayActivityCount(date){
   const shopAppointments = getShopAppointmentsForDate(date);
@@ -590,12 +603,14 @@ function buildWeekStrip(){
     el.dataset.date = d.toDateString();
 
     const count = getDayActivityCount(d);
-    const countLabel = count > 0 ? `${count} appt${count === 1 ? "" : "s"}` : "";
+    const countMarkup = count > 0
+      ? `<span class="day-count${count >= 4 ? ' is-busy' : ''}">${count}</span>`
+      : "";
 
     el.innerHTML = `
       <div>${DAYS[d.getDay()]}</div>
       <div>${d.getDate()}</div>
-      <div class="day-dot">${countLabel}</div>
+      <div class="day-dot">${countMarkup}</div>
     `;
 
     el.onclick = () => scrollToDate(d);
@@ -938,6 +953,7 @@ function buildTimeline(){
       if (!groupedByTime.has(item.time)) groupedByTime.set(item.time, []);
       groupedByTime.get(item.time).push(item);
     });
+    const sortedTimes = Array.from(groupedByTime.keys()).sort((a, b) => parseMinutes(a) - parseMinutes(b));
 
     // === Now/Next logic ===
     const isToday = currentDate.toDateString() === today.toDateString();
@@ -945,7 +961,8 @@ function buildTimeline(){
     let nextMarked = false;
 
     const slotMarkup = timelineItems.length
-      ? Array.from(groupedByTime.entries()).map(([time, items]) => {
+      ? sortedTimes.map((time) => {
+          const items = groupedByTime.get(time);
           // check if we should insert Now marker before this slot
           const slotMin = parseMinutes(time);
           const shouldInsertNow = isToday && nowMin !== null && !nextMarked && slotMin >= nowMin;
@@ -967,8 +984,8 @@ function buildTimeline(){
                 <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-time">${item.time}</div>
                   <div class="appt-client">${item.client}</div>
-                  <div class="appt-artist">${item.artist}</div>
                   <div class="appt-type" style="font-size:11px;color:var(--muted);white-space:nowrap;">${item.type || ''}</div>
+                  <div class="appt-artist">${item.artist}</div>
                 </div>
               `;
             }
@@ -1023,8 +1040,9 @@ function buildTimeline(){
   if(upNext && bar && value){
     bar.style.display = 'flex';
     value.textContent = `${upNext.time} · ${upNext.count} appointment${upNext.count>1?'s':''}`;
-  }else if(bar){
-    bar.style.display = 'none';
+  }else if(bar && value){
+    bar.style.display = 'flex';
+    value.textContent = 'No more appointments today';
   }
 }
 
