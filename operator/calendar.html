@@ -260,25 +260,26 @@ body{
     display:flex;
     align-items:center;
     gap:6px;
-    margin:0 0 6px;
+    margin:0 0 4px;
     font-size:10px;
-    font-weight:700;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    color:rgba(233,232,223,.58);
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:none;
+    color:rgba(233,232,223,.52);
   }
 
   .slot-group-count{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-width:18px;
-    height:18px;
-    padding:0 6px;
+    min-width:16px;
+    height:16px;
+    padding:0 5px;
     border-radius:999px;
-    background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.07);
-    color:rgba(233,232,223,.78);
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    color:rgba(233,232,223,.72);
+    font-size:10px;
   }
 
   /* === NOW / NEXT UP Awareness Layer === */
@@ -1071,7 +1072,7 @@ function buildTimeline(){
           }).join("");
           const appointmentCount = items.filter((item) => item.kind === "appointment").length;
           const clusterMeta = appointmentCount > 1
-            ? `<div class="slot-group-meta"><span class="slot-group-count">${appointmentCount}</span><span>${appointmentCount} appointments starting</span></div>`
+            ? `<div class="slot-group-meta"><span class="slot-group-count">${appointmentCount}</span><span>starting</span></div>`
             : "";
 
           return `
