@@ -119,6 +119,29 @@ body{
    TIMELINE
 ========================= */
 
+/* Destination focus */
+.day-section.is-focused{
+  outline:1px solid rgba(255,77,77,.28);
+  box-shadow:0 0 0 1px rgba(255,77,77,.10) inset, 0 10px 28px rgba(0,0,0,.35);
+  animation:dayFocusFade 520ms ease-out;
+}
+
+@keyframes dayFocusFade{
+  0%{ box-shadow:0 0 0 2px rgba(255,77,77,.35) inset, 0 16px 36px rgba(0,0,0,.45); }
+  100%{ box-shadow:0 0 0 1px rgba(255,77,77,.10) inset, 0 10px 28px rgba(0,0,0,.35); }
+}
+
+/* Week pill pulse */
+.day-pill.pulse{
+  animation:pillPulse 380ms ease-out;
+}
+
+@keyframes pillPulse{
+  0%{ transform:scale(1); background:rgba(255,77,77,.12); }
+  40%{ transform:scale(1.06); background:rgba(255,77,77,.18); }
+  100%{ transform:scale(1); background:rgba(255,77,77,.12); }
+}
+
 .timeline{
   display:flex;
   flex-direction:column;
@@ -427,6 +450,25 @@ function setActiveStripDay(dateString) {
   });
 }
 
+// ========== Premium micro-interactions ==========
+function pulseActivePill(dateString){
+  const pill = document.querySelector(`.day-pill[data-date="${dateString}"]`);
+  if(!pill) return;
+  pill.classList.remove("pulse");
+  // restart animation
+  void pill.offsetWidth;
+  pill.classList.add("pulse");
+}
+
+function focusDaySection(el){
+  if(!el) return;
+  el.classList.remove("is-focused");
+  void el.offsetWidth;
+  el.classList.add("is-focused");
+  // remove class after animation to keep DOM clean
+  setTimeout(()=> el.classList.remove("is-focused"), 520);
+}
+
 function syncStripToScroll() {
   const daySections = Array.from(document.querySelectorAll(".day-section"));
   if (!daySections.length) return;
@@ -658,9 +700,13 @@ function scrollToDate(date){
   const id = "day-"+date.toDateString();
   const el = document.getElementById(id);
   if(el){
-    setActiveStripDay(date.toDateString());
+    const ds = date.toDateString();
+    setActiveStripDay(ds);
+    pulseActivePill(ds);
     const y = window.scrollY + el.getBoundingClientRect().top - getTopOffset();
     window.scrollTo({ top: y, behavior: "smooth" });
+    // focus after scroll settles
+    window.setTimeout(()=> focusDaySection(el), 220);
   }
 }
 
