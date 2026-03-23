@@ -256,31 +256,6 @@ body{
     gap:6px;
   }
 
-  .slot-group-meta{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    margin:0 0 4px;
-    font-size:10px;
-    font-weight:600;
-    letter-spacing:.04em;
-    text-transform:none;
-    color:rgba(233,232,223,.52);
-  }
-
-  .slot-group-count{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-width:16px;
-    height:16px;
-    padding:0 5px;
-    border-radius:999px;
-    background:rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06);
-    color:rgba(233,232,223,.72);
-    font-size:10px;
-  }
 
   /* === NOW / NEXT UP Awareness Layer === */
   .now-marker{
@@ -353,6 +328,27 @@ body{
   .is-past{
     opacity:.55;
   }
+
+.home-row{
+  display:flex;
+  justify-content:flex-start;
+  margin-bottom:10px;
+}
+
+.home-btn{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-size:12px;
+  cursor:pointer;
+}
+
+.home-btn:hover{
+  background:rgba(255,255,255,.06);
+}
+
 .lens-row{
   display:flex;
   justify-content:center;
@@ -499,6 +495,10 @@ body{
 <body>
 <div class="shell">
   <div class="top-nav">
+      <div class="home-row">
+        <button class="home-btn" onclick="goOperatorHome()">← Home</button>
+      </div>
+
       <div class="lens-row">
     <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Shop</button>
     <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Artist</button>
@@ -552,6 +552,10 @@ const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "Jake";
+
+function goOperatorHome(){
+  window.location.href = "/operator/";
+}
 
 function getShopAppointmentsForDate(date){
   const day = date.getDay();
@@ -1070,16 +1074,11 @@ function buildTimeline(){
               </div>
             `;
           }).join("");
-          const appointmentCount = items.filter((item) => item.kind === "appointment").length;
-          const clusterMeta = appointmentCount > 1
-            ? `<div class="slot-group-meta"><span class="slot-group-count">${appointmentCount}</span><span>starting</span></div>`
-            : "";
-
           return `
             ${nowMarker}
             <div class="time-slot">
               <div class="slot-time">${time}</div>
-              <div class="slot-stack">${clusterMeta}${inner}</div>
+              <div class="slot-stack">${inner}</div>
             </div>
           `;
         }).join("")
