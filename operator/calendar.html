@@ -134,10 +134,11 @@ body{
 }
 
 .day-dot{
-  margin-top:2px;
-  font-size:10px;
-  color:var(--accent);
-  opacity:.9;
+  margin-top:3px;
+  font-size:9px;
+  line-height:1.1;
+  color:rgba(233,232,223,.58);
+  min-height:10px;
 }
 
 /* =========================
@@ -434,12 +435,13 @@ body{
     <button class="jump-btn" onclick="scrollToMonth(1)">+ Month</button>
   </div>
 
+  <!-- WEEK STRIP -->
+  <div class="week-strip" id="week-strip"></div>
+
   <div class="up-next-bar" id="up-next-bar" style="display:none;">
     <div class="up-next-label">Up Next</div>
     <div class="up-next-value" id="up-next-value"></div>
   </div>
-  <!-- WEEK STRIP -->
-  <div class="week-strip" id="week-strip"></div>
   </div>
 
   <!-- TIMELINE -->
@@ -587,12 +589,13 @@ function buildWeekStrip(){
     if (d.toDateString() === baseDate.toDateString()) el.classList.add("active");
     el.dataset.date = d.toDateString();
 
-    const dot = getDayActivityDot(d);
+    const count = getDayActivityCount(d);
+    const countLabel = count > 0 ? `${count} appt${count === 1 ? "" : "s"}` : "";
 
     el.innerHTML = `
       <div>${DAYS[d.getDay()]}</div>
       <div>${d.getDate()}</div>
-      <div class="day-dot">${dot}</div>
+      <div class="day-dot">${countLabel}</div>
     `;
 
     el.onclick = () => scrollToDate(d);
@@ -645,6 +648,39 @@ function parseMinutes(timeStr){
 function getNowMinutes(){
   const n = new Date();
   return n.getHours() * 60 + n.getMinutes();
+}
+
+function computeUpNext(){
+  const items = Array.from(document.querySelectorAll('.appt'));
+  const upcoming = [];
+  const nowMin = getNowMinutes();
+
+  items.forEach(el => {
+    const section = el.closest('.day-section');
+    if (!section || !section.classList.contains('is-today')) return;
+
+    const timeEl = el.querySelector('.appt-time');
+    if(!timeEl) return;
+
+    const timeStr = timeEl.textContent;
+    const min = parseMinutes(timeStr);
+
+    if(min >= nowMin){
+      upcoming.push({ el, min, timeStr });
+    }
+  });
+
+  if(!upcoming.length) return null;
+
+  upcoming.sort((a,b)=>a.min-b.min);
+
+  const firstTime = upcoming[0].min;
+  const group = upcoming.filter(i=>i.min===firstTime);
+
+  return {
+    time: group[0].timeStr,
+    count: group.length
+  };
 }
 
 function getMotionDuration(motion, fromDate, toDate, pixelDistance){
@@ -1123,35 +1159,3 @@ syncStripToScroll();
 </script>
 </body>
 </html>
-function computeUpNext(){
-  const now = new Date();
-  const todayKey = today.toDateString();
-
-  const items = Array.from(document.querySelectorAll('.appt'));
-  const upcoming = [];
-
-  items.forEach(el => {
-    const timeEl = el.querySelector('.appt-time');
-    if(!timeEl) return;
-
-    const timeStr = timeEl.textContent;
-    const min = parseMinutes(timeStr);
-    const nowMin = getNowMinutes();
-
-    if(min >= nowMin){
-      upcoming.push({ el, min, timeStr });
-    }
-  });
-
-  if(!upcoming.length) return null;
-
-  upcoming.sort((a,b)=>a.min-b.min);
-
-  const firstTime = upcoming[0].min;
-  const group = upcoming.filter(i=>i.min===firstTime);
-
-  return {
-    time: group[0].timeStr,
-    count: group.length
-  };
-}
