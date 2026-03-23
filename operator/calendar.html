@@ -382,16 +382,20 @@ const artistSelectEl = document.getElementById("artist-select");
 const topNavEl = document.querySelector(".top-nav");
 let today = new Date();
 let baseDate = new Date(today);
+const timelineStartDate = new Date(today);
+timelineStartDate.setDate(timelineStartDate.getDate() - 90);
+const timelineEndDate = new Date(today);
+timelineEndDate.setDate(timelineEndDate.getDate() + 180);
 let currentLens = "shop";
 let currentArtist = "Jake";
 let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, sweep: false, startDistancePx: 0 },
-  today: { duration: 360, easing: "easeOutQuart", focusDelay: 120, sweep: false, startDistancePx: 180 },
-  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, sweep: true, startDistancePx: 140 },
-  month: { duration: 900, easing: "easeInOutQuart", focusDelay: 210, sweep: true, startDistancePx: 420 }
+  tap:   { minDuration: 220, maxDuration: 320, easing: "easeOutCubic", focusDelay: 140, sweep: false },
+  today: { minDuration: 320, maxDuration: 420, easing: "easeOutQuart", focusDelay: 120, sweep: false },
+  week:  { minDuration: 720, maxDuration: 980, easing: "easeInOutCubic", focusDelay: 170, sweep: true },
+  month: { minDuration: 1380, maxDuration: 1820, easing: "easeInOutSine", focusDelay: 220, sweep: true }
 };
 
 function getTopOffset() {
@@ -489,7 +493,33 @@ function clampScrollY(y){
   const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   return Math.max(0, Math.min(maxY, y));
 }
+function clamp(value, min, max){
+  return Math.max(min, Math.min(max, value));
+}
 
+function getMotionDuration(motion, fromDate, toDate, pixelDistance){
+  const preset = MOTION_PRESETS[motion] || MOTION_PRESETS.tap;
+  const dayDistance = Math.max(1, Math.abs(Math.round((toDate - fromDate) / 86400000)));
+  const pxDistance = Math.abs(pixelDistance);
+
+  if (motion === "month") {
+    const duration = 980 + (dayDistance * 22) + (pxDistance * 0.06);
+    return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
+  }
+
+  if (motion === "week") {
+    const duration = 520 + (dayDistance * 24) + (pxDistance * 0.05);
+    return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
+  }
+
+  if (motion === "today") {
+    const duration = 260 + (pxDistance * 0.08);
+    return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
+  }
+
+  const duration = 180 + (pxDistance * 0.05);
+  return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
+}
 function getScrollEasing(name, t){
   if (name === "easeOutQuart") {
     return 1 - Math.pow(1 - t, 4);
@@ -500,6 +530,10 @@ function getScrollEasing(name, t){
       ? 8 * Math.pow(t, 4)
       : 1 - Math.pow(-2 * t + 2, 4) / 2;
   }
+
+if (name === "easeInOutSine") {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
 
   if (name === "easeInOutQuint") {
     return t < 0.5
@@ -525,12 +559,6 @@ function getDayTargetY(date){
 }
 
 
-function getPreparedStartY(targetY, direction = 1, distancePx = 0){
-  if (!distancePx) return null;
-
-  const signedDistance = direction >= 0 ? -distancePx : distancePx;
-  return clampScrollY(targetY + signedDistance);
-}
 
 function sweepWeekStrip(){
   const pills = Array.from(document.querySelectorAll(".day-pill"));
@@ -586,8 +614,7 @@ function navigateToDate(date, motion = "tap", options = {}){
   const {
     updateStrip = true,
     pulse = motion !== "today",
-    focus = true,
-    direction = 1
+    focus = true
   } = options;
 
   if (updateStrip) {
@@ -600,27 +627,19 @@ function navigateToDate(date, motion = "tap", options = {}){
 
   pulseActivePill(target.dateString, pulse);
 
-  const finalY = target.targetY;
-  const preparedStartY = getPreparedStartY(finalY, direction, preset.startDistancePx || 0);
+  const duration = getMotionDuration(motion, baseDate, date, target.targetY - window.scrollY);
 
-  const finish = () => {
-    window.setTimeout(() => {
-      focusDaySection(target.el, focus);
-    }, preset.focusDelay);
-  };
-
-  const canUsePreparedStart = preparedStartY !== null
-    && Math.abs(finalY - preparedStartY) > 80
-    && Math.abs(window.scrollY - finalY) < 48;
-
-  if (canUsePreparedStart) {
-    window.scrollTo(0, preparedStartY);
-  }
-
-  animateScrollTo(finalY, {
-    duration: preset.duration,
+  animateScrollTo(target.targetY, {
+    duration,
     easing: preset.easing,
-    onComplete: finish
+    onComplete: () => {
+      baseDate = new Date(date);
+      buildWeekStrip();
+      setActiveStripDay(target.dateString);
+      window.setTimeout(() => {
+        focusDaySection(target.el, focus);
+      }, preset.focusDelay);
+    }
   });
 }
 
@@ -633,14 +652,20 @@ function syncStripToScroll() {
 
   daySections.forEach((section) => {
     const rect = section.getBoundingClientRect();
-    const distance = Math.abs(rect.top - getTopOffset());    if (distance < closestDistance) {
+    const distance = Math.abs(rect.top - getTopOffset());
+    if (distance < closestDistance) {
       closest = section;
       closestDistance = distance;
     }
   });
 
   const activeDate = closest.id.replace("day-", "");
-  setActiveStripDay(activeDate);
+  const parsed = new Date(activeDate);
+  if (!Number.isNaN(parsed.getTime())) {
+    baseDate = parsed;
+    buildWeekStrip();
+    setActiveStripDay(activeDate);
+  }
 }
 
 /* =========================
@@ -650,11 +675,13 @@ function syncStripToScroll() {
 function buildTimeline(){
   timelineEl.innerHTML = "";
 
-  for(let i=-7;i<21;i++){
-    const d = new Date(baseDate);
-    d.setDate(baseDate.getDate()+i);
+  const start = new Date(timelineStartDate);
+  const end = new Date(timelineEndDate);
 
-    const dayLabel = d.toDateString();
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const currentDate = new Date(d);
+
+    const dayLabel = currentDate.toDateString();
 
     const shopAppointments = [
       {
@@ -862,68 +889,34 @@ function scrollToDate(date){
 function scrollToDay(type){
   if(type !== "today") return;
 
-  const previousBaseDate = new Date(baseDate);
   const isAlreadyToday = baseDate.toDateString() === today.toDateString();
 
-  if (isAlreadyToday) {
-    navigateToDate(today, "today", {
-      updateStrip: true,
-      pulse: false,
-      focus: true,
-      direction: 0
-    });
-    return;
-  }
-
-  const direction = today > previousBaseDate ? 1 : -1;
-
-  baseDate = new Date(today);
-  buildWeekStrip();
-  buildTimeline();
-
-  window.requestAnimationFrame(() => {
-    navigateToDate(baseDate, "today", {
-      updateStrip: true,
-      pulse: false,
-      focus: true,
-      direction
-    });
+  navigateToDate(today, "today", {
+    updateStrip: true,
+    pulse: !isAlreadyToday,
+    focus: true
   });
 }
 
 function scrollToWeek(offset){
   const next = new Date(baseDate);
   next.setDate(baseDate.getDate() + (offset * 7));
-  baseDate = next;
 
-  buildWeekStrip();
-  buildTimeline();
-
-  window.requestAnimationFrame(() => {
-    navigateToDate(baseDate, "week", {
-      updateStrip: true,
-      pulse: true,
-      focus: true,
-      direction: offset
-    });
+  navigateToDate(next, "week", {
+    updateStrip: true,
+    pulse: true,
+    focus: true
   });
 }
 
 function scrollToMonth(offset){
   const next = new Date(baseDate);
   next.setMonth(baseDate.getMonth() + offset);
-  baseDate = next;
 
-  buildWeekStrip();
-  buildTimeline();
-
-  window.requestAnimationFrame(() => {
-    navigateToDate(baseDate, "month", {
-      updateStrip: true,
-      pulse: true,
-      focus: true,
-      direction: offset
-    });
+  navigateToDate(next, "month", {
+    updateStrip: true,
+    pulse: true,
+    focus: true
   });
 }
 
