@@ -395,7 +395,7 @@ const MOTION_PRESETS = {
   tap:   { minDuration: 180, maxDuration: 260, easing: "easeOutCubic", focusDelay: 110, sweep: false },
   today: { minDuration: 240, maxDuration: 340, easing: "easeOutQuart", focusDelay: 110, sweep: false },
   week:  { minDuration: 420, maxDuration: 620, easing: "easeInOutCubic", focusDelay: 130, sweep: true },
-  month: { minDuration: 760, maxDuration: 1080, easing: "easeInOutCubic", focusDelay: 160, sweep: true }
+  month: { minDuration: 620, maxDuration: 900, easing: "easeInOutCubic", focusDelay: 145, sweep: true }
 };
 
 function getTopOffset() {
@@ -503,7 +503,7 @@ function getMotionDuration(motion, fromDate, toDate, pixelDistance){
   const pxDistance = Math.abs(pixelDistance);
 
   if (motion === "month") {
-    const duration = 620 + (dayDistance * 12) + (pxDistance * 0.035);
+    const duration = 520 + (dayDistance * 9) + (pxDistance * 0.026);
     return clamp(Math.round(duration), preset.minDuration, preset.maxDuration);
   }
 
