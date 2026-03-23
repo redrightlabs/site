@@ -384,7 +384,15 @@ let today = new Date();
 let baseDate = new Date(today);
 let currentLens = "shop";
 let currentArtist = "Jake";
-let lastJumpDirection = 0;
+let isProgrammaticScroll = false;
+let scrollSyncTicking = false;
+
+const MOTION_PRESETS = {
+  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140 },
+  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120 },
+  week:  { duration: 520, easing: "easeInOutCubic", focusDelay: 150 },
+  month: { duration: 720, easing: "easeInOutQuint", focusDelay: 170 }
+};
 
 function getTopOffset() {
   const navHeight = topNavEl ? topNavEl.getBoundingClientRect().height : 0;
@@ -460,22 +468,21 @@ function setActiveStripDay(dateString) {
 }
 
 // ========== Premium micro-interactions ==========
-function pulseActivePill(dateString){
+function pulseActivePill(dateString, shouldPulse = true){
+  if (!shouldPulse) return;
   const pill = document.querySelector(`.day-pill[data-date="${dateString}"]`);
   if(!pill) return;
   pill.classList.remove("pulse");
-  // restart animation
   void pill.offsetWidth;
   pill.classList.add("pulse");
 }
 
-function focusDaySection(el){
-  if(!el) return;
+function focusDaySection(el, shouldFocus = true){
+  if(!el || !shouldFocus) return;
   el.classList.remove("is-focused");
   void el.offsetWidth;
   el.classList.add("is-focused");
-  // remove class after animation to keep DOM clean
-  setTimeout(()=> el.classList.remove("is-focused"), 520);
+  setTimeout(() => el.classList.remove("is-focused"), 520);
 }
 
 function clampScrollY(y){
@@ -483,79 +490,92 @@ function clampScrollY(y){
   return Math.max(0, Math.min(maxY, y));
 }
 
-function animateWindowScroll(from, to, duration, easingName){
-  const start = performance.now();
-
-  function easeValue(t){
-    if (easingName === "month") {
-      return 1 - Math.pow(1 - t, 5);
-    }
-    if (easingName === "today") {
-      return 1 - Math.pow(1 - t, 3);
-    }
-    return t < 0.5
-      ? 2 * t * t
-      : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function getScrollEasing(name, t){
+  if (name === "easeOutQuart") {
+    return 1 - Math.pow(1 - t, 4);
   }
 
+  if (name === "easeInOutQuint") {
+    return t < 0.5
+      ? 16 * Math.pow(t, 5)
+      : 1 - Math.pow(-2 * t + 2, 5) / 2;
+  }
+
+  if (name === "easeInOutCubic") {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function getDayTargetY(date){
+  const el = document.getElementById("day-" + date.toDateString());
+  if (!el) return null;
+
+  const targetY = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
+  return { el, targetY, dateString: date.toDateString() };
+}
+
+function animateScrollTo(targetY, { duration, easing, onComplete } = {}){
+  const startY = window.scrollY;
+  const endY = clampScrollY(targetY);
+  const distance = endY - startY;
+
+  if (Math.abs(distance) < 2) {
+    window.scrollTo(0, endY);
+    if (typeof onComplete === "function") onComplete();
+    return;
+  }
+
+  const startTime = performance.now();
+  isProgrammaticScroll = true;
+
   function frame(now){
-    const t = Math.min(1, (now - start) / duration);
-    const eased = easeValue(t);
-    const current = from + (to - from) * eased;
-    window.scrollTo(0, current);
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    const eased = getScrollEasing(easing, t);
+    window.scrollTo(0, startY + (distance * eased));
 
     if (t < 1) {
       requestAnimationFrame(frame);
+      return;
     }
+
+    window.scrollTo(0, endY);
+    isProgrammaticScroll = false;
+    if (typeof onComplete === "function") onComplete();
   }
 
   requestAnimationFrame(frame);
 }
 
+function navigateToDate(date, motion = "tap", options = {}){
+  const target = getDayTargetY(date);
+  if (!target) return;
 
-function navigateToDateWithRoll(date, direction, mode = "week"){
-  const id = "day-" + date.toDateString();
-  const el = document.getElementById(id);
-  if(!el) return;
+  const preset = MOTION_PRESETS[motion] || MOTION_PRESETS.tap;
+  const {
+    updateStrip = true,
+    pulse = motion !== "today",
+    focus = true
+  } = options;
 
-  const ds = date.toDateString();
-  setActiveStripDay(ds);
-  pulseActivePill(ds);
+  if (updateStrip) {
+    setActiveStripDay(target.dateString);
+  }
 
-  const targetY = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
+  pulseActivePill(target.dateString, pulse);
 
-  const travel = mode === "month"
-    ? Math.max(window.innerHeight * 2.2, 1200)
-    : mode === "today"
-      ? Math.max(window.innerHeight * 0.55, 320)
-      : Math.max(window.innerHeight * 0.9, 560);
-
-  const duration = mode === "month"
-    ? 260
-    : mode === "today"
-      ? 360
-      : 500;
-
-  const easing = mode === "month"
-    ? "month"
-    : mode === "today"
-      ? "today"
-      : "week";
-
-  const startY = clampScrollY(targetY + (direction > 0 ? -travel : travel));
-
-  window.scrollTo({ top: startY, behavior: "auto" });
-
-  window.requestAnimationFrame(() => {
-    animateWindowScroll(startY, targetY, duration, easing);
-    window.setTimeout(() => {
-      const settle = mode === "month" ? 6 : 3;
-      window.scrollTo(0, clampScrollY(targetY + (direction > 0 ? settle : -settle)));
+  animateScrollTo(target.targetY, {
+    duration: preset.duration,
+    easing: preset.easing,
+    onComplete: () => {
       window.setTimeout(() => {
-        window.scrollTo(0, targetY);
-        focusDaySection(el);
-      }, mode === "month" ? 40 : 60);
-    }, duration);
+        focusDaySection(target.el, focus);
+      }, preset.focusDelay);
+    }
   });
 }
 
@@ -787,63 +807,53 @@ function wireProjectLinks() {
 ========================= */
 
 function scrollToDate(date){
-  const id = "day-"+date.toDateString();
-  const el = document.getElementById(id);
-  if(el){
-    const ds = date.toDateString();
-    setActiveStripDay(ds);
-    pulseActivePill(ds);
-    const y = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
-    window.scrollTo({ top: y, behavior: "smooth" });
-    // focus after scroll settles
-    window.setTimeout(()=> focusDaySection(el), 220);
-  }
+  navigateToDate(date, "tap", {
+    updateStrip: true,
+    pulse: true,
+    focus: true
+  });
 }
 
 function scrollToDay(type){
-  if(type === "today"){
-    const isAlreadyToday = baseDate.toDateString() === today.toDateString();
+  if(type !== "today") return;
 
-    if (isAlreadyToday) {
-      const id = "day-" + today.toDateString();
-      const el = document.getElementById(id);
-      if (el) {
-        const y = clampScrollY(window.scrollY + el.getBoundingClientRect().top - getTopOffset());
-        window.scrollTo({ top: y, behavior: "auto" });
-        setActiveStripDay(today.toDateString());
-        pulseActivePill(today.toDateString());
-        focusDaySection(el);
-      }
-      return;
-    }
+  const isAlreadyToday = baseDate.toDateString() === today.toDateString();
 
-    const prev = new Date(baseDate);
-    baseDate = new Date(today);
-
-    const direction = baseDate > prev ? 1 : -1;
-
-    lastJumpDirection = direction;
-    buildWeekStrip();
-    buildTimeline();
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        navigateToDateWithRoll(baseDate, direction, "today");
-      });
+  if (isAlreadyToday) {
+    navigateToDate(today, "today", {
+      updateStrip: true,
+      pulse: false,
+      focus: true
     });
+    return;
   }
+
+  baseDate = new Date(today);
+  buildWeekStrip();
+  buildTimeline();
+
+  window.requestAnimationFrame(() => {
+    navigateToDate(baseDate, "today", {
+      updateStrip: true,
+      pulse: false,
+      focus: true
+    });
+  });
 }
 
 function scrollToWeek(offset){
   const next = new Date(baseDate);
   next.setDate(baseDate.getDate() + (offset * 7));
   baseDate = next;
-  lastJumpDirection = offset;
+
   buildWeekStrip();
   buildTimeline();
+
   window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      navigateToDateWithRoll(baseDate, lastJumpDirection, "week");
+    navigateToDate(baseDate, "week", {
+      updateStrip: true,
+      pulse: true,
+      focus: true
     });
   });
 }
@@ -852,20 +862,22 @@ function scrollToMonth(offset){
   const next = new Date(baseDate);
   next.setMonth(baseDate.getMonth() + offset);
   baseDate = next;
-  lastJumpDirection = offset;
+
   buildWeekStrip();
   buildTimeline();
+
   window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      navigateToDateWithRoll(baseDate, lastJumpDirection, "month");
+    navigateToDate(baseDate, "month", {
+      updateStrip: true,
+      pulse: true,
+      focus: true
     });
   });
 }
 
 
-let scrollSyncTicking = false;
 window.addEventListener("scroll", () => {
-  if (scrollSyncTicking) return;
+  if (isProgrammaticScroll || scrollSyncTicking) return;
   scrollSyncTicking = true;
   window.requestAnimationFrame(() => {
     syncStripToScroll();
@@ -880,8 +892,13 @@ window.addEventListener("scroll", () => {
 const backTopBtn = document.getElementById("back-to-top");
 if(backTopBtn){
   backTopBtn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setActiveStripDay(baseDate.toDateString());
+    animateScrollTo(0, {
+      duration: 260,
+      easing: "easeOutCubic",
+      onComplete: () => {
+        syncStripToScroll();
+      }
+    });
   });
 }
 
