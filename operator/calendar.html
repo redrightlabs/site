@@ -388,10 +388,10 @@ let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
 
 const MOTION_PRESETS = {
-  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, preRollDays: 0, sweep: false },
-  today: { duration: 320, easing: "easeOutQuart", focusDelay: 120, preRollDays: 0, sweep: false },
-  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, preRollDays: 1, sweep: true },
-  month: { duration: 920, easing: "easeInOutQuart", focusDelay: 210, preRollDays: 6, sweep: true }
+  tap:   { duration: 240, easing: "easeOutCubic", focusDelay: 140, preRollDays: 0, sweep: false, startDistancePx: 0 },
+  today: { duration: 360, easing: "easeOutQuart", focusDelay: 120, preRollDays: 0, sweep: false, startDistancePx: 220 },
+  week:  { duration: 560, easing: "easeInOutCubic", focusDelay: 150, preRollDays: 1, sweep: true, startDistancePx: 0 },
+  month: { duration: 960, easing: "easeInOutQuart", focusDelay: 210, preRollDays: 6, sweep: true, startDistancePx: 520 }
 };
 
 function getTopOffset() {
@@ -534,6 +534,13 @@ function getLeadTargetY(date, leadDays = 0){
   return lead ? lead.targetY : null;
 }
 
+function getPreparedStartY(targetY, direction = 1, distancePx = 0){
+  if (!distancePx) return null;
+
+  const signedDistance = direction >= 0 ? -distancePx : distancePx;
+  return clampScrollY(targetY + signedDistance);
+}
+
 function sweepWeekStrip(){
   const pills = Array.from(document.querySelectorAll(".day-pill"));
   pills.forEach((pill, index) => {
@@ -588,7 +595,8 @@ function navigateToDate(date, motion = "tap", options = {}){
   const {
     updateStrip = true,
     pulse = motion !== "today",
-    focus = true
+    focus = true,
+    direction = 1
   } = options;
 
   if (updateStrip) {
@@ -601,17 +609,26 @@ function navigateToDate(date, motion = "tap", options = {}){
 
   pulseActivePill(target.dateString, pulse);
 
-  const leadY = getLeadTargetY(date, preset.preRollDays || 0);
   const finalY = target.targetY;
-  const canUseLead = leadY !== null
-    && Math.abs(finalY - leadY) > 40
-    && Math.abs(window.scrollY - leadY) > 24;
+  const leadY = getLeadTargetY(date, preset.preRollDays || 0);
+  const preparedStartY = getPreparedStartY(finalY, direction, preset.startDistancePx || 0);
 
   const finish = () => {
     window.setTimeout(() => {
       focusDaySection(target.el, focus);
     }, preset.focusDelay);
   };
+
+  const canUsePreparedStart = preparedStartY !== null
+    && Math.abs(finalY - preparedStartY) > 80;
+
+  const canUseLead = leadY !== null
+    && Math.abs(finalY - leadY) > 40
+    && Math.abs(window.scrollY - leadY) > 24;
+
+  if (canUsePreparedStart && Math.abs(window.scrollY - finalY) < 40) {
+    window.scrollTo(0, preparedStartY);
+  }
 
   if (!canUseLead) {
     animateScrollTo(finalY, {
@@ -876,16 +893,20 @@ function scrollToDate(date){
 function scrollToDay(type){
   if(type !== "today") return;
 
+  const previousBaseDate = new Date(baseDate);
   const isAlreadyToday = baseDate.toDateString() === today.toDateString();
 
   if (isAlreadyToday) {
     navigateToDate(today, "today", {
       updateStrip: true,
       pulse: false,
-      focus: true
+      focus: true,
+      direction: 0
     });
     return;
   }
+
+  const direction = today > previousBaseDate ? 1 : -1;
 
   baseDate = new Date(today);
   buildWeekStrip();
@@ -895,7 +916,8 @@ function scrollToDay(type){
     navigateToDate(baseDate, "today", {
       updateStrip: true,
       pulse: false,
-      focus: true
+      focus: true,
+      direction
     });
   });
 }
@@ -912,7 +934,8 @@ function scrollToWeek(offset){
     navigateToDate(baseDate, "week", {
       updateStrip: true,
       pulse: true,
-      focus: true
+      focus: true,
+      direction: offset
     });
   });
 }
@@ -929,7 +952,8 @@ function scrollToMonth(offset){
     navigateToDate(baseDate, "month", {
       updateStrip: true,
       pulse: true,
-      focus: true
+      focus: true,
+      direction: offset
     });
   });
 }
