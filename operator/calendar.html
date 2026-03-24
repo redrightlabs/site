@@ -707,12 +707,15 @@ function getIslaActionsForDate(date, appointments){
   const actions = [];
 
   appointments.forEach((appt) => {
+    const projectContext = appt.type || "Project";
+
     if (appt.time === "12:00 PM") {
       actions.push({
         date: dayKey,
         time: appt.time,
         type: "CareWatch",
         client: appt.client,
+        projectContext,
         detail: "Healing check-in scheduled",
         projectUrl: appt.projectUrl
       });
@@ -722,6 +725,7 @@ function getIslaActionsForDate(date, appointments){
         time: appt.time,
         type: "Review",
         client: appt.client,
+        projectContext,
         detail: "Review request queued",
         projectUrl: appt.projectUrl
       });
@@ -1108,6 +1112,7 @@ function buildTimeline(){
         projectUrl: item.projectUrl,
         type: item.type,
         client: item.client,
+        projectContext: item.projectContext,
         detail: item.detail
       });
     });
@@ -1177,7 +1182,7 @@ function buildTimeline(){
             return `
               <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
-                <div class="isla-client">${item.client}</div>
+                <div class="isla-client">${item.client}${item.projectContext ? ' · ' + item.projectContext : ''}</div>
                 <div class="isla-detail">${item.detail}</div>
               </div>
             `;
