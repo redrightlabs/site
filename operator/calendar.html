@@ -621,7 +621,12 @@ body{
 
 <button id="back-to-top" class="back-top">↑</button>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const supabase = window.supabase.createClient(
+  "https://uwydiqltvchlmjvzwkal.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eWRpcWx0dmNobG1qdnp3a2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODg3NDcsImV4cCI6MjA4Nzg2NDc0N30.lRDxjO8cBV8gf04MeP6ZPCAjPy4ckQA8Ums2rR-ocps"
+);
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const timelineEl = document.getElementById("timeline");
@@ -736,6 +741,19 @@ function normalizeLifecycleEvent(record){
   };
 }
 
+function mapLifecycleDetail(type){
+  switch ((type || "").toLowerCase()) {
+    case "followup":
+      return "Follow-up due";
+    case "review":
+      return "Review window open";
+    case "carewatch":
+      return "Healing check-in due";
+    default:
+      return "Action required";
+  }
+}
+
 function getBusinessName(){
   return CALENDAR_STATE.businessProfile?.name || BUSINESS_PROFILE.name;
 }
@@ -758,21 +776,70 @@ function getLifecycleEventsForDate(date){
 
 async function loadCalendarData(){
   try {
-    const response = await fetch(DATA_ENDPOINT, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    // 1. Get shop (for now hardcode or later from auth)
+    const shopId = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
 
-    const payload = await response.json();
-    CALENDAR_STATE.businessProfile = payload.businessProfile || null;
-    CALENDAR_STATE.projects = Array.isArray(payload.projects) ? payload.projects : [];
-    CALENDAR_STATE.appointments = Array.isArray(payload.appointments)
-      ? payload.appointments.map(normalizeAppointment).filter(Boolean)
-      : [];
-    CALENDAR_STATE.lifecycleEvents = Array.isArray(payload.lifecycleEvents)
-      ? payload.lifecycleEvents.map(normalizeLifecycleEvent).filter(Boolean)
-      : [];
+    // 2. Fetch appointments
+    const { data: appointmentsRaw, error: apptError } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("shop_id", shopId);
+
+    if (apptError) throw apptError;
+
+    // 3. Fetch lifecycle events
+    const { data: lifecycleRaw, error: lifeError } = await supabase
+      .from("lifecycle_events")
+      .select(`
+        *,
+        projects (id, shop_id)
+      `)
+      .eq("projects.shop_id", shopId);
+
+    if (lifeError) throw lifeError;
+
+    // 4. Fetch projects
+    const { data: projectsRaw, error: projError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("shop_id", shopId);
+
+    if (projError) throw projError;
+
+    // 5. Normalize → MATCH YOUR UI
+    CALENDAR_STATE.appointments = appointmentsRaw.map((a) => ({
+      id: a.id,
+      date: new Date(a.start_time).toDateString(),
+      time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString()),
+      client: a.client_name,
+      artist: a.artist_name,
+      type: a.service_type,
+      projectUrl: `/operator/projects.html?project=${a.project_id}`
+    }));
+
+    CALENDAR_STATE.lifecycleEvents = lifecycleRaw.map((e) => ({
+      id: e.id,
+      date: new Date(e.due_at).toDateString(),
+      time: normalizeTimeLabel(new Date(e.due_at).toLocaleTimeString()),
+      type: e.type,
+      client: "Client", // TODO: replace when clients table wired
+      artist: "",       // TODO: replace when roster wired
+      projectContext: "Project",
+      detail: mapLifecycleDetail(e.type),
+      projectUrl: `/operator/projects.html?project=${e.project_id}`
+    }));
+
+    CALENDAR_STATE.projects = projectsRaw;
+
+    CALENDAR_STATE.businessProfile = {
+      name: "Myrtle Ink Studio",
+      vertical: "tattoo"
+    };
+
     CALENDAR_STATE.loaded = true;
+
   } catch (error) {
-    console.warn("Calendar data fallback active:", error);
+    console.error("Supabase load failed:", error);
     CALENDAR_STATE.loaded = false;
   }
 }
@@ -1558,8 +1625,10 @@ if(backTopBtn){
 }
 
 // Bootstrapper: load data, then build UI
+// subscribeToRealtime();
 (async function initCalendar(){
   await loadCalendarData();
+  // subscribeToRealtime();
   applyBusinessIdentity();
   applyLensLabels();
   syncArtistFilterVisibility();
@@ -1568,6 +1637,28 @@ if(backTopBtn){
   syncStripToScroll();
   updateScrollContext(baseDate.toDateString());
 })();
+
+function subscribeToRealtime(){
+  supabase
+    .channel("calendar-live")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "appointments" },
+      () => reloadCalendar()
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "lifecycle_events" },
+      () => reloadCalendar()
+    )
+    .subscribe();
+}
+
+async function reloadCalendar(){
+  await loadCalendarData();
+  buildWeekStrip();
+  buildTimeline();
+}
 </script>
 </body>
 </html>
