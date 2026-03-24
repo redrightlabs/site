@@ -724,7 +724,7 @@ function getDayActivityCount(date){
   }
 
   if (currentLens === "isla") {
-    return shopAppointments.length;
+    return getIslaActionsForDate(date, shopAppointments).length;
   }
 
   return shopAppointments.length;
@@ -810,6 +810,8 @@ function getNowMinutes(){
 }
 
 function computeUpNext(){
+  if (currentLens === "isla") return null;
+
   const items = Array.from(document.querySelectorAll('.appt'));
   const upcoming = [];
   const nowMin = getNowMinutes();
@@ -818,10 +820,10 @@ function computeUpNext(){
     const section = el.closest('.day-section');
     if (!section || !section.classList.contains('is-today')) return;
 
-    const timeEl = el.querySelector('.appt-time');
+    const timeEl = section.querySelector('.slot-time');
     if(!timeEl) return;
 
-    const timeStr = timeEl.textContent;
+    const timeStr = timeEl.textContent.trim();
     const min = parseMinutes(timeStr);
 
     if(min >= nowMin){
@@ -1064,7 +1066,8 @@ function buildTimeline(){
         artist: item.artist,
         client: item.client,
         type: item.type,
-        ghost: currentLens === "isla"
+        ghost: currentLens === "isla",
+        isProviderView: currentLens === "artist"
       });
     });
 
@@ -1134,10 +1137,10 @@ function buildTimeline(){
             return `
               <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-client">${item.client}</div>
-                <div class="appt-type">${item.type ? '· ' + item.type : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
-                ${currentLens === "artist" ? '' : `<div class="appt-artist">${item.artist}</div>`}
-        </div>
-            `;
+                  <div class="appt-type">${item.type ? '· ' + item.type : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                  ${item.isProviderView ? '' : `<div class="appt-artist">${item.artist}</div>`}
+                </div>
+              `;
             }
 
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
@@ -1157,7 +1160,7 @@ function buildTimeline(){
             </div>
           `;
         }).join("")
-      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">No scheduled activity</div></div></div>`;
+      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">${currentLens === 'isla' ? 'No Isla actions queued' : 'No scheduled activity'}</div></div></div>`;
 
     const section = document.createElement("div");
     section.className = "day-section";
@@ -1186,10 +1189,12 @@ function buildTimeline(){
   const bar = document.getElementById('up-next-bar');
   const value = document.getElementById('up-next-value');
 
-  if(upNext && bar && value){
+  if (currentLens === 'isla' && bar) {
+    bar.style.display = 'none';
+  } else if(upNext && bar && value){
     bar.style.display = 'flex';
     value.textContent = `${upNext.time} · ${upNext.count} appointment${upNext.count>1?'s':''}`;
-  }else if(bar && value){
+  } else if(bar && value){
     bar.style.display = 'flex';
     value.textContent = 'No more appointments today';
   }
