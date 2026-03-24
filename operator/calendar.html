@@ -591,10 +591,8 @@ body{
       </div>
 
      <div class="artist-filter-row" id="artist-filter-row">
-  <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
-    <option value="Jake">Jake</option>
-    <option value="Lena">Lena</option>
-  </select>
+  <select class="artist-select" id="artist-select" onchange="setArtist(this.value)"></select>
+ 
 </div>
     </div>
   <!-- JUMP CONTROLS -->
@@ -641,7 +639,7 @@ timelineStartDate.setDate(timelineStartDate.getDate() - 120);
 const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
-let currentArtist = "Jake";
+let currentArtist = "";
 const BUSINESS_PROFILE = {
   name: "Myrtle Ink Studio",
   vertical: "tattoo"
@@ -656,6 +654,7 @@ const CALENDAR_STATE = {
   appointments: [],
   projects: [],
   lifecycleEvents: [],
+  roster: [],
   businessProfile: null
 };
 
@@ -686,7 +685,29 @@ function applyBusinessIdentity(){
   const businessEl = document.getElementById("business-identity");
   if (businessEl) businessEl.textContent = getBusinessName();
 }
+function applyArtistOptions(){
+  if (!artistSelectEl) return;
 
+  const roster = CALENDAR_STATE.roster || [];
+  artistSelectEl.innerHTML = "";
+
+  if (!roster.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No artists";
+    artistSelectEl.appendChild(option);
+    return;
+  }
+
+  roster.forEach((member) => {
+    const option = document.createElement("option");
+    option.value = member.name;
+    option.textContent = member.name;
+    artistSelectEl.appendChild(option);
+  });
+
+  artistSelectEl.value = currentArtist || roster[0].name;
+}
 
 function normalizeDateKey(value){
   const d = new Date(value);
@@ -843,6 +864,7 @@ async function loadCalendarData(){
 
       if (rosterRes.error) throw rosterRes.error;
       rosterRaw = rosterRes.data || [];
+      CALENDAR_STATE.roster = rosterRaw || [];
     }
 
     const projectMap = new Map((projectsRaw || []).map((p) => [p.id, p]));
@@ -883,7 +905,9 @@ async function loadCalendarData(){
       vertical: shopRow?.vertical || BUSINESS_PROFILE.vertical,
       timezone: shopRow?.timezone || null
     };
-
+if (!currentArtist && CALENDAR_STATE.roster.length) {
+  currentArtist = CALENDAR_STATE.roster[0].name;
+}
     CALENDAR_STATE.loaded = true;
   } catch (error) {
     console.error("Supabase load failed:", error);
@@ -1567,7 +1591,7 @@ function syncArtistFilterVisibility() {
 
   if (currentLens === "artist") {
     artistFilterRowEl.classList.add("is-visible");
-    if (artistSelectEl) artistSelectEl.value = currentArtist;
+applyArtistOptions();
   } else {
     artistFilterRowEl.classList.remove("is-visible");
   }
@@ -1576,6 +1600,7 @@ function syncArtistFilterVisibility() {
 function setArtist(artist) {
   currentArtist = artist;
   applyBusinessIdentity();
+  applyArtistOptions();
   buildWeekStrip();
   buildTimeline();
   syncStripToScroll();
@@ -1703,6 +1728,9 @@ function subscribeToRealtime(){
 
 async function reloadCalendar(){
   await loadCalendarData();
+  applyBusinessIdentity();
+  applyArtistOptions();
+  syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
 }
