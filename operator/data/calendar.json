@@ -1,0 +1,50 @@
+{
+  "businessProfile": {
+    "name": "Myrtle Ink Studio"
+  },
+  "appointments": [
+    {
+      "id": "appt-1",
+      "date": "2025-11-24",
+      "time": "10:00 AM",
+      "client": "Alyssa R.",
+      "artist": "Jake",
+      "type": "Consult",
+      "projectId": "alyssa-r-1"
+    },
+    {
+      "id": "appt-2",
+      "date": "2025-11-24",
+      "time": "12:00 PM",
+      "client": "Miss Mary",
+      "artist": "Jake",
+      "type": "Session 2/5",
+      "projectId": "miss-mary-1"
+    }
+  ],
+  "lifecycleEvents": [
+    {
+      "id": "evt-1",
+      "date": "2025-11-25",
+      "time": "10:00 AM",
+      "type": "Follow-up",
+      "client": "Alyssa R.",
+      "artist": "Jake",
+      "projectContext": "Consult",
+      "detail": "Consult follow-up due",
+      "projectId": "alyssa-r-1"
+    },
+    {
+      "id": "evt-2",
+      "date": "2025-12-15",
+      "time": "12:00 PM",
+      "type": "Review",
+      "client": "Miss Mary",
+      "artist": "Jake",
+      "projectContext": "Session 2/5",
+      "detail": "Review request window open",
+      "projectId": "miss-mary-1"
+    }
+  ],
+  "projects": []
+}

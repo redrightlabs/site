@@ -854,18 +854,16 @@ async function loadCalendarData(){
       clientsRaw = clientRes.data || [];
     }
 
-    // 6. Related artists (canonical runtime source = shop_roster)
+    // 6. Load full shop roster (not just project-linked artists)
     let rosterRaw = [];
-    if (artistIds.length) {
-      const rosterRes = await supabaseClient
-        .from("shop_roster")
-        .select("id, name, role")
-        .in("id", artistIds);
+    const rosterRes = await supabaseClient
+      .from("shop_roster")
+      .select("id, name, role")
+      .eq("shop_id", shopId);
 
-      if (rosterRes.error) throw rosterRes.error;
-      rosterRaw = rosterRes.data || [];
-      CALENDAR_STATE.roster = rosterRaw || [];
-    }
+    if (rosterRes.error) throw rosterRes.error;
+    rosterRaw = rosterRes.data || [];
+    CALENDAR_STATE.roster = rosterRaw || [];
 
     const projectMap = new Map((projectsRaw || []).map((p) => [p.id, p]));
     const clientMap = new Map((clientsRaw || []).map((c) => [c.id, c]));
