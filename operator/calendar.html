@@ -32,6 +32,7 @@ body{
     padding:16px;
   }
 
+
 .top-nav{
   position:sticky;
   top:0;
@@ -40,6 +41,15 @@ body{
   background:linear-gradient(rgba(6,7,10,.96),rgba(9,11,15,.92));
   backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(255,255,255,.04);
+}
+
+.business-identity{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+  opacity:.75;
 }
 
 .up-next-bar{
@@ -527,6 +537,7 @@ body{
 <div class="shell">
   <div class="top-nav">
     <div class="command-stack">
+      <div class="business-identity" id="business-identity">Myrtle Ink Studio</div>
       <div class="command-row command-row-top">
         <button class="home-btn" onclick="goOperatorHome()">← Home</button>
 
@@ -1309,6 +1320,7 @@ if(backTopBtn){
   });
 }
 
+applyLensLabels();
 syncArtistFilterVisibility();
 buildWeekStrip();
 buildTimeline();
