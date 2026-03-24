@@ -646,7 +646,9 @@ const BUSINESS_PROFILE = {
   name: "Myrtle Ink Studio",
   vertical: "tattoo"
 };
-const CURRENT_VERTICAL = BUSINESS_PROFILE.vertical;
+function getCurrentVertical(){
+  return CALENDAR_STATE.businessProfile?.vertical || BUSINESS_PROFILE.vertical;
+}
 
 const DATA_ENDPOINT = "/operator/data/calendar.json";
 const CALENDAR_STATE = {
@@ -776,10 +778,30 @@ function getLifecycleEventsForDate(date){
 
 async function loadCalendarData(){
   try {
-    // 1. Get shop (for now hardcode or later from auth)
     const shopId = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
 
-    // 2. Fetch appointments
+    // 1. Shop identity
+    const { data: shopRow, error: shopError } = await supabase
+      .from("shops")
+      .select("id, name, vertical, timezone")
+      .eq("id", shopId)
+      .single();
+
+    if (shopError) throw shopError;
+
+    // 2. Projects for this shop
+    const { data: projectsRaw, error: projError } = await supabase
+      .from("projects")
+      .select("id, shop_id, client_id, primary_artist_id, vertical, status")
+      .eq("shop_id", shopId);
+
+    if (projError) throw projError;
+
+    const projectIds = (projectsRaw || []).map((p) => p.id);
+    const clientIds = [...new Set((projectsRaw || []).map((p) => p.client_id).filter(Boolean))];
+    const artistIds = [...new Set((projectsRaw || []).map((p) => p.primary_artist_id).filter(Boolean))];
+
+    // 3. Appointments for this shop
     const { data: appointmentsRaw, error: apptError } = await supabase
       .from("appointments")
       .select("*")
@@ -787,57 +809,82 @@ async function loadCalendarData(){
 
     if (apptError) throw apptError;
 
-    // 3. Fetch lifecycle events
-    const { data: lifecycleRaw, error: lifeError } = await supabase
-      .from("lifecycle_events")
-      .select(`
-        *,
-        projects (id, shop_id)
-      `)
-      .eq("projects.shop_id", shopId);
+    // 4. Lifecycle events for this shop's projects
+    let lifecycleRaw = [];
+    if (projectIds.length) {
+      const lifeRes = await supabase
+        .from("lifecycle_events")
+        .select("id, project_id, appointment_id, type, due_at, status, created_at")
+        .in("project_id", projectIds);
 
-    if (lifeError) throw lifeError;
+      if (lifeRes.error) throw lifeRes.error;
+      lifecycleRaw = lifeRes.data || [];
+    }
 
-    // 4. Fetch projects
-    const { data: projectsRaw, error: projError } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("shop_id", shopId);
+    // 5. Related clients
+    let clientsRaw = [];
+    if (clientIds.length) {
+      const clientRes = await supabase
+        .from("clients")
+        .select("id, name, phone, email")
+        .in("id", clientIds);
 
-    if (projError) throw projError;
+      if (clientRes.error) throw clientRes.error;
+      clientsRaw = clientRes.data || [];
+    }
 
-    // 5. Normalize → MATCH YOUR UI
-    CALENDAR_STATE.appointments = appointmentsRaw.map((a) => ({
+    // 6. Related artists (canonical runtime source = shop_roster)
+    let rosterRaw = [];
+    if (artistIds.length) {
+      const rosterRes = await supabase
+        .from("shop_roster")
+        .select("id, name, role")
+        .in("id", artistIds);
+
+      if (rosterRes.error) throw rosterRes.error;
+      rosterRaw = rosterRes.data || [];
+    }
+
+    const projectMap = new Map((projectsRaw || []).map((p) => [p.id, p]));
+    const clientMap = new Map((clientsRaw || []).map((c) => [c.id, c]));
+    const rosterMap = new Map((rosterRaw || []).map((r) => [r.id, r]));
+
+    CALENDAR_STATE.appointments = (appointmentsRaw || []).map((a) => ({
       id: a.id,
       date: new Date(a.start_time).toDateString(),
-      time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString()),
+      time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
       client: a.client_name,
       artist: a.artist_name,
-      type: a.service_type,
+      type: a.service_type || "Appointment",
       projectUrl: `/operator/projects.html?project=${a.project_id}`
     }));
 
-    CALENDAR_STATE.lifecycleEvents = lifecycleRaw.map((e) => ({
-      id: e.id,
-      date: new Date(e.due_at).toDateString(),
-      time: normalizeTimeLabel(new Date(e.due_at).toLocaleTimeString()),
-      type: e.type,
-      client: "Client", // TODO: replace when clients table wired
-      artist: "",       // TODO: replace when roster wired
-      projectContext: "Project",
-      detail: mapLifecycleDetail(e.type),
-      projectUrl: `/operator/projects.html?project=${e.project_id}`
-    }));
+    CALENDAR_STATE.lifecycleEvents = (lifecycleRaw || []).map((e) => {
+      const project = projectMap.get(e.project_id);
+      const client = project ? clientMap.get(project.client_id) : null;
+      const artist = project ? rosterMap.get(project.primary_artist_id) : null;
 
-    CALENDAR_STATE.projects = projectsRaw;
+      return {
+        id: e.id,
+        date: new Date(e.due_at).toDateString(),
+        time: normalizeTimeLabel(new Date(e.due_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
+        type: e.type,
+        client: client?.name || "Client",
+        artist: artist?.name || "",
+        projectContext: project?.vertical ? `${project.vertical} project` : "Project",
+        detail: mapLifecycleDetail(e.type),
+        projectUrl: `/operator/projects.html?project=${e.project_id}`
+      };
+    });
 
+    CALENDAR_STATE.projects = projectsRaw || [];
     CALENDAR_STATE.businessProfile = {
-      name: "Myrtle Ink Studio",
-      vertical: "tattoo"
+      name: shopRow?.name || BUSINESS_PROFILE.name,
+      vertical: shopRow?.vertical || BUSINESS_PROFILE.vertical,
+      timezone: shopRow?.timezone || null
     };
 
     CALENDAR_STATE.loaded = true;
-
   } catch (error) {
     console.error("Supabase load failed:", error);
     CALENDAR_STATE.loaded = false;
@@ -847,7 +894,7 @@ async function loadCalendarData(){
 
 
 function getLensLabel(lens){
-  return LENS_LABELS[CURRENT_VERTICAL]?.[lens] || lens;
+  return LENS_LABELS[getCurrentVertical()]?.[lens] || lens;
 }
 
 function applyLensLabels(){
@@ -924,7 +971,7 @@ function getFallbackIslaActionsForDate(date){
     const sourceDate = new Date(date);
     sourceDate.setDate(date.getDate() - offset);
 
-    const sourceAppointments = getShopAppointmentsForDate(sourceDate);
+    const sourceAppointments = getFallbackShopAppointmentsForDate(sourceDate);
 
     sourceAppointments.forEach((appt) => {
       const type = (appt.type || "").toLowerCase();
