@@ -36,17 +36,18 @@ body{
   position:sticky;
   top:0;
   z-index:20;
-  padding-bottom:10px;
-  background:linear-gradient(#06070a,#090b0f);
-  backdrop-filter:blur(10px);
+  padding:8px 0 10px;
+  background:linear-gradient(rgba(6,7,10,.96),rgba(9,11,15,.92));
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.04);
 }
 
 .up-next-bar{
-  margin:6px 0 10px;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
+  margin:8px 0 0;
+  padding:9px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
   font-size:13px;
   display:flex;
   justify-content:space-between;
@@ -54,13 +55,15 @@ body{
 }
 .up-next-label{
   color:var(--muted);
-  font-size:11px;
-  letter-spacing:.06em;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
   text-transform:uppercase;
 }
 .up-next-value{
   font-weight:600;
   color:var(--text);
+  text-align:right;
 }
 .back-top{
   position:fixed;
@@ -90,15 +93,16 @@ body{
 .jump-row{
   display:flex;
   justify-content:center;
-  gap:8px;
-  margin-bottom:10px;
+  gap:6px;
+  margin-bottom:8px;
+  flex-wrap:wrap;
 }
 
 .jump-btn{
-  padding:8px 12px;
+  padding:7px 11px;
   border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
   color:var(--text);
   font-size:12px;
   cursor:pointer;
@@ -112,22 +116,24 @@ body{
   display:flex;
   justify-content:space-between;
   gap:4px;
-  margin-bottom:12px;
+  margin-bottom:8px;
 }
 
 .day-pill{
   flex:1;
   text-align:center;
-  padding:6px 0;
+  padding:7px 0 6px;
   border-radius:10px;
   font-size:11px;
   color:var(--muted);
   cursor:pointer;
+  border:1px solid transparent;
 }
 
 .day-pill.active{
   color:#fff;
-  background:rgba(255,77,77,.12);
+  background:rgba(255,77,77,.10);
+  border-color:rgba(255,77,77,.14);
 }
 
 .day-pill:hover{
@@ -147,16 +153,17 @@ body{
     color:rgba(233,232,223,.82);
   }
   .day-count{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-width:18px;
-    height:18px;
-    padding:0 6px;
-    border-radius:999px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);
-  }
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:16px;
+  height:16px;
+  padding:0 5px;
+  border-radius:999px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);
+  font-size:10px;
+}
 
 /* =========================
    TIMELINE
@@ -332,14 +339,14 @@ body{
 .home-row{
   display:flex;
   justify-content:flex-start;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
 .home-btn{
-  padding:8px 12px;
+  padding:7px 11px;
   border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
   color:var(--text);
   font-size:12px;
   cursor:pointer;
@@ -352,15 +359,15 @@ body{
 .lens-row{
   display:flex;
   justify-content:center;
-  gap:8px;
-  margin-bottom:10px;
+  gap:6px;
+  margin-bottom:8px;
 }
 
 .lens-btn{
-  padding:8px 14px;
+  padding:7px 12px;
   border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
   color:var(--muted);
   font-size:12px;
   cursor:pointer;
@@ -374,7 +381,7 @@ body{
 .artist-filter-row{
   display:none;
   justify-content:center;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
 .artist-filter-row.is-visible{
@@ -383,13 +390,13 @@ body{
 
 .artist-select{
   min-width:180px;
-  padding:10px 14px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
+  padding:9px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
   color:var(--text);
   font-size:13px;
-  font-family:var(--sans);
+  font-family:var(--serif);
 }
 .appt-ghost{
   opacity:.45;
@@ -500,8 +507,8 @@ body{
       </div>
 
       <div class="lens-row">
-    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Shop</button>
-    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Artist</button>
+    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Business</button>
+    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Provider</button>
     <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)">Isla</button>
   </div>
 
