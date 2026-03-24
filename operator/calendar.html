@@ -432,6 +432,8 @@ body{
   color:var(--text);
   font-size:13px;
   font-family:var(--serif);
+  text-align:center;
+  text-align-last:center;
 }
 .appt-ghost{
   opacity:.45;
@@ -587,9 +589,8 @@ body{
         </div>
       </div>
 
-      <div class="artist-filter-row" id="artist-filter-row">
-    <div class="artist-filter-label" id="artist-filter-label">Artist</div>
-    <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
+     <div class="artist-filter-row" id="artist-filter-row">
+  <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
     <option value="Jake">Jake</option>
     <option value="Lena">Lena</option>
   </select>
@@ -668,14 +669,7 @@ function applyBusinessIdentity(){
   if (businessEl) businessEl.textContent = BUSINESS_PROFILE.name;
 }
 
-function getProviderLabel(){
-  return getLensLabel("artist");
-}
 
-function applyProviderFilterLabel(){
-  const labelEl = document.getElementById("artist-filter-label");
-  if (labelEl) labelEl.textContent = getProviderLabel();
-}
 
 function getLensLabel(lens){
   return LENS_LABELS[CURRENT_VERTICAL]?.[lens] || lens;
@@ -814,7 +808,7 @@ function getDayActivityCount(date){
   }
 
   if (currentLens === "isla") {
-    return getIslaActionsForDate(date).length;
+    return 0; // suppress Isla counts
   }
 
   return shopAppointments.length;
@@ -1240,8 +1234,7 @@ function buildTimeline(){
             return `
               <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
-                <div class="isla-client">${item.artist ? item.artist + ' · ' : ''}${item.projectContext ? item.projectContext + ' · ' : ''}${item.client}</div>
-                <div class="isla-detail">${item.detail}</div>
+                <div class="isla-client">${item.artist ? item.artist + ' · ' : ''}${item.client}${item.projectContext ? ' · ' + item.projectContext : ''}</div>                <div class="isla-detail">${item.detail}</div>
               </div>
             `;
           }).join("");
