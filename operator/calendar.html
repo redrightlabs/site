@@ -623,7 +623,7 @@ body{
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   "https://uwydiqltvchlmjvzwkal.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eWRpcWx0dmNobG1qdnp3a2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODg3NDcsImV4cCI6MjA4Nzg2NDc0N30.lRDxjO8cBV8gf04MeP6ZPCAjPy4ckQA8Ums2rR-ocps"
 );
@@ -781,7 +781,7 @@ async function loadCalendarData(){
     const shopId = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
 
     // 1. Shop identity
-    const { data: shopRow, error: shopError } = await supabase
+    const { data: shopRow, error: shopError } = await supabaseClient
       .from("shops")
       .select("id, name, vertical, timezone")
       .eq("id", shopId)
@@ -790,7 +790,7 @@ async function loadCalendarData(){
     if (shopError) throw shopError;
 
     // 2. Projects for this shop
-    const { data: projectsRaw, error: projError } = await supabase
+    const { data: projectsRaw, error: projError } = await supabaseClient
       .from("projects")
       .select("id, shop_id, client_id, primary_artist_id, vertical, status")
       .eq("shop_id", shopId);
@@ -802,7 +802,7 @@ async function loadCalendarData(){
     const artistIds = [...new Set((projectsRaw || []).map((p) => p.primary_artist_id).filter(Boolean))];
 
     // 3. Appointments for this shop
-    const { data: appointmentsRaw, error: apptError } = await supabase
+    const { data: appointmentsRaw, error: apptError } = await supabaseClient
       .from("appointments")
       .select("*")
       .eq("shop_id", shopId);
@@ -812,7 +812,7 @@ async function loadCalendarData(){
     // 4. Lifecycle events for this shop's projects
     let lifecycleRaw = [];
     if (projectIds.length) {
-      const lifeRes = await supabase
+      const lifeRes = await supabaseClient
         .from("lifecycle_events")
         .select("id, project_id, appointment_id, type, due_at, status, created_at")
         .in("project_id", projectIds);
@@ -824,7 +824,7 @@ async function loadCalendarData(){
     // 5. Related clients
     let clientsRaw = [];
     if (clientIds.length) {
-      const clientRes = await supabase
+      const clientRes = await supabaseClient
         .from("clients")
         .select("id, name, phone, email")
         .in("id", clientIds);
@@ -836,7 +836,7 @@ async function loadCalendarData(){
     // 6. Related artists (canonical runtime source = shop_roster)
     let rosterRaw = [];
     if (artistIds.length) {
-      const rosterRes = await supabase
+      const rosterRes = await supabaseClient
         .from("shop_roster")
         .select("id, name, role")
         .in("id", artistIds);
@@ -1686,7 +1686,7 @@ if(backTopBtn){
 })();
 
 function subscribeToRealtime(){
-  supabase
+  supabaseClient
     .channel("calendar-live")
     .on(
       "postgres_changes",
