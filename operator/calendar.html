@@ -342,13 +342,7 @@ body{
     margin-bottom:8px;
   }
 
-.lens-label{
-  font-size:10px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin:0 0 4px 2px;
-}
+
 
 .home-btn{
   padding:7px 11px;
@@ -414,7 +408,7 @@ body{
 ========================= */
 
 .appt{
-  padding:9px 10px;
+  padding:8px 10px;
   border-radius:12px;
   background:rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.06);
@@ -422,7 +416,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:8px;
 }
 
 .appt:last-child{
@@ -440,19 +434,20 @@ body{
   }
 
   .appt-type{
-    flex:1 1 auto;
-    min-width:0;
-    color:rgba(233,232,223,.6);
-    font-size:11px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
+  flex:1 1 auto;
+  min-width:0;
+  margin-left:6px;
+  color:rgba(233,232,223,.58);
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 
 .appt-artist{
   flex:0 0 auto;
-  color:rgba(233,232,223,.55);
-  font-size:12px;
+  color:rgba(233,232,223,.45);
+  font-size:11px;
   white-space:nowrap;
 }
 .appt,
@@ -515,13 +510,12 @@ body{
         <button class="home-btn" onclick="goOperatorHome()">← Home</button>
       </div>
 
-      <div class="lens-label">OPERATING VIEW</div>
 
       <div class="lens-row">
-    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)">Business</button>
-    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)">Provider</button>
-    <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)">Isla</button>
-  </div>
+    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)" id="lens-shop-btn">Shop</button>
+    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)" id="lens-provider-btn">Artist</button>
+    <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)" id="lens-isla-btn">Isla</button>
+    </div>
 
   <div class="artist-filter-row" id="artist-filter-row">
     <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
@@ -570,9 +564,41 @@ const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "Jake";
+const CURRENT_VERTICAL = "tattoo";
+
+const LENS_LABELS = {
+  tattoo: {
+    shop: "Shop",
+    artist: "Artist",
+    isla: "Isla"
+  },
+  medspa: {
+    shop: "Operations",
+    artist: "Provider",
+    isla: "Isla"
+  },
+  dental: {
+    shop: "Front Desk",
+    artist: "Doctor",
+    isla: "Isla"
+  }
+};
 
 function goOperatorHome(){
   window.location.href = "/operator/";
+}
+function getLensLabel(lens){
+  return LENS_LABELS[CURRENT_VERTICAL]?.[lens] || lens;
+}
+
+function applyLensLabels(){
+  const shopBtn = document.getElementById("lens-shop-btn");
+  const providerBtn = document.getElementById("lens-provider-btn");
+  const islaBtn = document.getElementById("lens-isla-btn");
+
+  if (shopBtn) shopBtn.textContent = getLensLabel("shop");
+  if (providerBtn) providerBtn.textContent = getLensLabel("artist");
+  if (islaBtn) islaBtn.textContent = getLensLabel("isla");
 }
 
 function getShopAppointmentsForDate(date){
@@ -1077,9 +1103,9 @@ function buildTimeline(){
             return `
               <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-client">${item.client}</div>
-                  <div class="appt-type"> ${item.type ? '· ' + item.type : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
-                  <div class="appt-artist">${item.artist}</div>
-              </div>
+                <div class="appt-type">${item.type ? '· ' + item.type : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                ${currentLens === "artist" ? '' : `<div class="appt-artist">${item.artist}</div>`}
+        </div>
             `;
             }
 
@@ -1152,11 +1178,12 @@ function setLens(lens, event){
     if (btn) btn.classList.add("active");
   }
 
-  syncArtistFilterVisibility();
+    applyLensLabels();
+    syncArtistFilterVisibility();
     buildWeekStrip();
     buildTimeline();
     syncStripToScroll();
-}
+    }
 
 function syncArtistFilterVisibility() {
   if (!artistFilterRowEl) return;
