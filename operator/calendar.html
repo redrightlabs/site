@@ -797,6 +797,28 @@ function getLifecycleEventsForDate(date){
   return getFallbackIslaActionsForDate(date);
 }
 
+function getInitialBaseDate(){
+  if (!CALENDAR_STATE.loaded || !CALENDAR_STATE.appointments.length) {
+    return new Date(today);
+  }
+
+  const sorted = [...CALENDAR_STATE.appointments].sort((a, b) => {
+    const aDate = new Date(`${a.date} ${a.time}`);
+    const bDate = new Date(`${b.date} ${b.time}`);
+    return aDate - bDate;
+  });
+
+  const first = sorted[0];
+  const firstDate = new Date(`${first.date} ${first.time}`);
+  if (Number.isNaN(firstDate.getTime())) return new Date(today);
+
+  const todayStart = new Date(today);
+  todayStart.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.abs(Math.round((firstDate - todayStart) / 86400000));
+  return diffDays <= 14 ? new Date(today) : firstDate;
+}
+
 async function loadCalendarData(){
   try {
     const shopId = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
@@ -1385,6 +1407,15 @@ function buildTimeline(){
       renderedIsla = islaActions;
     }
 
+    const shouldHideEmptyDay = CALENDAR_STATE.loaded && (
+      (currentLens === "artist" && renderedAppointments.length === 0) ||
+      (currentLens === "isla" && renderedIsla.length === 0)
+    );
+
+    if (shouldHideEmptyDay) {
+      continue;
+    }
+
     const timelineItems = [];
 
     renderedAppointments.forEach((item) => {
@@ -1534,12 +1565,14 @@ function buildTimeline(){
 
   if (currentLens === 'isla' && bar) {
     bar.style.display = 'none';
-  } else if(upNext && bar && value){
+  } else if (upNext && bar && value) {
     bar.style.display = 'flex';
-    value.textContent = `${upNext.time} · ${upNext.count} appointment${upNext.count>1?'s':''}`;
-  } else if(bar && value){
+    value.textContent = `${upNext.time} · ${upNext.count} appointment${upNext.count > 1 ? 's' : ''}`;
+  } else if (bar && value) {
     bar.style.display = 'flex';
-    value.textContent = 'No more appointments today';
+    value.textContent = currentLens === 'artist'
+      ? 'No more appointments for this artist today'
+      : 'No more appointments today';
   }
 }
 // =========================
@@ -1696,11 +1729,14 @@ if(backTopBtn){
 
 // Bootstrapper: load data, then build UI
 // subscribeToRealtime();
+// Bootstrapper: load data, then build UI
 (async function initCalendar(){
   await loadCalendarData();
-  // subscribeToRealtime();
+  baseDate = getInitialBaseDate();
+  subscribeToRealtime();
   applyBusinessIdentity();
   applyLensLabels();
+  applyArtistOptions();
   syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
@@ -1713,7 +1749,12 @@ function subscribeToRealtime(){
     .channel("calendar-live")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "appointments" },
+      {
+        event: "*",
+        schema: "public",
+        table: "appointments",
+        filter: "shop_id=eq.b529479b-6fbd-4ded-9abd-b8a3c66326ba"
+      },
       () => reloadCalendar()
     )
     .on(
@@ -1721,16 +1762,28 @@ function subscribeToRealtime(){
       { event: "*", schema: "public", table: "lifecycle_events" },
       () => reloadCalendar()
     )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "shop_roster",
+        filter: "shop_id=eq.b529479b-6fbd-4ded-9abd-b8a3c66326ba"
+      },
+      () => reloadCalendar()
+    )
     .subscribe();
 }
 
 async function reloadCalendar(){
   await loadCalendarData();
+  baseDate = getInitialBaseDate();
   applyBusinessIdentity();
   applyArtistOptions();
   syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
+  syncStripToScroll();
 }
 </script>
 </body>
