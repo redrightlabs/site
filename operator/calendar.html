@@ -121,9 +121,9 @@ body{
 .jump-btn{
   padding:7px 11px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.06);
-  background:rgba(255,255,255,.025);
-  color:var(--text);
+  border:1px solid rgba(255,255,255,.045);
+  background:rgba(255,255,255,.018);
+  color:rgba(233,232,223,.72);
   font-size:12px;
   cursor:pointer;
 }
@@ -546,11 +546,12 @@ body{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  color:rgba(233,232,223,.82);
 }
 
 .isla-detail{
   flex:0 0 auto;
-  color:var(--muted);
+  color:rgba(233,232,223,.5);
   font-size:11px;
   white-space:nowrap;
 }
@@ -1234,7 +1235,12 @@ function buildTimeline(){
             return `
               <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
-                <div class="isla-client">${item.artist ? item.artist + ' · ' : ''}${item.client}${item.projectContext ? ' · ' + item.projectContext : ''}</div>                <div class="isla-detail">${item.detail}</div>
+                <div class="isla-client">
+                  ${item.artist ? item.artist + ' · ' : ''}
+                  ${item.client}
+                  ${item.projectContext ? ' · <span style="opacity:.6">' + item.projectContext + '</span>' : ''}
+                </div>
+                <div class="isla-detail">${item.detail}</div>
               </div>
             `;
           }).join("");
