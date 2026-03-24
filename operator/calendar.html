@@ -643,6 +643,15 @@ const BUSINESS_PROFILE = {
 };
 const CURRENT_VERTICAL = BUSINESS_PROFILE.vertical;
 
+const DATA_ENDPOINT = "/operator/data/calendar.json";
+const CALENDAR_STATE = {
+  loaded: false,
+  appointments: [],
+  projects: [],
+  lifecycleEvents: [],
+  businessProfile: null
+};
+
 const LENS_LABELS = {
   tattoo: {
     shop: "Shop",
@@ -665,9 +674,107 @@ function goOperatorHome(){
   window.location.href = "/operator/";
 }
 
+
 function applyBusinessIdentity(){
   const businessEl = document.getElementById("business-identity");
-  if (businessEl) businessEl.textContent = BUSINESS_PROFILE.name;
+  if (businessEl) businessEl.textContent = getBusinessName();
+}
+
+
+function normalizeDateKey(value){
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toDateString();
+}
+
+function normalizeTimeLabel(value){
+  if (!value) return "12:00 PM";
+  if (typeof value !== "string") return String(value);
+
+  const trimmed = value.trim();
+  if (/AM|PM/i.test(trimmed)) return trimmed.toUpperCase();
+
+  const [rawH, rawM = "00"] = trimmed.split(":");
+  let hours = Number(rawH);
+  const minutes = String(rawM).padStart(2, "0");
+  if (Number.isNaN(hours)) return trimmed;
+
+  const suffix = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${hours}:${minutes} ${suffix}`;
+}
+
+function normalizeAppointment(record){
+  const dateKey = normalizeDateKey(record.date || record.start || record.startsAt);
+  if (!dateKey) return null;
+
+  return {
+    id: record.id || `${dateKey}-${record.time || record.startTime || record.clientName || record.client || "appt"}`,
+    date: dateKey,
+    time: normalizeTimeLabel(record.time || record.startTime || record.start || record.startsAt),
+    client: record.client || record.clientName || "Client",
+    artist: record.artist || record.artistName || record.provider || record.providerName || "Provider",
+    type: record.type || record.serviceType || record.sessionLabel || "Appointment",
+    projectUrl: record.projectUrl || (record.projectId ? `/operator/projects.html?project=${record.projectId}` : "")
+  };
+}
+
+function normalizeLifecycleEvent(record){
+  const dateKey = normalizeDateKey(record.date || record.dueDate || record.when);
+  if (!dateKey) return null;
+
+  return {
+    id: record.id || `${dateKey}-${record.type || "event"}-${record.client || record.clientName || "client"}`,
+    date: dateKey,
+    time: normalizeTimeLabel(record.time || record.dueTime || record.startTime || "12:00 PM"),
+    type: record.type || "Follow-up",
+    client: record.client || record.clientName || "Client",
+    artist: record.artist || record.artistName || record.provider || record.providerName || "Provider",
+    projectContext: record.projectContext || record.serviceType || record.sessionLabel || record.projectLabel || "Project",
+    detail: record.detail || record.statusLabel || "Action due",
+    projectUrl: record.projectUrl || (record.projectId ? `/operator/projects.html?project=${record.projectId}` : "")
+  };
+}
+
+function getBusinessName(){
+  return CALENDAR_STATE.businessProfile?.name || BUSINESS_PROFILE.name;
+}
+
+function getAppointmentsForDate(date){
+  const dayKey = date.toDateString();
+  if (CALENDAR_STATE.loaded) {
+    return CALENDAR_STATE.appointments.filter((item) => item.date === dayKey);
+  }
+  return getFallbackShopAppointmentsForDate(date);
+}
+
+function getLifecycleEventsForDate(date){
+  const dayKey = date.toDateString();
+  if (CALENDAR_STATE.loaded) {
+    return CALENDAR_STATE.lifecycleEvents.filter((item) => item.date === dayKey);
+  }
+  return getFallbackIslaActionsForDate(date);
+}
+
+async function loadCalendarData(){
+  try {
+    const response = await fetch(DATA_ENDPOINT, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const payload = await response.json();
+    CALENDAR_STATE.businessProfile = payload.businessProfile || null;
+    CALENDAR_STATE.projects = Array.isArray(payload.projects) ? payload.projects : [];
+    CALENDAR_STATE.appointments = Array.isArray(payload.appointments)
+      ? payload.appointments.map(normalizeAppointment).filter(Boolean)
+      : [];
+    CALENDAR_STATE.lifecycleEvents = Array.isArray(payload.lifecycleEvents)
+      ? payload.lifecycleEvents.map(normalizeLifecycleEvent).filter(Boolean)
+      : [];
+    CALENDAR_STATE.loaded = true;
+  } catch (error) {
+    console.warn("Calendar data fallback active:", error);
+    CALENDAR_STATE.loaded = false;
+  }
 }
 
 
@@ -686,7 +793,7 @@ function applyLensLabels(){
   if (islaBtn) islaBtn.textContent = getLensLabel("isla");
 }
 
-function getShopAppointmentsForDate(date){
+function getFallbackShopAppointmentsForDate(date){
   const day = date.getDay();
   const dayKey = date.toDateString();
 
@@ -727,7 +834,7 @@ function getShopAppointmentsForDate(date){
   return (patterns[day] || []).map((item) => ({ ...item, date: dayKey }));
 }
 
-function getIslaActionsForDate(date){
+function getFallbackIslaActionsForDate(date){
   const targetDayKey = date.toDateString();
   const actions = [];
 
@@ -802,17 +909,17 @@ function getTopOffset() {
 }
 
 function getDayActivityCount(date){
-  const shopAppointments = getShopAppointmentsForDate(date);
+  const appointments = getAppointmentsForDate(date);
 
   if (currentLens === "artist") {
-    return shopAppointments.filter((a) => a.artist === currentArtist).length;
+    return appointments.filter((a) => a.artist === currentArtist).length;
   }
 
   if (currentLens === "isla") {
-    return 0; // suppress Isla counts
+    return 0;
   }
 
-  return shopAppointments.length;
+  return appointments.length;
 }
 
 /* =========================
@@ -1128,8 +1235,8 @@ function buildTimeline(){
     const currentDate = new Date(d);
     const dayLabel = currentDate.toDateString();
 
-    const shopAppointments = getShopAppointmentsForDate(currentDate);
-    const islaActions = getIslaActionsForDate(currentDate);
+    const shopAppointments = getAppointmentsForDate(currentDate);
+    const islaActions = getLifecycleEventsForDate(currentDate);
     let renderedAppointments = shopAppointments;
     let renderedIsla = [];
 
@@ -1333,12 +1440,13 @@ function setLens(lens, event){
     if (btn) btn.classList.add("active");
   }
 
-    applyLensLabels();
-    syncArtistFilterVisibility();
-    buildWeekStrip();
-    buildTimeline();
-    syncStripToScroll();
-    }
+  applyBusinessIdentity();
+  applyLensLabels();
+  syncArtistFilterVisibility();
+  buildWeekStrip();
+  buildTimeline();
+  syncStripToScroll();
+}
 
 function syncArtistFilterVisibility() {
   if (!artistFilterRowEl) return;
@@ -1353,6 +1461,7 @@ function syncArtistFilterVisibility() {
 
 function setArtist(artist) {
   currentArtist = artist;
+  applyBusinessIdentity();
   buildWeekStrip();
   buildTimeline();
   syncStripToScroll();
@@ -1448,13 +1557,17 @@ if(backTopBtn){
   });
 }
 
-applyBusinessIdentity();
-applyLensLabels();
-syncArtistFilterVisibility();
-buildWeekStrip();
-buildTimeline();
-syncStripToScroll();
-updateScrollContext(baseDate.toDateString());
+// Bootstrapper: load data, then build UI
+(async function initCalendar(){
+  await loadCalendarData();
+  applyBusinessIdentity();
+  applyLensLabels();
+  syncArtistFilterVisibility();
+  buildWeekStrip();
+  buildTimeline();
+  syncStripToScroll();
+  updateScrollContext(baseDate.toDateString());
+})();
 </script>
 </body>
 </html>
