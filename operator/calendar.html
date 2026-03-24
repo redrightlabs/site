@@ -616,7 +616,7 @@ body{
   <!-- TIMELINE -->
   <div class="timeline" id="timeline"></div>
 
-<\/div>
+</div>
 
 <button id="back-to-top" class="back-top">↑</button>
 
@@ -1336,8 +1336,6 @@ function setLens(lens, event){
 
 function syncArtistFilterVisibility() {
   if (!artistFilterRowEl) return;
-
-  applyProviderFilterLabel();
 
   if (currentLens === "artist") {
     artistFilterRowEl.classList.add("is-visible");
