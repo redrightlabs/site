@@ -43,14 +43,23 @@ body{
   border-bottom:1px solid rgba(255,255,255,.04);
 }
 
-.business-identity{
-  font-size:11px;
-  letter-spacing:.08em;
+  .business-identity{
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:4px;
+    opacity:.82;
+    text-align:center;
+  }
+
+.scroll-context{
+  font-size:10px;
+  letter-spacing:.06em;
   text-transform:uppercase;
-  color:var(--muted);
-  margin-bottom:4px;
-  opacity:.82;
+  color:rgba(255,255,255,.35);
   text-align:center;
+  margin-bottom:6px;
 }
 
 .up-next-bar{
@@ -420,20 +429,39 @@ body{
    APPOINTMENTS
 ========================= */
 
-.appt{
-  padding:8px 10px;
+  .appt{
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.06);
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .appt:last-child{
+    margin-bottom:0;
+  }
+
+.empty-state{
+  padding:10px 12px;
   border-radius:12px;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.06);
-  font-size:13px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
+  background:rgba(255,255,255,.025);
+  border:1px dashed rgba(255,255,255,.06);
 }
 
-.appt:last-child{
-  margin-bottom:0;
+.empty-title{
+  font-size:12px;
+  font-weight:600;
+  color:rgba(255,255,255,.7);
+}
+
+.empty-sub{
+  font-size:11px;
+  color:rgba(255,255,255,.4);
+  margin-top:2px;
 }
 
   .appt-client{
@@ -538,6 +566,7 @@ body{
   <div class="top-nav">
     <div class="command-stack">
       <div class="business-identity" id="business-identity">Myrtle Ink Studio</div>
+      <div class="scroll-context" id="scroll-context"></div>
       <div class="command-row command-row-top">
         <button class="home-btn" onclick="goOperatorHome()">← Home</button>
 
@@ -1025,6 +1054,7 @@ function syncStripToScroll() {
   }
 
   setActiveStripDay(activeDate);
+  updateScrollContext(activeDate);
 }
 
 /* =========================
@@ -1160,7 +1190,15 @@ function buildTimeline(){
             </div>
           `;
         }).join("")
-      : `<div class="time-slot"><div class="slot-time">—</div><div class="slot-stack"><div class="appt" style="opacity:.6;">${currentLens === 'isla' ? 'No Isla actions queued' : 'No scheduled activity'}</div></div></div>`;
+      : `<div class="time-slot">
+          <div class="slot-time">—</div>
+          <div class="slot-stack">
+            <div class="empty-state">
+              <div class="empty-title">${currentLens === 'isla' ? 'No Isla actions' : 'Nothing scheduled'}</div>
+              <div class="empty-sub">${currentLens === 'isla' ? 'This day is quiet on automation.' : 'This day is open.'}</div>
+            </div>
+          </div>
+        </div>`;
 
     const section = document.createElement("div");
     section.className = "day-section";
@@ -1198,6 +1236,25 @@ function buildTimeline(){
     bar.style.display = 'flex';
     value.textContent = 'No more appointments today';
   }
+}
+// =========================
+//   SCROLL CONTEXT
+//=========================
+function updateScrollContext(dateString){
+  const el = document.getElementById("scroll-context");
+  if(!el) return;
+
+  const d = new Date(dateString);
+  const start = new Date(d);
+  start.setDate(d.getDate() - d.getDay());
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  const options = { month: 'short', day: 'numeric' };
+  const label = `${start.toLocaleDateString(undefined, options)} – ${end.toLocaleDateString(undefined, options)}`;
+
+  el.textContent = label;
 }
 
 function setLens(lens, event){
@@ -1330,6 +1387,7 @@ syncArtistFilterVisibility();
 buildWeekStrip();
 buildTimeline();
 syncStripToScroll();
+updateScrollContext(baseDate.toDateString());
 </script>
 </body>
 </html>
