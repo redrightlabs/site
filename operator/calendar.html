@@ -688,25 +688,28 @@ function applyBusinessIdentity(){
 function applyArtistOptions(){
   if (!artistSelectEl) return;
 
-  const roster = CALENDAR_STATE.roster || [];
+const rosterNames = getRenderableArtistNames();
   artistSelectEl.innerHTML = "";
+if (!rosterNames.length) {
+  const option = document.createElement("option");
+  option.value = "";
+  option.textContent = "No artists";
+  artistSelectEl.appendChild(option);
+  return;
+}
 
-  if (!roster.length) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "No artists";
-    artistSelectEl.appendChild(option);
-    return;
-  }
+rosterNames.forEach((name) => {
+  const option = document.createElement("option");
+  option.value = name;
+  option.textContent = name;
+  artistSelectEl.appendChild(option);
+});
 
-  roster.forEach((member) => {
-    const option = document.createElement("option");
-    option.value = member.name;
-    option.textContent = member.name;
-    artistSelectEl.appendChild(option);
-  });
+if (!currentArtist || !rosterNames.includes(currentArtist)) {
+  currentArtist = rosterNames[0];
+}
 
-  artistSelectEl.value = currentArtist || roster[0].name;
+artistSelectEl.value = currentArtist;
 }
 
 function normalizeDateKey(value){
@@ -780,7 +783,17 @@ function mapLifecycleDetail(type){
 function getBusinessName(){
   return CALENDAR_STATE.businessProfile?.name || BUSINESS_PROFILE.name;
 }
+function getRenderableArtistNames(){
+  const rosterNames = (CALENDAR_STATE.roster || [])
+    .map((member) => member.name)
+    .filter(Boolean);
 
+  const appointmentNames = (CALENDAR_STATE.appointments || [])
+    .map((item) => item.artist)
+    .filter(Boolean);
+
+  return [...new Set([...rosterNames, ...appointmentNames])];
+}
 function getAppointmentsForDate(date){
   const dayKey = date.toDateString();
   if (CALENDAR_STATE.loaded) {
@@ -925,8 +938,13 @@ async function loadCalendarData(){
       vertical: shopRow?.vertical || BUSINESS_PROFILE.vertical,
       timezone: shopRow?.timezone || null
     };
-if (!currentArtist && CALENDAR_STATE.roster.length) {
-  currentArtist = CALENDAR_STATE.roster[0].name;
+const availableArtistNames = [...new Set([
+  ...(CALENDAR_STATE.roster || []).map((member) => member.name).filter(Boolean),
+  ...(CALENDAR_STATE.appointments || []).map((item) => item.artist).filter(Boolean)
+])];
+
+if (!currentArtist || !availableArtistNames.includes(currentArtist)) {
+  currentArtist = availableArtistNames[0] || "";
 }
     CALENDAR_STATE.loaded = true;
   } catch (error) {
@@ -1597,7 +1615,12 @@ function updateScrollContext(dateString){
 
 function setLens(lens, event){
   currentLens = lens;
-
+if (lens === "artist") {
+  const availableArtistNames = getRenderableArtistNames();
+  if (!currentArtist || !availableArtistNames.includes(currentArtist)) {
+    currentArtist = availableArtistNames[0] || "";
+  }
+}
   document.querySelectorAll(".lens-btn").forEach((btn) => {
     btn.classList.remove("active");
   });
