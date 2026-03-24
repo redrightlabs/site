@@ -500,30 +500,46 @@ body{
   font-size:11px;
   white-space:nowrap;
 }
+.command-stack{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.command-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.command-row-top{
+  max-width:100%;
+}
 </style>
 </head>
 
 <body>
 <div class="shell">
   <div class="top-nav">
-      <div class="home-row">
+    <div class="command-stack">
+      <div class="command-row command-row-top">
         <button class="home-btn" onclick="goOperatorHome()">← Home</button>
+
+        <div class="lens-row">
+          <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)" id="lens-shop-btn">Shop</button>
+          <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)" id="lens-provider-btn">Artist</button>
+          <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)" id="lens-isla-btn">Isla</button>
+        </div>
       </div>
 
-
-      <div class="lens-row">
-    <button class="lens-btn active" data-lens="shop" onclick="setLens('shop', event)" id="lens-shop-btn">Shop</button>
-    <button class="lens-btn" data-lens="artist" onclick="setLens('artist', event)" id="lens-provider-btn">Artist</button>
-    <button class="lens-btn" data-lens="isla" onclick="setLens('isla', event)" id="lens-isla-btn">Isla</button>
+      <div class="artist-filter-row" id="artist-filter-row">
+        <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
+          <option value="Jake">Jake</option>
+          <option value="Lena">Lena</option>
+        </select>
+      </div>
     </div>
-
-  <div class="artist-filter-row" id="artist-filter-row">
-    <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
-      <option value="Jake">Jake</option>
-      <option value="Lena">Lena</option>
-    </select>
-  </div>
-
   <!-- JUMP CONTROLS -->
   <div class="jump-row">
     <button class="jump-btn" onclick="scrollToWeek(-1)">← Week</button>
