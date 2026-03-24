@@ -91,9 +91,19 @@ body{
   align-items:center;
   justify-content:center;
   box-shadow:0 10px 30px rgba(0,0,0,.4);
+  opacity:0;
+  transform:translateY(8px);
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease, background .12s ease;
 }
 .back-top:hover{
   background:rgba(255,255,255,.08);
+}
+
+.back-top.is-visible{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
 }
 
 /* =========================
@@ -397,14 +407,22 @@ body{
 }
 .artist-filter-row{
   display:none;
+  align-items:center;
   justify-content:center;
+  gap:8px;
   margin-bottom:8px;
 }
 
 .artist-filter-row.is-visible{
   display:flex;
 }
-
+.artist-filter-label{
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(233,232,223,.48);
+  white-space:nowrap;
+}
 .artist-select{
   min-width:180px;
   padding:9px 12px;
@@ -570,11 +588,12 @@ body{
       </div>
 
       <div class="artist-filter-row" id="artist-filter-row">
-        <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
-          <option value="Jake">Jake</option>
-          <option value="Lena">Lena</option>
-        </select>
-      </div>
+    <div class="artist-filter-label" id="artist-filter-label">Artist</div>
+    <select class="artist-select" id="artist-select" onchange="setArtist(this.value)">
+    <option value="Jake">Jake</option>
+    <option value="Lena">Lena</option>
+  </select>
+</div>
     </div>
   <!-- JUMP CONTROLS -->
   <div class="jump-row">
@@ -616,7 +635,11 @@ const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "Jake";
-const CURRENT_VERTICAL = "tattoo";
+const BUSINESS_PROFILE = {
+  name: "Myrtle Ink Studio",
+  vertical: "tattoo"
+};
+const CURRENT_VERTICAL = BUSINESS_PROFILE.vertical;
 
 const LENS_LABELS = {
   tattoo: {
@@ -639,6 +662,21 @@ const LENS_LABELS = {
 function goOperatorHome(){
   window.location.href = "/operator/";
 }
+
+function applyBusinessIdentity(){
+  const businessEl = document.getElementById("business-identity");
+  if (businessEl) businessEl.textContent = BUSINESS_PROFILE.name;
+}
+
+function getProviderLabel(){
+  return getLensLabel("artist");
+}
+
+function applyProviderFilterLabel(){
+  const labelEl = document.getElementById("artist-filter-label");
+  if (labelEl) labelEl.textContent = getProviderLabel();
+}
+
 function getLensLabel(lens){
   return LENS_LABELS[CURRENT_VERTICAL]?.[lens] || lens;
 }
@@ -694,39 +732,64 @@ function getShopAppointmentsForDate(date){
   return (patterns[day] || []).map((item) => ({ ...item, date: dayKey }));
 }
 
-function getIslaActionsForDate(date, appointments){
-  const dayKey = date.toDateString();
+function getIslaActionsForDate(date){
+  const targetDayKey = date.toDateString();
   const actions = [];
 
-  appointments.forEach((appt) => {
-    const projectContext = appt.type || "Project";
+  function addLifecycleAction(appt, actionDate, actionType, detail){
+    if (actionDate.toDateString() !== targetDayKey) return;
 
-    if (appt.time === "12:00 PM") {
-      actions.push({
-        date: dayKey,
-        time: appt.time,
-        type: "CareWatch",
-        client: appt.client,
-        artist: appt.artist,
-        projectContext,
-        detail: "Healing check-in scheduled",
-        projectUrl: appt.projectUrl
-      });
-    } else {
-      actions.push({
-        date: dayKey,
-        time: appt.time,
-        type: "Review",
-        client: appt.client,
-        artist: appt.artist,
-        projectContext,
-        detail: "Review request queued",
-        projectUrl: appt.projectUrl
-      });
-    }
-  });
+    actions.push({
+      date: targetDayKey,
+      time: appt.time,
+      type: actionType,
+      client: appt.client,
+      artist: appt.artist,
+      projectContext: appt.type || "Project",
+      detail,
+      projectUrl: appt.projectUrl
+    });
+  }
 
-  return actions.slice(0, Math.min(actions.length, 3));
+  for (let offset = 0; offset <= 30; offset++) {
+    const sourceDate = new Date(date);
+    sourceDate.setDate(date.getDate() - offset);
+
+    const sourceAppointments = getShopAppointmentsForDate(sourceDate);
+
+    sourceAppointments.forEach((appt) => {
+      const type = (appt.type || "").toLowerCase();
+
+      if (type.includes("consult")) {
+        const followupDate = new Date(sourceDate);
+        followupDate.setDate(sourceDate.getDate() + 1);
+        addLifecycleAction(appt, followupDate, "Follow-up", "Consult follow-up due");
+      }
+
+      if (type.includes("session") || type.includes("tattoo")) {
+        const careWatchDate = new Date(sourceDate);
+        careWatchDate.setDate(sourceDate.getDate() + 3);
+        addLifecycleAction(appt, careWatchDate, "CareWatch", "Healing check-in due");
+
+        const reviewDate = new Date(sourceDate);
+        reviewDate.setDate(sourceDate.getDate() + 21);
+        addLifecycleAction(appt, reviewDate, "Review", "Review request window open");
+      }
+
+      if (type.includes("facial") || type.includes("botox") || type.includes("laser")) {
+        const outcomeDate = new Date(sourceDate);
+        outcomeDate.setDate(sourceDate.getDate() + 2);
+        addLifecycleAction(appt, outcomeDate, "Follow-up", "Outcome check-in due");
+
+        const reviewDate = new Date(sourceDate);
+        reviewDate.setDate(sourceDate.getDate() + 14);
+        addLifecycleAction(appt, reviewDate, "Review", "Review request window open");
+      }
+    });
+  }
+
+  actions.sort((a, b) => parseMinutes(a.time) - parseMinutes(b.time));
+  return actions.slice(0, Math.min(actions.length, 6));
 }
 let isProgrammaticScroll = false;
 let scrollSyncTicking = false;
@@ -751,7 +814,7 @@ function getDayActivityCount(date){
   }
 
   if (currentLens === "isla") {
-    return getIslaActionsForDate(date, shopAppointments).length;
+    return getIslaActionsForDate(date).length;
   }
 
   return shopAppointments.length;
@@ -847,7 +910,8 @@ function computeUpNext(){
     const section = el.closest('.day-section');
     if (!section || !section.classList.contains('is-today')) return;
 
-    const timeEl = section.querySelector('.slot-time');
+    const timeSlot = el.closest('.time-slot');
+    const timeEl = timeSlot ? timeSlot.querySelector('.slot-time') : null;
     if(!timeEl) return;
 
     const timeStr = timeEl.textContent.trim();
@@ -1070,8 +1134,7 @@ function buildTimeline(){
     const dayLabel = currentDate.toDateString();
 
     const shopAppointments = getShopAppointmentsForDate(currentDate);
-    const islaActions = getIslaActionsForDate(currentDate, shopAppointments);
-
+    const islaActions = getIslaActionsForDate(currentDate);
     let renderedAppointments = shopAppointments;
     let renderedIsla = [];
 
@@ -1281,6 +1344,8 @@ function setLens(lens, event){
 function syncArtistFilterVisibility() {
   if (!artistFilterRowEl) return;
 
+  applyProviderFilterLabel();
+
   if (currentLens === "artist") {
     artistFilterRowEl.classList.add("is-visible");
     if (artistSelectEl) artistSelectEl.value = currentArtist;
@@ -1380,8 +1445,13 @@ if(backTopBtn){
       }
     });
   });
+
+  window.addEventListener("scroll", () => {
+    backTopBtn.classList.toggle("is-visible", window.scrollY > 520);
+  });
 }
 
+applyBusinessIdentity();
 applyLensLabels();
 syncArtistFilterVisibility();
 buildWeekStrip();
