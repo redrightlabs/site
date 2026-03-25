@@ -541,6 +541,10 @@ body{
   justify-content:space-between;
   gap:10px;
 }
+.isla.isla-blocked{
+  opacity:.72;
+  border-style:dashed;
+}
 .isla-type{
   flex:0 0 auto;
   font-weight:600;
@@ -778,14 +782,48 @@ function normalizeLifecycleEvent(record){
 
 function mapLifecycleDetail(type){
   switch ((type || "").toLowerCase()) {
+    case "prep":
+      return "Preparation reminder";
+    case "here":
+      return "Arrival check-in";
+    case "done_check":
+      return "Artist confirmation";
+    case "aftercare":
+      return "Aftercare message";
+    case "contact_card":
+      return "Contact card message";
+    case "carewatch_1":
+      return "24 hour care check";
+    case "carewatch_2":
+      return "72 hour care check";
+    case "carewatch_3":
+      return "10 day care check";
+    case "review":
+      return "Review request window open";
+    case "portfolio_request":
+      return "Portfolio request window open";
     case "followup":
       return "Follow-up due";
-    case "review":
-      return "Review window open";
     case "carewatch":
       return "Healing check-in due";
     default:
       return "Action required";
+  }
+}
+
+function mapLifecycleTypeLabel(type){
+  switch(type){
+    case "prep": return "Prep";
+    case "here": return "Arrival";
+    case "done_check": return "Done?";
+    case "aftercare": return "Aftercare";
+    case "contact_card": return "Contact";
+    case "carewatch_1": return "CW1";
+    case "carewatch_2": return "CW2";
+    case "carewatch_3": return "CW3";
+    case "review": return "Review";
+    case "portfolio_request": return "Portfolio";
+    default: return type;
   }
 }
 
@@ -861,7 +899,7 @@ async function loadCalendarData(){
     if (projectIds.length) {
       const lifeRes = await supabaseClient
         .from("lifecycle_events")
-        .select("id, project_id, appointment_id, type, due_at, status, created_at")
+        .select("id, project_id, appointment_id, type, due_at, status, is_blocked, created_at")
         .in("project_id", projectIds);
 
       if (lifeRes.error) throw lifeRes.error;
@@ -913,13 +951,17 @@ async function loadCalendarData(){
       return {
         id: e.id,
         date: new Date(e.due_at).toDateString(),
-        time: normalizeTimeLabel(new Date(e.due_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
-        type: e.type,
+        time: normalizeTimeLabel(
+          new Date(e.due_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        ),
+        type: mapLifecycleTypeLabel(e.type),
+        rawType: e.type,
         client: client?.name || "Client",
         artist: artist?.name || "",
         projectContext: project?.vertical ? `${project.vertical} project` : "Project",
         detail: mapLifecycleDetail(e.type),
-        projectUrl: `/operator/projects.html?project=${e.project_id}`
+        projectUrl: `/operator/projects.html?project=${e.project_id}`,
+        isBlocked: !!e.is_blocked
       };
     });
 
@@ -1083,7 +1125,7 @@ function getDayActivityCount(date){
   }
 
   if (currentLens === "isla") {
-    return 0;
+    return getLifecycleEventsForDate(date).length;
   }
 
   return appointments.length;
@@ -1460,7 +1502,8 @@ function buildTimeline(){
         client: item.client,
         artist: item.artist,
         projectContext: item.projectContext,
-        detail: item.detail
+        detail: item.detail,
+        isBlocked: item.isBlocked
       });
     });
 
@@ -1526,8 +1569,9 @@ function buildTimeline(){
             }
 
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
+            const blockedClass = item.isBlocked ? ' isla-blocked' : '';
             return `
-              <div class="isla${stateClass}" data-project-url="${item.projectUrl}">
+              <div class="isla${stateClass}${blockedClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
                 <div class="isla-client">
                   ${item.artist ? item.artist + ' · ' : ''}
