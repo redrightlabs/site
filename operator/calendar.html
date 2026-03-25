@@ -468,13 +468,14 @@ body{
 .empty-title{
   font-size:12px;
   font-weight:600;
-  color:rgba(255,255,255,.7);
+  color:rgba(255,255,255,.6);
 }
 
 .empty-sub{
-  font-size:11px;
+  display:inline;
+  font-size:12px;
   color:rgba(255,255,255,.4);
-  margin-top:2px;
+  margin-left:6px;
 }
 
   .appt-client{
@@ -596,7 +597,8 @@ body{
 </div>
     </div>
   <!-- JUMP CONTROLS -->
-  <div class="jump-row">
+   <div class="jump-row">
+    <button class="jump-btn" onclick="scrollToMonth(-1)">− Month</button>
     <button class="jump-btn" onclick="scrollToWeek(-1)">← Week</button>
     <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
     <button class="jump-btn" onclick="scrollToWeek(1)">Week →</button>
@@ -1425,6 +1427,14 @@ function buildTimeline(){
       renderedIsla = islaActions;
     }
 
+    const shouldHideEmptyDay = CALENDAR_STATE.loaded && (
+      (currentLens === "artist" && renderedAppointments.length === 0) ||
+      (currentLens === "isla" && renderedIsla.length === 0)
+    );
+
+    if (shouldHideEmptyDay) {
+      continue;
+    }
 
     const timelineItems = [];
 
@@ -1540,8 +1550,7 @@ function buildTimeline(){
           <div class="slot-time">—</div>
           <div class="slot-stack">
             <div class="empty-state">
-              <div class="empty-title">${currentLens === 'isla' ? 'No Isla actions yet' : 'Nothing scheduled'}</div>
-              <div class="empty-sub">${currentLens === 'isla' ? 'No Isla touch is due on this day.' : 'This day is open.'}</div>
+              <div class="empty-title">${currentLens === 'isla' ? 'No Isla actions yet' : 'Nothing scheduled'}<span class="empty-sub">${currentLens === 'isla' ? '— no touch due' : '— day is open'}</span></div>
             </div>
           </div>
         </div>`;
