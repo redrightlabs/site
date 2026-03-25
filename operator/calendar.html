@@ -591,7 +591,7 @@ body{
 <div class="shell">
   <div class="top-nav">
     <div class="command-stack">
-      <div class="business-identity" id="business-identity">Myrtle Ink Studio</div>
+      <div class="business-identity" id="business-identity"></div>
       <div class="command-row command-row-top">
         <button class="home-btn" onclick="goOperatorHome()">← Home</button>
 
@@ -654,7 +654,7 @@ timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
 let currentArtist = "";
 const BUSINESS_PROFILE = {
-  name: "Myrtle Ink Studio",
+  name: "",
   vertical: "tattoo"
 };
 function getCurrentVertical(){
@@ -828,7 +828,7 @@ function mapLifecycleTypeLabel(type){
 }
 
 function getBusinessName(){
-  return CALENDAR_STATE.businessProfile?.name || BUSINESS_PROFILE.name;
+  return CALENDAR_STATE.businessProfile?.name || "";
 }
 function getRenderableArtistNames(){
   const rosterNames = (CALENDAR_STATE.roster || [])
@@ -893,14 +893,15 @@ async function loadCalendarData(){
       .eq("shop_id", shopId);
 
     if (apptError) throw apptError;
+    const appointmentIds = (appointmentsRaw || []).map((a) => a.id).filter(Boolean);
 
-    // 4. Lifecycle events for this shop's projects
+    // 4. Lifecycle events for this shop's appointments
     let lifecycleRaw = [];
-    if (projectIds.length) {
+    if (appointmentIds.length) {
       const lifeRes = await supabaseClient
         .from("lifecycle_events")
         .select("id, project_id, appointment_id, type, due_at, status, is_blocked, created_at")
-        .in("project_id", projectIds);
+        .in("appointment_id", appointmentIds);
 
       if (lifeRes.error) throw lifeRes.error;
       lifecycleRaw = lifeRes.data || [];
@@ -932,6 +933,7 @@ async function loadCalendarData(){
     const projectMap = new Map((projectsRaw || []).map((p) => [p.id, p]));
     const clientMap = new Map((clientsRaw || []).map((c) => [c.id, c]));
     const rosterMap = new Map((rosterRaw || []).map((r) => [r.id, r]));
+    const appointmentMap = new Map((appointmentsRaw || []).map((a) => [a.id, a]));
 
     CALENDAR_STATE.appointments = (appointmentsRaw || []).map((a) => ({
       id: a.id,
@@ -945,6 +947,7 @@ async function loadCalendarData(){
 
     CALENDAR_STATE.lifecycleEvents = (lifecycleRaw || []).map((e) => {
       const project = projectMap.get(e.project_id);
+      const appointment = appointmentMap.get(e.appointment_id);
       const client = project ? clientMap.get(project.client_id) : null;
       const artist = project ? rosterMap.get(project.primary_artist_id) : null;
 
@@ -956,9 +959,9 @@ async function loadCalendarData(){
         ),
         type: mapLifecycleTypeLabel(e.type),
         rawType: e.type,
-        client: client?.name || "Client",
-        artist: artist?.name || "",
-        projectContext: project?.vertical ? `${project.vertical} project` : "Project",
+        client: client?.name || appointment?.client_name || "Client",
+        artist: artist?.name || appointment?.artist_name || "",
+        projectContext: appointment?.service_type || (project?.vertical ? `${project.vertical} project` : "Project"),
         detail: mapLifecycleDetail(e.type),
         projectUrl: `/operator/projects.html?project=${e.project_id}`,
         isBlocked: !!e.is_blocked
