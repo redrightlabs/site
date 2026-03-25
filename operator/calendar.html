@@ -545,6 +545,21 @@ body{
   opacity:.72;
   border-style:dashed;
 }
+.isla.isla-pending{
+  background:rgba(255,77,77,.10);
+  border-color:rgba(255,77,77,.22);
+}
+.isla.isla-sent,
+.isla.isla-completed{
+  background:rgba(255,255,255,.045);
+  border-color:rgba(255,255,255,.10);
+}
+.isla.isla-cancelled{
+  opacity:.45;
+  background:rgba(255,255,255,.025);
+  border-color:rgba(255,255,255,.06);
+  text-decoration:line-through;
+}
 .isla-type{
   flex:0 0 auto;
   font-weight:600;
@@ -827,6 +842,22 @@ function mapLifecycleTypeLabel(type){
   }
 }
 
+function mapLifecycleStatusLabel(status, isBlocked){
+  if (isBlocked) return "Waiting on Done";
+
+  switch ((status || "pending").toLowerCase()) {
+    case "sent":
+      return "Sent";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    case "pending":
+    default:
+      return "Queued";
+  }
+}
+
 function getBusinessName(){
   return CALENDAR_STATE.businessProfile?.name || "";
 }
@@ -964,6 +995,7 @@ async function loadCalendarData(){
         projectContext: appointment?.service_type || (project?.vertical ? `${project.vertical} project` : "Project"),
         detail: mapLifecycleDetail(e.type),
         projectUrl: `/operator/projects.html?project=${e.project_id}`,
+        status: e.status || "pending",
         isBlocked: !!e.is_blocked
       };
     });
@@ -1506,6 +1538,7 @@ function buildTimeline(){
         artist: item.artist,
         projectContext: item.projectContext,
         detail: item.detail,
+        status: item.status,
         isBlocked: item.isBlocked
       });
     });
@@ -1573,15 +1606,17 @@ function buildTimeline(){
 
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             const blockedClass = item.isBlocked ? ' isla-blocked' : '';
+            const statusClass = ` isla-${(item.status || 'pending').toLowerCase()}`;
+            const statusLabel = mapLifecycleStatusLabel(item.status, item.isBlocked);
             return `
-              <div class="isla${stateClass}${blockedClass}" data-project-url="${item.projectUrl}">
+              <div class="isla${stateClass}${blockedClass}${statusClass}" data-project-url="${item.projectUrl}">
                 <div class="isla-type">${item.type}</div>
                 <div class="isla-client">
                   ${item.artist ? item.artist + ' · ' : ''}
                   ${item.client}
                   ${item.projectContext ? ' · <span style="opacity:.6">' + item.projectContext + '</span>' : ''}
                 </div>
-                <div class="isla-detail">${item.detail}</div>
+                <div class="isla-detail">${statusLabel} · ${item.detail}</div>
               </div>
             `;
           }).join("");
