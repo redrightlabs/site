@@ -128,6 +128,13 @@ body{
   cursor:pointer;
 }
 
+.jump-btn.is-today{
+  border-color:rgba(255,77,77,.16);
+  background:rgba(255,77,77,.08);
+  color:rgba(255,245,245,.92);
+  box-shadow:0 0 0 1px rgba(255,77,77,.04) inset;
+}
+
 /* =========================
    WEEK STRIP
 ========================= */
@@ -600,7 +607,7 @@ body{
    <div class="jump-row">
     <button class="jump-btn" onclick="scrollToMonth(-1)">− Month</button>
     <button class="jump-btn" onclick="scrollToWeek(-1)">← Week</button>
-    <button class="jump-btn" onclick="scrollToDay('today')">Today</button>
+    <button class="jump-btn is-today" onclick="scrollToDay('today')">Today</button>
     <button class="jump-btn" onclick="scrollToWeek(1)">Week →</button>
     <button class="jump-btn" onclick="scrollToMonth(1)">+ Month</button>
   </div>
@@ -637,7 +644,7 @@ const topNavEl = document.querySelector(".top-nav");
 let today = new Date();
 let baseDate = new Date(today);
 const timelineStartDate = new Date(today);
-timelineStartDate.setDate(timelineStartDate.getDate() - 120);
+timelineStartDate.setDate(timelineStartDate.getDate() - 365);
 const timelineEndDate = new Date(today);
 timelineEndDate.setDate(timelineEndDate.getDate() + 365);
 let currentLens = "shop";
@@ -813,25 +820,7 @@ function getLifecycleEventsForDate(date){
 }
 
 function getInitialBaseDate(){
-  if (!CALENDAR_STATE.loaded || !CALENDAR_STATE.appointments.length) {
-    return new Date(today);
-  }
-
-  const sorted = [...CALENDAR_STATE.appointments].sort((a, b) => {
-    const aDate = new Date(`${a.date} ${a.time}`);
-    const bDate = new Date(`${b.date} ${b.time}`);
-    return aDate - bDate;
-  });
-
-  const first = sorted[0];
-  const firstDate = new Date(`${first.date} ${first.time}`);
-  if (Number.isNaN(firstDate.getTime())) return new Date(today);
-
-  const todayStart = new Date(today);
-  todayStart.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.abs(Math.round((firstDate - todayStart) / 86400000));
-  return diffDays <= 14 ? new Date(today) : firstDate;
+  return new Date(today);
 }
 
 async function loadCalendarData(){
@@ -1276,7 +1265,25 @@ function getDayTargetY(date){
   return { el, targetY, dateString: date.toDateString() };
 }
 
+function snapToDate(date, { updateStrip = true, focus = false } = {}){
+  const target = getDayTargetY(date);
+  if (!target) return;
 
+  baseDate = new Date(date);
+
+  if (updateStrip) {
+    buildWeekStrip();
+    setActiveStripDay(target.dateString);
+  }
+
+  isProgrammaticScroll = true;
+  window.scrollTo(0, target.targetY);
+  window.setTimeout(() => {
+    isProgrammaticScroll = false;
+    focusDaySection(target.el, focus);
+    updateScrollContext(target.dateString);
+  }, 0);
+}
 
 function sweepWeekStrip(){
   const pills = Array.from(document.querySelectorAll(".day-pill"));
@@ -1427,14 +1434,7 @@ function buildTimeline(){
       renderedIsla = islaActions;
     }
 
-    const shouldHideEmptyDay = CALENDAR_STATE.loaded && (
-      (currentLens === "artist" && renderedAppointments.length === 0) ||
-      (currentLens === "isla" && renderedIsla.length === 0)
-    );
 
-    if (shouldHideEmptyDay) {
-      continue;
-    }
 
     const timelineItems = [];
 
@@ -1633,12 +1633,12 @@ if (lens === "artist") {
     if (btn) btn.classList.add("active");
   }
 
-  applyBusinessIdentity();
+   applyBusinessIdentity();
   applyLensLabels();
   syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
-  syncStripToScroll();
+  snapToDate(baseDate, { updateStrip: true, focus: false });
 }
 
 function syncArtistFilterVisibility() {
@@ -1689,7 +1689,9 @@ function scrollToDate(date){
 function scrollToDay(type){
   if(type !== "today") return;
 
-  const isAlreadyToday = baseDate.toDateString() === today.toDateString();
+  const visibleTodaySection = document.getElementById("day-" + today.toDateString());
+  const todayRect = visibleTodaySection ? visibleTodaySection.getBoundingClientRect() : null;
+  const isAlreadyToday = !!todayRect && Math.abs(todayRect.top - getTopOffset()) < 8;
 
   navigateToDate(today, "today", {
     updateStrip: true,
@@ -1764,8 +1766,7 @@ if(backTopBtn){
   syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
-  syncStripToScroll();
-  updateScrollContext(baseDate.toDateString());
+  snapToDate(today, { updateStrip: true, focus: false });
 })();
 
 function subscribeToRealtime(){
@@ -1800,14 +1801,14 @@ function subscribeToRealtime(){
 }
 
 async function reloadCalendar(){
+  const previousBaseDate = new Date(baseDate);
   await loadCalendarData();
-  baseDate = getInitialBaseDate();
   applyBusinessIdentity();
   applyArtistOptions();
   syncArtistFilterVisibility();
   buildWeekStrip();
   buildTimeline();
-  syncStripToScroll();
+  snapToDate(previousBaseDate, { updateStrip: true, focus: false });
 }
 </script>
 </body>
