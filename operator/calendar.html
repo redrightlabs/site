@@ -1425,14 +1425,6 @@ function buildTimeline(){
       renderedIsla = islaActions;
     }
 
-    const shouldHideEmptyDay = CALENDAR_STATE.loaded && (
-      (currentLens === "artist" && renderedAppointments.length === 0) ||
-      (currentLens === "isla" && renderedIsla.length === 0)
-    );
-
-    if (shouldHideEmptyDay) {
-      continue;
-    }
 
     const timelineItems = [];
 
@@ -1548,8 +1540,8 @@ function buildTimeline(){
           <div class="slot-time">—</div>
           <div class="slot-stack">
             <div class="empty-state">
-              <div class="empty-title">${currentLens === 'isla' ? 'No Isla actions' : 'Nothing scheduled'}</div>
-              <div class="empty-sub">${currentLens === 'isla' ? 'This day is quiet on automation.' : 'This day is open.'}</div>
+              <div class="empty-title">${currentLens === 'isla' ? 'No Isla actions yet' : 'Nothing scheduled'}</div>
+              <div class="empty-sub">${currentLens === 'isla' ? 'No Isla touch is due on this day.' : 'This day is open.'}</div>
             </div>
           </div>
         </div>`;
