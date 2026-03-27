@@ -513,7 +513,7 @@
   flex-direction:column;
   gap:10px;
   overflow:auto;
-  padding-right:2px;
+  padding:2px 2px 0;
 }
 .section-action-row{
   display:flex;
@@ -539,9 +539,12 @@
     }
 
     .activity-item.is-selectable:hover{
-      background:rgba(255,255,255,.04);
-      border-color:rgba(255,77,77,.16);
-      box-shadow:0 10px 24px rgba(0,0,0,.22), 0 0 18px rgba(255,77,77,.06);
+      background:rgba(255,255,255,.045);
+      border-color:rgba(255,77,77,.45);
+      box-shadow:
+        0 10px 24px rgba(0,0,0,.22),
+        0 0 0 1px rgba(255,77,77,.55),
+        0 0 22px rgba(255,77,77,.18);
       transform:translateY(-1px);
     }
 
@@ -1384,10 +1387,8 @@ function wireHandleFlow() {
   let cta = "";
 
   if (attentionCount > 0 && !isHandling) {
-    title = attentionCount === 1 ? "One thing needs you" : `${attentionCount} things need you`; 
-       copy = attentionCount === 1
-      ? "1 item still needs to be closed out. Everything else is handled for you."
-      : `${attentionCount} items still need to be closed out. Everything else is handled for you.`;
+    title = attentionCount === 1 ? "One thing needs you" : `${attentionCount} things need you`;
+    copy = "Everything else is handled for you.";
     cta = "Handle it";
     currentStatusAction = "attention";
   } else if (isHandling) {
