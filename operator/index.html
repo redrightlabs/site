@@ -778,16 +778,8 @@
 
   <div class="handle-overlay" id="handle-overlay" aria-hidden="true">
     <div class="handle-sheet" role="dialog" aria-modal="true" aria-labelledby="handle-title">
-      <p class="handle-topline">Handle it</p>
-      <h2 class="handle-title" id="handle-title">An appointment hasn't been closed out yet.</h2>
-      <p class="handle-copy" id="handle-copy">Have Isla close it out?</p>
-
-      <div class="handle-actions">
-        <button class="handle-secondary" type="button" id="handle-cancel">Not now</button>
-        <button class="handle-primary" type="button" id="handle-confirm">Send to Isla</button>
-      </div>
-
-      <p class="handle-result" id="handle-result"></p>
+      <div id="handle-list-view"></div>
+      <div id="handle-detail-view" style="display:none;"></div>
     </div>
   </div>
 
@@ -876,11 +868,8 @@
   output: document.getElementById("output-card"),
   today: document.getElementById("today-card"),
   handleOverlay: document.getElementById("handle-overlay"),
-  handleTitle: document.getElementById("handle-title"),
-  handleCopy: document.getElementById("handle-copy"),
-  handleCancel: document.getElementById("handle-cancel"),
-  handleConfirm: document.getElementById("handle-confirm"),
-  handleResult: document.getElementById("handle-result"),
+  handleListView: document.getElementById("handle-list-view"),
+  handleDetailView: document.getElementById("handle-detail-view"),
   handleTrigger: null,
   activityOverlay: document.getElementById("activity-overlay"),
   activityTitle: document.getElementById("activity-title"),
@@ -999,11 +988,150 @@ function getAttentionItems(data) {
     function closeHandleFlow() {
         els.handleOverlay.classList.remove("is-open");
         els.handleOverlay.setAttribute("aria-hidden", "true");
-        els.handleResult.textContent = "";
-        els.handleConfirm.disabled = false;
-        els.handleConfirm.textContent = "Send to Isla";
+        if (els.handleListView) {
+          els.handleListView.style.display = "block";
+          els.handleListView.innerHTML = "";
+        }
+        if (els.handleDetailView) {
+          els.handleDetailView.style.display = "none";
+          els.handleDetailView.innerHTML = "";
+        }
+        els.handleConfirm = null;
+        els.handleResult = null;
         currentHandleItem = null;
     }
+
+function renderHandleList(items) {
+  if (!els.handleListView || !els.handleDetailView) return;
+
+  els.handleDetailView.style.display = "none";
+  els.handleDetailView.innerHTML = "";
+  els.handleListView.style.display = "block";
+
+  els.handleListView.innerHTML = `
+    <p class="handle-topline">Needs attention</p>
+    <h2 class="handle-title" id="handle-title">${items.length} thing${items.length === 1 ? "" : "s"} need your attention</h2>
+    <p class="handle-copy">Select one to resolve.</p>
+
+    <div class="activity-list" id="handle-item-list">
+      ${items.map((item, i) => `
+        <div class="activity-item" data-index="${i}" role="button" tabindex="0">
+          <p class="activity-title">${escapeHtml(item.title || "Needs attention")}</p>
+          <p class="activity-subtitle">${escapeHtml(item.body || "Have Isla close it out?")}</p>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="handle-actions is-single">
+      <button class="handle-secondary" type="button" id="handle-list-close">Close</button>
+    </div>
+  `;
+
+  const chooseItem = (index) => {
+    const selected = items[index];
+    if (selected) openHandleDetail(selected, items);
+  };
+
+  els.handleListView.querySelectorAll(".activity-item").forEach((el) => {
+    el.addEventListener("click", () => chooseItem(Number(el.dataset.index)));
+    el.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        chooseItem(Number(el.dataset.index));
+      }
+    });
+  });
+
+  const closeBtn = document.getElementById("handle-list-close");
+  if (closeBtn) closeBtn.addEventListener("click", closeHandleFlow);
+}
+
+function openHandleDetail(item, items) {
+  if (!els.handleListView || !els.handleDetailView) return;
+
+  els.handleListView.style.display = "none";
+  els.handleDetailView.style.display = "block";
+  currentHandleItem = item;
+
+  els.handleDetailView.innerHTML = `
+    <p class="handle-topline">Handle it</p>
+    <h2 class="handle-title" id="handle-title">${escapeHtml(item.title || "Needs attention")}</h2>
+    <p class="handle-copy">${escapeHtml(item.body || "Have Isla close it out?")}</p>
+
+    <div class="handle-actions">
+      <button class="handle-secondary" type="button" id="handle-back">Back</button>
+      <button class="handle-primary" type="button" id="handle-confirm">${escapeHtml(item.actionLabel || "Send to Isla")}</button>
+    </div>
+
+    <p class="handle-result" id="handle-result"></p>
+  `;
+
+  els.handleConfirm = document.getElementById("handle-confirm");
+  els.handleResult = document.getElementById("handle-result");
+
+  const backBtn = document.getElementById("handle-back");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => renderHandleList(items));
+  }
+
+  if (els.handleConfirm) {
+    els.handleConfirm.addEventListener("click", async () => {
+      if (!currentHandleItem) {
+        closeHandleFlow();
+        return;
+      }
+
+      try {
+        els.handleConfirm.disabled = true;
+        els.handleConfirm.textContent = "Sending...";
+        if (els.handleResult) els.handleResult.textContent = "";
+
+        const payload = {
+          shopId: currentOperatorData?.shopId || null,
+          shopName: currentOperatorData?.shopName || "",
+          actionType: "closeout",
+          appointmentId: currentHandleItem.appointmentId || null,
+          completionStatus: currentHandleItem.completionStatus || "",
+          artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
+          title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
+          body: currentHandleItem.body || "Have Isla close it out?",
+          source: "operator-home"
+        };
+
+        const response = await fetch(window.ISLA_ACTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result?.success !== true) {
+          throw new Error(result?.error || `Action request failed: ${response.status}`);
+        }
+
+        if (els.handleResult) {
+          els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
+        }
+
+        window.setTimeout(() => {
+          closeHandleFlow();
+        }, 1100);
+      } catch (error) {
+        console.error("Send to Isla failed:", error);
+        if (els.handleConfirm) {
+          els.handleConfirm.disabled = false;
+          els.handleConfirm.textContent = currentHandleItem?.actionLabel || "Send to Isla";
+        }
+        if (els.handleResult) {
+          els.handleResult.textContent = "Could not reach Isla right now.";
+        }
+      }
+    });
+  }
+}
 
    function closeActivityFlow() {
   els.activityOverlay.classList.remove("is-open");
@@ -1095,18 +1223,13 @@ function openTodayFlow() {
 
     function openHandleFlow() {
       const items = getAttentionItems(currentOperatorData || FALLBACK_OPERATOR_DATA);
-      const item = items[0] || null;
-      if (!item) {
+      if (!items.length) {
         return;
       }
 
-      currentHandleItem = item;
-      els.handleTitle.textContent = item.title || "An appointment hasn't been closed out yet.";
-      els.handleCopy.textContent = item.body || "Have Isla close it out?";
-      els.handleConfirm.textContent = item.actionLabel || "Send to Isla";
-      els.handleResult.textContent = "";
       els.handleOverlay.classList.add("is-open");
       els.handleOverlay.setAttribute("aria-hidden", "false");
+      renderHandleList(items);
     }
 
 function wireHandleFlow() {
@@ -1145,7 +1268,9 @@ function wireHandleFlow() {
 
   if (attentionCount > 0 && !isHandling) {
     title = "One thing needs you";
-    copy = "1 item still needs to be closed out. Everything else is handled for you.";
+    copy = attentionCount === 1
+      ? "1 item still needs to be closed out. Everything else is handled for you."
+      : `${attentionCount} items still need to be closed out. Everything else is handled for you.`;
     cta = "Handle it";
     currentStatusAction = "attention";
   } else if (isHandling) {
@@ -1365,7 +1490,6 @@ function wireHandleFlow() {
       };
     }
 
-    els.handleCancel.addEventListener("click", closeHandleFlow);
 
     els.handleOverlay.addEventListener("click", (event) => {
       if (event.target === els.handleOverlay) closeHandleFlow();
@@ -1381,55 +1505,6 @@ function wireHandleFlow() {
     els.todayOverlay.addEventListener("click", (event) => {
       if (event.target === els.todayOverlay) closeTodayFlow();
     });
-    els.handleConfirm.addEventListener("click", async () => {
-  if (!currentHandleItem) {
-    closeHandleFlow();
-    return;
-  }
-
-  try {
-    els.handleConfirm.disabled = true;
-    els.handleConfirm.textContent = "Sending...";
-    els.handleResult.textContent = "";
-
-    const payload = {
-      shopId: currentOperatorData?.shopId || null,
-      shopName: currentOperatorData?.shopName || "",
-      actionType: "closeout",
-      appointmentId: currentHandleItem.appointmentId || null,
-      completionStatus: currentHandleItem.completionStatus || "",
-      artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
-      title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
-      body: currentHandleItem.body || "Have Isla close it out?",
-      source: "operator-home"
-    };
-
-    const response = await fetch(window.ISLA_ACTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || result?.success !== true) {
-      throw new Error(result?.error || `Action request failed: ${response.status}`);
-    }
-
-    els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
-
-    window.setTimeout(() => {
-      closeHandleFlow();
-    }, 1100);
-  } catch (error) {
-    console.error("Send to Isla failed:", error);
-    els.handleConfirm.disabled = false;
-    els.handleConfirm.textContent = "Send to Isla";
-    els.handleResult.textContent = "Could not reach Isla right now.";
-  }
-});
 
     (async function init() {
       try {
