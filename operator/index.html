@@ -351,23 +351,42 @@
     }
 
     .cta-button{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--accent-line);
-      background:linear-gradient(180deg, rgba(255,77,77,.22), rgba(255,77,77,.10));
-      color:#fff0f0;
-      font-family:var(--sans);
-      font-size:12px;
-      font-weight:700;
-      line-height:1;
-      text-decoration:none;
-      box-shadow:0 8px 20px rgba(255,77,77,.12);
-      cursor:pointer;
-    }
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--accent-line);
+  background:linear-gradient(180deg, rgba(255,77,77,.22), rgba(255,77,77,.10));
+  color:#fff0f0;
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  text-decoration:none;
+  box-shadow:0 8px 20px rgba(255,77,77,.12);
+  cursor:pointer;
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease,
+    background .16s ease;
+}
+.cta-button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,77,77,.34);
+  box-shadow:0 12px 28px rgba(255,77,77,.18), 0 0 18px rgba(255,77,77,.08);
+  background:linear-gradient(180deg, rgba(255,77,77,.26), rgba(255,77,77,.12));
+}
 
+.cta-button:active{
+  transform:translateY(0);
+}
+
+.cta-button:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px rgba(255,77,77,.18), 0 12px 28px rgba(255,77,77,.18);
+}
     .handle-overlay{
       position:fixed;
       inset:0;
@@ -397,6 +416,11 @@
         inset 0 1px 0 rgba(255,255,255,.04);
       padding:18px 18px 16px;
       max-height:min(80vh, 760px);
+      overflow-y:auto;
+      scrollbar-width:none;
+    }
+    .handle-sheet::-webkit-scrollbar{
+     display:none;
     }
 
     .handle-topline{
@@ -474,16 +498,24 @@
   margin-left:auto;
   margin-right:auto;
 }
-    .handle-secondary,
-    .handle-primary{
-      min-height:46px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.08);
-      font-family:var(--sans);
-      font-size:14px;
-      font-weight:700;
-      cursor:pointer;
+    .handle-actions.is-triple{
+      grid-template-columns:1fr 1fr 1fr;
     }
+    .handle-secondary,
+.handle-primary{
+  min-height:46px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease,
+    background .16s ease;
+}
 
     .handle-secondary{
       background:rgba(255,255,255,.03);
@@ -496,7 +528,32 @@
       color:#fff0f0;
       box-shadow:0 8px 20px rgba(255,77,77,.12);
     }
+.handle-secondary:hover,
+.handle-primary:hover{
+  transform:translateY(-1px);
+}
 
+.handle-secondary:active,
+.handle-primary:active{
+  transform:translateY(0);
+}
+
+.handle-secondary:focus-visible,
+.handle-primary:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px rgba(255,255,255,.08);
+}
+
+.handle-secondary:hover{
+  border-color:rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);
+}
+
+.handle-primary:hover{
+  border-color:rgba(255,77,77,.34);
+  box-shadow:0 12px 28px rgba(255,77,77,.18), 0 0 18px rgba(255,77,77,.08);
+  background:linear-gradient(180deg, rgba(255,77,77,.26), rgba(255,77,77,.12));
+}
     .handle-result{
       margin:12px 0 0;
       min-height:18px;
@@ -575,21 +632,23 @@
     }
 
     .activity-title{
-      margin:0;
-      color:rgba(255,255,255,.96);
-      font-family:var(--sans);
-      font-size:14px;
-      font-weight:700;
-      line-height:1.3;
-    }
+  margin:0;
+  color:rgba(255,255,255,.96);
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:-.015em;
+}
 
     .activity-subtitle{
-      margin:4px 0 0;
-      color:rgba(235,239,245,.78);
-      font-family:var(--serif);
-      font-size:13px;
-      line-height:1.35;
-    }
+  margin:5px 0 0;
+  color:rgba(235,239,245,.78);
+  font-family:var(--serif);
+  font-size:13px;
+  line-height:1.42;
+  max-width:42ch;
+}
 
     .activity-time{
       margin:6px 0 0;
@@ -1173,20 +1232,31 @@ function openHandleDetail(item, items) {
   els.handleDetailView.style.display = "block";
   currentHandleItem = item;
 
+  const isBlocked = item.completionStatus === "blocked_missing_contact";
+  const actionLayoutClass = isBlocked ? "is-single" : "is-triple";
+  const actionsMarkup = isBlocked
+    ? `
+      <button class="handle-secondary" type="button" id="handle-back">Back</button>
+      <button class="handle-primary" type="button" id="handle-needs-contact">Needs contact</button>
+    `
+    : `
+      <button class="handle-secondary" type="button" id="handle-back">Back</button>
+      <button class="handle-primary" type="button" id="handle-mark-done">Mark Done</button>
+      <button class="handle-primary" type="button" id="handle-mark-no-show">Mark No Show</button>
+    `;
+
   els.handleDetailView.innerHTML = `
     <p class="handle-topline">Handle it</p>
     <h2 class="handle-title" id="handle-title">${escapeHtml(item.title || "Needs attention")}</h2>
     <p class="handle-copy">${escapeHtml(item.body || "Have Isla close it out?")}</p>
 
-    <div class="handle-actions">
-      <button class="handle-secondary" type="button" id="handle-back">Back</button>
-      <button class="handle-primary" type="button" id="handle-confirm">${escapeHtml(item.actionLabel || "Send to Isla")}</button>
+    <div class="handle-actions ${actionLayoutClass}">
+      ${actionsMarkup}
     </div>
 
     <p class="handle-result" id="handle-result"></p>
   `;
 
-  els.handleConfirm = document.getElementById("handle-confirm");
   els.handleResult = document.getElementById("handle-result");
 
   const backBtn = document.getElementById("handle-back");
@@ -1194,62 +1264,82 @@ function openHandleDetail(item, items) {
     backBtn.addEventListener("click", () => renderHandleList(items));
   }
 
-  if (els.handleConfirm) {
-    els.handleConfirm.addEventListener("click", async () => {
-      if (!currentHandleItem) {
+  async function submitHandleAction(requestedOutcome, triggerId, busyLabel) {
+    const trigger = document.getElementById(triggerId);
+    if (!trigger || !currentHandleItem) return;
+
+    try {
+      trigger.disabled = true;
+      trigger.textContent = busyLabel;
+      if (els.handleResult) els.handleResult.textContent = "";
+
+      const payload = {
+        shopId: currentOperatorData?.shopId || null,
+        shopName: currentOperatorData?.shopName || "",
+        actionType: requestedOutcome === "needs_contact" ? "closeout_needs_contact" : "closeout_outcome",
+        requestedOutcome,
+        appointmentId: currentHandleItem.appointmentId || null,
+        completionStatus: currentHandleItem.completionStatus || "",
+        artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
+        title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
+        body: currentHandleItem.body || "Have Isla close it out?",
+        source: "operator-home"
+      };
+
+      const response = await fetch(window.ISLA_ACTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result?.success !== true) {
+        throw new Error(result?.error || `Action request failed: ${response.status}`);
+      }
+
+      if (els.handleResult) {
+        els.handleResult.textContent = requestedOutcome === "done"
+          ? "Marked Done ✔ Isla will continue follow-through."
+          : requestedOutcome === "no_show"
+            ? "Marked No Show ✔ Isla will route recovery follow-through."
+            : "Needs contact ✔ Isla has the issue queued.";
+      }
+
+      window.setTimeout(() => {
         closeHandleFlow();
-        return;
+      }, 1100);
+    } catch (error) {
+      console.error("Send to Isla failed:", error);
+      if (trigger) {
+        trigger.disabled = false;
+        trigger.textContent = requestedOutcome === "done"
+          ? "Mark Done"
+          : requestedOutcome === "no_show"
+            ? "Mark No Show"
+            : "Needs contact";
       }
-
-      try {
-        els.handleConfirm.disabled = true;
-        els.handleConfirm.textContent = "Sending...";
-        if (els.handleResult) els.handleResult.textContent = "";
-
-        const payload = {
-          shopId: currentOperatorData?.shopId || null,
-          shopName: currentOperatorData?.shopName || "",
-          actionType: "closeout",
-          appointmentId: currentHandleItem.appointmentId || null,
-          completionStatus: currentHandleItem.completionStatus || "",
-          artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
-          title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
-          body: currentHandleItem.body || "Have Isla close it out?",
-          source: "operator-home"
-        };
-
-        const response = await fetch(window.ISLA_ACTION_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || result?.success !== true) {
-          throw new Error(result?.error || `Action request failed: ${response.status}`);
-        }
-
-        if (els.handleResult) {
-          els.handleResult.textContent = "Sent to Isla ✔ Action queued for follow-through.";
-        }
-
-        window.setTimeout(() => {
-          closeHandleFlow();
-        }, 1100);
-      } catch (error) {
-        console.error("Send to Isla failed:", error);
-        if (els.handleConfirm) {
-          els.handleConfirm.disabled = false;
-          els.handleConfirm.textContent = currentHandleItem?.actionLabel || "Send to Isla";
-        }
-        if (els.handleResult) {
-          els.handleResult.textContent = "Could not reach Isla right now.";
-        }
+      if (els.handleResult) {
+        els.handleResult.textContent = "Could not reach Isla right now.";
       }
-    });
+    }
+  }
+
+  const doneBtn = document.getElementById("handle-mark-done");
+  if (doneBtn) {
+    doneBtn.addEventListener("click", () => submitHandleAction("done", "handle-mark-done", "Marking..."));
+  }
+
+  const noShowBtn = document.getElementById("handle-mark-no-show");
+  if (noShowBtn) {
+    noShowBtn.addEventListener("click", () => submitHandleAction("no_show", "handle-mark-no-show", "Marking..."));
+  }
+
+  const needsContactBtn = document.getElementById("handle-needs-contact");
+  if (needsContactBtn) {
+    needsContactBtn.addEventListener("click", () => submitHandleAction("needs_contact", "handle-needs-contact", "Queueing..."));
   }
 }
 
@@ -1388,7 +1478,7 @@ function wireHandleFlow() {
 
   if (attentionCount > 0 && !isHandling) {
     title = attentionCount === 1 ? "One thing needs you" : `${attentionCount} things need you`;
-    copy = "Everything else is handled for you.";
+    copy = "Everything else is handled.";
     cta = "Handle it";
     currentStatusAction = "attention";
   } else if (isHandling) {
