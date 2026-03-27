@@ -1001,6 +1001,7 @@
   <script>
     window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard?shopId=LATEST";
     window.ISLA_ACTION_URL = "https://uwydiqltvchlmjvzwkal.supabase.co/functions/v1/confirm-project-done";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eWRpcWx0dmNobG1qdnp3a2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODg3NDcsImV4cCI6MjA4Nzg2NDc0N30.lRDxjO8cBV8gf04MeP6ZPCAjPy4ckQA8Ums2rR-ocps";
     const supabaseClient = window.supabase.createClient(
       "https://uwydiqltvchlmjvzwkal.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eWRpcWx0dmNobG1qdnp3a2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODg3NDcsImV4cCI6MjA4Nzg2NDc0N30.lRDxjO8cBV8gf04MeP6ZPCAjPy4ckQA8Ums2rR-ocps"
@@ -1286,10 +1287,13 @@ function openHandleDetail(item, items) {
         source: "operator-home"
       };
 
-      const response = await fetch(window.ISLA_ACTION_URL, {
+      const response = await 
+      fetch(window.ISLA_ACTION_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${window.SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify(payload),
       });
