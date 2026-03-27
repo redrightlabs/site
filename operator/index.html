@@ -1312,8 +1312,14 @@ function openHandleDetail(item, items) {
             : "Needs contact ✔ Isla has the issue queued.";
       }
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
         closeHandleFlow();
+        try {
+          const freshData = await loadOperatorData();
+          renderView(freshData || FALLBACK_OPERATOR_DATA);
+        } catch (refreshError) {
+          console.error("Operator refresh after closeout failed:", refreshError);
+        }
       }, 1100);
     } catch (error) {
       console.error("Send to Isla failed:", error);
