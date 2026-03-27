@@ -1106,59 +1106,35 @@ function getAttentionItems(data) {
     ? data.completionAttentionItems
     : [];
 
-  if (queueItems.length) {
-    return queueItems.map((item) => {
-      const completionStatus = String(item.completionStatus || "").trim();
-      const artistName = item.artistName || "";
-      const clientName = item.clientName || "Client";
+  return queueItems.map((item) => {
+    const completionStatus = String(item.completionStatus || "").trim();
+    const artistName = item.artistName || "";
+    const clientName = item.clientName || "Client";
 
-      let body = "Have Isla close it out?";
-      if (completionStatus === "blocked_missing_contact") {
-        body = "This closeout is blocked because the artist contact info is missing.";
-      } else if (completionStatus === "escalated") {
-        body = "This closeout has already been escalated and still needs a final outcome.";
-      } else if (completionStatus === "nudged_artist") {
-        body = "This closeout was nudged and is still waiting on a final outcome.";
-      }
+    let body = "Have Isla close it out?";
+    if (completionStatus === "blocked_missing_contact") {
+      body = "This closeout is blocked because the artist contact info is missing.";
+    } else if (completionStatus === "escalated") {
+      body = "This closeout has already been escalated and still needs a final outcome.";
+    } else if (completionStatus === "nudged_artist") {
+      body = "This closeout was nudged and is still waiting on a final outcome.";
+    }
 
-      const title = artistName
-        ? `${artistName} still has an unresolved closeout for ${clientName}.`
-        : `${clientName} still has an unresolved closeout.`;
+    const title = artistName
+      ? `${artistName} still has an unresolved closeout for ${clientName}.`
+      : `${clientName} still has an unresolved closeout.`;
 
-      return {
-        appointmentId: item.appointmentId,
-        artistName,
-        clientName,
-        completionStatus,
-        projectUrl: item.projectUrl || "",
-        title,
-        body,
-        actionLabel: completionStatus === "blocked_missing_contact" ? "Needs contact" : "Send to Isla"
-      };
-    });
-  }
-
-  const attentionCount = Number(data?.impact?.attentionCount || 0);
-  const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
-  const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
-
-  if (attentionCount <= 0 || isHandling) {
-    return [];
-  }
-
-  const roster = Array.isArray(data?.roster) ? data.roster : [];
-  const firstArtist = roster.find((r) => r?.name)?.name || "";
-
-  const title = firstArtist
-    ? `${firstArtist} has an appointment that hasn’t been closed out.`
-    : "An appointment hasn't been closed out yet.";
-
-  return [{
-    artistName: firstArtist,
-    title,
-    body: "Have Isla close it out?",
-    actionLabel: "Send to Isla"
-  }];
+    return {
+      appointmentId: item.appointmentId,
+      artistName,
+      clientName,
+      completionStatus,
+      projectUrl: item.projectUrl || "",
+      title,
+      body,
+      actionLabel: completionStatus === "blocked_missing_contact" ? "Needs contact" : "Send to Isla"
+    };
+  });
 }
 
     function closeHandleFlow() {
@@ -1475,7 +1451,7 @@ function wireHandleFlow() {
   const queueAttentionCount = Array.isArray(data?.completionAttentionItems)
     ? data.completionAttentionItems.length
     : 0;
-  const attentionCount = queueAttentionCount || Number(data?.impact?.attentionCount || 0);
+  const attentionCount = queueAttentionCount;
   const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
   const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
   const actionsCount = Number(data?.impact?.lifecycleActions || 0);
