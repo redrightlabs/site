@@ -1126,7 +1126,7 @@ function wireHandleFlow() {
   }
 }
 
-    function renderStatus(data) {
+   function renderStatus(data) {
   const businessName = data.shopName || "Your Business";
   const logoUrl = data.logoUrl || data.shopLogoUrl || "";
   const queueAttentionCount = Array.isArray(data?.completionAttentionItems)
@@ -1149,11 +1149,11 @@ function wireHandleFlow() {
     cta = "Handle it";
     currentStatusAction = "attention";
   } else if (isHandling) {
-  title = "All clear";
-  copy = "Isla has everything handled for you right now.";
-  cta = "";
-  currentStatusAction = "";
-} else if (actionsCount > 0) {
+    title = "All clear";
+    copy = "Isla has everything handled for you right now.";
+    cta = "";
+    currentStatusAction = "";
+  } else if (actionsCount > 0) {
     title = "All clear";
     copy = `Nothing important needs you right now. Isla already handled ${actionsCount} things for you today.`;
     cta = "See activity";
@@ -1176,15 +1176,15 @@ function wireHandleFlow() {
     : "All clear";
 
   const logoMarkup = logoUrl
-    ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)}" logo></div>`
+    ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)} logo"></div>`
     : `<div class="business-logo-wrap business-logo-fallback">${escapeHtml(businessName.charAt(0))}</div>`;
 
   els.status.innerHTML = `
     <div class="status-inner">
       <button class="beacon beacon-trigger ${attentionCount > 0 ? 'is-actionable' : ''}" type="button" id="beacon-trigger" ${attentionCount > 0 ? '' : 'disabled'}>
-  <span class="beacon-dot ${alertClass}"></span>
-  ${escapeHtml(beaconText)}
-</button>
+        <span class="beacon-dot ${alertClass}"></span>
+        ${escapeHtml(beaconText)}
+      </button>
 
       ${logoMarkup}
 
@@ -1198,7 +1198,7 @@ function wireHandleFlow() {
       ` : ""}
     </div>
   `;
-}
+
   const beaconTrigger = document.getElementById("beacon-trigger");
   if (beaconTrigger && attentionCount > 0) {
     beaconTrigger.addEventListener("click", () => {
@@ -1207,6 +1207,7 @@ function wireHandleFlow() {
       }
     });
   }
+}
     function renderMoney(data) {
       const impact = data.impact || {};
       const revenueLabel = impact.influencedRevenue || "$0";
