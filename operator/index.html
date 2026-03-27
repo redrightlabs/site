@@ -187,8 +187,27 @@
       opacity:.88;
     }
 
+    .beacon-dot::after{
+      content:"";
+      position:absolute;
+      inset:-6px; /* extends beyond the lens */
+      border-radius:999px;
+      pointer-events:none;
+      background:radial-gradient(circle at 50% 50%, rgba(255,77,77,.45) 0%, rgba(255,77,77,.22) 35%, rgba(255,77,77,.10) 55%, rgba(255,77,77,0) 70%);
+      filter:blur(6px);
+      opacity:.9;
+    }
+
+       .beacon-dot.is-alert{
+      animation:beaconBuoyPulse 1.8s ease-in-out infinite;
+    }
+
     .beacon-dot.is-alert::before{
-      animation:beaconBuoyPulse 2.4s ease-in-out infinite;
+      animation:beaconBuoyGlow 1.8s ease-in-out infinite;
+    }
+
+    .beacon-dot.is-alert::after{
+      animation:beaconBuoyHalo 1.8s ease-in-out infinite;
     }
 
     .beacon-dot.is-calm::before{
@@ -199,30 +218,81 @@
         0 0 10px rgba(255,77,77,.08);
     }
 
-    @keyframes beaconBuoyPulse{
+        @keyframes beaconBuoyPulse{
       0%{
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,.06) inset,
-          0 0 6px rgba(255,77,77,.22),
-          0 0 12px rgba(255,77,77,.10);
         transform:scale(1);
-        opacity:.96;
-      }
-      68%{
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,.08) inset,
-          0 0 12px rgba(255,77,77,.46),
-          0 0 24px rgba(255,77,77,.22);
-        transform:scale(1.05);
         opacity:1;
       }
+      40%{
+        transform:scale(1);
+        opacity:1;
+      }
+      50%{
+        transform:scale(.85);
+        opacity:0;
+      }
+      60%{
+        transform:scale(.85);
+        opacity:0;
+      }
       100%{
+        transform:scale(1);
+        opacity:1;
+      }
+    }
+
+    @keyframes beaconBuoyGlow{
+      0%{
+        opacity:1;
         box-shadow:
           0 0 0 1px rgba(255,255,255,.06) inset,
-          0 0 6px rgba(255,77,77,.22),
-          0 0 12px rgba(255,77,77,.10);
+          0 0 12px rgba(255,77,77,.45),
+          0 0 26px rgba(255,77,77,.25);
+      }
+      40%{
+        opacity:1;
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.06) inset,
+          0 0 12px rgba(255,77,77,.45),
+          0 0 26px rgba(255,77,77,.25);
+      }
+      50%{
+        opacity:0;
+        box-shadow:none;
+      }
+      60%{
+        opacity:0;
+        box-shadow:none;
+      }
+      100%{
+        opacity:1;
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.06) inset,
+          0 0 12px rgba(255,77,77,.45),
+          0 0 26px rgba(255,77,77,.25);
+      }
+    }
+
+    @keyframes beaconBuoyHalo{
+      0%{
+        opacity:1;
         transform:scale(1);
-        opacity:.96;
+      }
+      40%{
+        opacity:1;
+        transform:scale(1.05);
+      }
+      50%{
+        opacity:0;
+        transform:scale(.9);
+      }
+      60%{
+        opacity:0;
+        transform:scale(.9);
+      }
+      100%{
+        opacity:1;
+        transform:scale(1);
       }
     }
 
@@ -456,6 +526,49 @@
       background:rgba(255,255,255,.025);
       border:1px solid rgba(255,255,255,.05);
       text-align:left;
+      cursor:default;
+    }
+
+    .activity-item.is-selectable{
+      cursor:pointer;
+      transition:
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease,
+        box-shadow .16s ease;
+    }
+
+    .activity-item.is-selectable:hover{
+      background:rgba(255,255,255,.04);
+      border-color:rgba(255,77,77,.16);
+      box-shadow:0 10px 24px rgba(0,0,0,.22), 0 0 18px rgba(255,77,77,.06);
+      transform:translateY(-1px);
+    }
+
+    .activity-item.is-selectable:active{
+      transform:translateY(0);
+    }
+
+    .activity-item.is-selectable:focus-visible{
+      outline:none;
+      border-color:rgba(255,77,77,.28);
+      box-shadow:0 0 0 2px rgba(255,77,77,.14), 0 10px 24px rgba(0,0,0,.22);
+    }
+
+    .activity-item-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .activity-item-meta{
+      flex:1 1 auto;
+      min-width:0;
+    }
+
+       .activity-item-cta{
+      display:none;
     }
 
     .activity-title{
@@ -1015,9 +1128,13 @@ function renderHandleList(items) {
 
     <div class="activity-list" id="handle-item-list">
       ${items.map((item, i) => `
-        <div class="activity-item" data-index="${i}" role="button" tabindex="0">
-          <p class="activity-title">${escapeHtml(item.title || "Needs attention")}</p>
-          <p class="activity-subtitle">${escapeHtml(item.body || "Have Isla close it out?")}</p>
+        <div class="activity-item is-selectable" data-index="${i}" role="button" tabindex="0" aria-label="Open ${escapeHtml(item.title || "Needs attention")}">
+          <div class="activity-item-head">
+            <div class="activity-item-meta">
+              <p class="activity-title">${escapeHtml(item.title || "Needs attention")}</p>
+              <p class="activity-subtitle">${escapeHtml(item.body || "Have Isla close it out?")}</p>
+            </div>
+          </div>
         </div>
       `).join("")}
     </div>
@@ -1267,8 +1384,8 @@ function wireHandleFlow() {
   let cta = "";
 
   if (attentionCount > 0 && !isHandling) {
-    title = "One thing needs you";
-    copy = attentionCount === 1
+    title = attentionCount === 1 ? "One thing needs you" : `${attentionCount} things need you`; 
+       copy = attentionCount === 1
       ? "1 item still needs to be closed out. Everything else is handled for you."
       : `${attentionCount} items still need to be closed out. Everything else is handled for you.`;
     cta = "Handle it";
