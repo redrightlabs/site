@@ -1,13 +1,56 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-
-const app = express();
-app.use(express.json({ limit: "100kb" })); // small by design (no PHI blobs)
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+const app = express();
+app.use(express.urlencoded({ extended: false })); // Twilio sends webhook bodies as form-urlencoded
+app.use(express.json({ limit: "100kb" })); // small by design (no PHI blobs)
+
+
+// ===== ENV LOADER (simple local v1) =====
+const ENV_PATH = path.resolve(SITE_ROOT_FOR_ENV(), ".env");
+loadEnvFile(ENV_PATH);
+
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+const supabase =
+  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    : null;
+
+// TEMP proof-only appointment target
+const TEST_APPOINTMENT_ID = "9abaef82-4031-4a36-8a3a-9bfda382f406";
+
+function SITE_ROOT_FOR_ENV() {
+  return path.resolve(__dirname, "..", "..");
+}
+
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  const raw = fs.readFileSync(filePath, "utf8");
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+
+    const key = trimmed.slice(0, eq).trim();
+    const value = trimmed.slice(eq + 1).trim();
+
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
 // ===== CONFIG =====
 // Points at your existing plugin UI folder:
 const SITE_ROOT = path.resolve(__dirname, "..", ".."); // /site
@@ -250,6 +293,221 @@ app.use("/api", (req, res) => {
   jsonOk(res, { ok: false, reason: "not_found" });
 });
 
+app.post("/twilio", async (req, res) => {
+  console.log("📩 Twilio hit:", req.body);
+
+  const message = String(req.body?.Body || "").toLowerCase().trim();
+  const from = String(req.body?.From || "").trim();
+
+  if (!message) {
+    console.log("⚠️ Twilio webhook received without Body");
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+  const isDone = message === "done";
+const isNoShow = message === "no show" || message === "noshow";
+
+if (!isDone && !isNoShow) {
+    console.log("⏭️ Ignored inbound SMS:", { from, message });
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+console.log("✅ Received completion signal:", {
+  from,
+  message,
+  signal: isDone ? "done" : "no_show"
+});
+
+  if (!supabase) {
+    console.log("❌ Supabase client not configured");
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+  // 1. Find artist by phone
+  const { data: artist, error: artistError } = await supabase
+    .from("artists")
+    .select("artist_name")
+    .eq("artist_phone", from)
+    .single();
+
+  if (artistError || !artist) {
+    console.log("❌ No artist found for phone:", from, artistError);
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+  console.log("👤 Matched artist:", artist);
+
+  // 2. Find most recent started appointment for that artist
+  const now = new Date().toISOString();
+
+  const { data: appt, error: apptError } = await supabase
+    .from("appointments")
+    .select("id, start_time, end_time, status")
+    .eq("artist_name", artist.artist_name)
+    .lte("start_time", now)
+    .order("start_time", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (apptError) {
+    console.log("❌ Appointment query failed:", apptError);
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+  if (!appt) {
+    console.log("⚠️ No appointment found for artist (likely no test data yet):", artist.artist_name);
+    res.type("text/xml");
+    return res.send("<Response></Response>");
+  }
+
+  console.log("🎯 Matched appointment:", appt);
+
+  // 3. Mark it done
+  const rpcName = isNoShow ? "mark_appointment_no_show" : "mark_appointment_done";
+
+const { data, error } = await supabase.rpc(rpcName, {
+  appt_id: appt.id
+});
+
+if (error) {
+  console.log(`❌ Supabase ${rpcName} failed:`, error);
+  res.type("text/xml");
+  return res.send("<Response></Response>");
+}
+
+console.log("🎉 Appointment outcome recorded in Supabase:", {
+  appointment_id: appt.id,
+  outcome: isNoShow ? "no_show" : "done",
+  rpc: rpcName,
+  result: data
+});
+
+  res.type("text/xml");
+  return res.send("<Response></Response>");
+});
+
+
+async function sendDueCompletionPrompts() {
+  if (!supabase) {
+    console.log("❌ Supabase client not configured");
+    return;
+  }
+
+  const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "";
+  const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || "";
+  const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER || "";
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+    console.log("❌ Twilio env not configured");
+    return;
+  }
+
+  const twilio = (await import("twilio")).default;
+  const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+
+  const { data: actions, error } = await supabase.rpc("get_due_completion_actions");
+
+  if (error) {
+    console.log("❌ get_due_completion_actions failed:", error);
+    return;
+  }
+
+  if (!actions || actions.length === 0) {
+    console.log("ℹ️ No due completion actions");
+    return;
+  }
+
+  for (const action of actions) {
+
+    let targetPhone = action.artist_phone;
+
+    if (action.action === "send_escalation") {
+      targetPhone = action.escalation_contact_phone || action.artist_phone;
+    }
+
+    if (!targetPhone) {
+      console.log("⚠️ Missing contact for escalation ladder:", action.appointment_id);
+
+      await supabase.rpc("mark_completion_blocked_missing_contact", {
+        p_appointment_id: action.appointment_id,
+        p_reason: "missing_all_contacts"
+      });
+
+      continue;
+    }
+
+    let body = null;
+
+    if (action.action === "send_initial_prompt") {
+      body = "All set?";
+    } else if (action.action === "send_nudge") {
+      body = action.here_signal_present
+        ? "Quick check — was that session completed?"
+        : "Quick check — did the client come in today?";
+    } else if (action.action === "send_escalation") {
+      body = action.here_signal_present
+        ? "Heads up — we still need completion confirmation for a finished session. Can you mark it done?"
+        : "Heads up — we don’t have confirmation whether the client showed. Can you mark done or no show?";
+    } else {
+      continue;
+    }
+
+    try {
+      const msg = await client.messages.create({
+        from: TWILIO_FROM_NUMBER,
+        to: targetPhone,
+        body
+      });
+
+      console.log("📤 Sent completion ladder message:", {
+        appointment_id: action.appointment_id,
+        sid: msg.sid
+      });
+
+      if (action.action === "send_initial_prompt") {
+        await supabase.rpc("register_completion_prompt", {
+          p_shop_id: action.shop_id,
+          p_appointment_id: action.appointment_id,
+          p_escalation_contact_name: action.escalation_contact_name,
+          p_escalation_contact_phone: action.escalation_contact_phone,
+          p_escalation_contact_role: action.escalation_contact_role
+        });
+
+        console.log("✅ Completion control registered:", action.appointment_id);
+      } else if (action.action === "send_nudge") {
+        await supabase.rpc("mark_completion_nudged", {
+          p_appointment_id: action.appointment_id
+        });
+
+        console.log("✅ Completion control marked nudged:", action.appointment_id);
+      } else if (action.action === "send_escalation") {
+        await supabase.rpc("mark_completion_escalated", {
+          p_appointment_id: action.appointment_id
+        });
+
+        console.log("🚨 Completion escalated:", action.appointment_id);
+      }
+    } catch (err) {
+      console.log("❌ Twilio send failed:", err.message);
+    }
+  }
+}
+// ===== TEST ROUTE: SEND COMPLETION PROMPTS =====
+app.post("/test/send-completion-prompts", async (req, res) => {
+  try {
+    await sendDueCompletionPrompts();
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("🔥 /test/send-completion-prompts failed:", err);
+    return res.status(500).json({ ok: false, error: err?.message || "unknown error" });
+  }
+});
+
 const PORT = 8787;
 app.listen(PORT, () => {
   console.log(`RR Desk Plugin backend running on http://localhost:${PORT}`);
@@ -257,4 +515,5 @@ app.listen(PORT, () => {
   console.log(`Desk UI (Tattoo shell): http://localhost:${PORT}/plugins/tattoo/desk/?token=demo-desk-token`);
   console.log(`Desk UI (MedSpa shell): http://localhost:${PORT}/plugins/medspa/desk/?token=demo-desk-token`);
   console.log(`Desk UI (PT shell): http://localhost:${PORT}/plugins/pt/desk/?token=demo-desk-token`);
+  console.log(`Twilio webhook: http://localhost:${PORT}/twilio`);
 });

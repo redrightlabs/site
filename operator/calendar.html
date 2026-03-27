@@ -677,6 +677,11 @@ function getCurrentVertical(){
 }
 
 const DATA_ENDPOINT = "/operator/data/calendar.json";
+const DEFAULT_SHOP_ID = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
+let activeShopId = null;
+let activeAppointmentIds = new Set();
+let calendarChannel = null;
+
 const CALENDAR_STATE = {
   loaded: false,
   appointments: [],
@@ -685,6 +690,34 @@ const CALENDAR_STATE = {
   roster: [],
   businessProfile: null
 };
+
+function getResolvedShopId(){
+  const params = new URLSearchParams(window.location.search);
+  const queryShopId = params.get("shop") || params.get("shopId");
+
+  if (queryShopId) {
+    try {
+      localStorage.setItem("rr_active_shop_id", queryShopId);
+    } catch {}
+    return queryShopId;
+  }
+
+  try {
+    const storedShopId = localStorage.getItem("rr_active_shop_id");
+    if (storedShopId) return storedShopId;
+  } catch {}
+
+  return DEFAULT_SHOP_ID;
+}
+
+function setActiveShopId(shopId){
+  activeShopId = shopId || null;
+  try {
+    if (activeShopId) {
+      localStorage.setItem("rr_active_shop_id", activeShopId);
+    }
+  } catch {}
+}
 
 const LENS_LABELS = {
   tattoo: {
@@ -894,7 +927,8 @@ function getInitialBaseDate(){
 
 async function loadCalendarData(){
   try {
-    const shopId = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
+    const shopId = getResolvedShopId();
+    setActiveShopId(shopId);
 
     // 1. Shop identity
     const { data: shopRow, error: shopError } = await supabaseClient
@@ -925,6 +959,7 @@ async function loadCalendarData(){
 
     if (apptError) throw apptError;
     const appointmentIds = (appointmentsRaw || []).map((a) => a.id).filter(Boolean);
+    activeAppointmentIds = new Set(appointmentIds);
 
     // 4. Lifecycle events for this shop's appointments
     let lifecycleRaw = [];
@@ -938,7 +973,17 @@ async function loadCalendarData(){
       lifecycleRaw = lifeRes.data || [];
     }
 
-    // 5. Related clients
+    // 5. Completion attention queue for this shop
+    let completionAttentionRaw = [];
+    const completionRes = await supabaseClient.rpc("get_completion_attention_queue");
+
+    if (completionRes.error) throw completionRes.error;
+
+    completionAttentionRaw = (completionRes.data || []).filter(
+      (row) => row.shop_id === shopId
+    );
+
+        // 6. Related clients
     let clientsRaw = [];
     if (clientIds.length) {
       const clientRes = await supabaseClient
@@ -966,15 +1011,25 @@ async function loadCalendarData(){
     const rosterMap = new Map((rosterRaw || []).map((r) => [r.id, r]));
     const appointmentMap = new Map((appointmentsRaw || []).map((a) => [a.id, a]));
 
-    CALENDAR_STATE.appointments = (appointmentsRaw || []).map((a) => ({
-      id: a.id,
-      date: new Date(a.start_time).toDateString(),
-      time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
-      client: a.client_name,
-      artist: a.artist_name,
-      type: a.service_type || "Appointment",
-      projectUrl: `/operator/projects.html?project=${a.project_id}`
-    }));
+        const completionAttentionMap = new Map(
+      (completionAttentionRaw || []).map((row) => [row.appointment_id, row])
+    );
+
+    CALENDAR_STATE.appointments = (appointmentsRaw || []).map((a) => {
+      const attention = completionAttentionMap.get(a.id);
+      return {
+        id: a.id,
+        date: new Date(a.start_time).toDateString(),
+        time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
+        client: a.client_name,
+        artist: a.artist_name,
+        type: a.service_type || "Appointment",
+        status: a.status || "scheduled",
+        completionStatus: attention?.completion_status || "",
+        hereSignalPresent: !!attention?.here_signal_present,
+        projectUrl: `/operator/projects.html?project=${a.project_id}`
+      };
+    });
 
     CALENDAR_STATE.lifecycleEvents = (lifecycleRaw || []).map((e) => {
       const project = projectMap.get(e.project_id);
@@ -1000,6 +1055,23 @@ async function loadCalendarData(){
       };
     });
 
+CALENDAR_STATE.completionAttention = (completionAttentionRaw || []).map((row) => ({
+  appointmentId: row.appointment_id,
+  shopId: row.shop_id,
+  clientName: row.client_name,
+  artistName: row.artist_name,
+  appointmentStatus: row.appointment_status,
+  completionStatus: row.completion_status,
+  startTime: row.start_time,
+  endTime: row.end_time,
+  initialPromptSentAt: row.initial_prompt_sent_at,
+  nudgeSentAt: row.nudge_sent_at,
+  escalationSentAt: row.escalation_sent_at,
+  resolvedAt: row.resolved_at,
+  hereSignalPresent: !!row.here_signal_present,
+  founderAttentionRequired: !!row.founder_attention_required
+}));
+
     CALENDAR_STATE.projects = projectsRaw || [];
     CALENDAR_STATE.businessProfile = {
       name: shopRow?.name || BUSINESS_PROFILE.name,
@@ -1017,11 +1089,24 @@ if (!currentArtist || !availableArtistNames.includes(currentArtist)) {
     CALENDAR_STATE.loaded = true;
   } catch (error) {
     console.error("Supabase load failed:", error);
+    activeAppointmentIds = new Set();
     CALENDAR_STATE.loaded = false;
   }
 }
 
+// after supabaseClient + helpers
 
+async function markDone(apptId){
+  const { error } = await supabaseClient.rpc("mark_appointment_done", {
+    appt_id: apptId
+  });
+
+  if(error){
+    console.error("Done failed", error);
+  } else {
+    console.log("Appointment marked done");
+  }
+}
 
 function getLensLabel(lens){
   return LENS_LABELS[getCurrentVertical()]?.[lens] || lens;
@@ -1515,7 +1600,7 @@ function buildTimeline(){
 
     const timelineItems = [];
 
-    renderedAppointments.forEach((item) => {
+        renderedAppointments.forEach((item) => {
       timelineItems.push({
         kind: "appointment",
         time: item.time,
@@ -1523,6 +1608,9 @@ function buildTimeline(){
         artist: item.artist,
         client: item.client,
         type: item.type,
+        status: item.status,
+        completionStatus: item.completionStatus,
+        hereSignalPresent: item.hereSignalPresent,
         ghost: currentLens === "isla",
         isProviderView: currentLens === "artist"
       });
@@ -1596,9 +1684,9 @@ function buildTimeline(){
             const islaGhostClass = item.ghost ? " appt-ghost" : "";
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             return `
-              <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
+                            <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-client">${item.client}</div>
-                  <div class="appt-type">${item.type ? '· ' + item.type : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                  <div class="appt-type">${item.type ? '· ' + item.type : ''}${item.completionStatus ? ' · ' + mapCompletionStatusLabel(item.completionStatus) : ''}${item.hereSignalPresent ? ' · HERE' : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
                   ${item.isProviderView ? '' : `<div class="appt-artist">${item.artist}</div>`}
                 </div>
               `;
@@ -1852,22 +1940,38 @@ if(backTopBtn){
 })();
 
 function subscribeToRealtime(){
-  supabaseClient
-    .channel("calendar-live")
+  if (!activeShopId) return;
+
+  if (calendarChannel) {
+    supabaseClient.removeChannel(calendarChannel);
+    calendarChannel = null;
+  }
+
+  calendarChannel = supabaseClient
+    .channel(`calendar-live-${activeShopId}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
         table: "appointments",
-        filter: "shop_id=eq.b529479b-6fbd-4ded-9abd-b8a3c66326ba"
+        filter: `shop_id=eq.${activeShopId}`
       },
       () => reloadCalendar()
     )
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "lifecycle_events" },
-      () => reloadCalendar()
+      {
+        event: "*",
+        schema: "public",
+        table: "lifecycle_events"
+      },
+      (payload) => {
+        const changedAppointmentId = payload?.new?.appointment_id || payload?.old?.appointment_id;
+        if (changedAppointmentId && activeAppointmentIds.has(changedAppointmentId)) {
+          reloadCalendar();
+        }
+      }
     )
     .on(
       "postgres_changes",
@@ -1875,7 +1979,7 @@ function subscribeToRealtime(){
         event: "*",
         schema: "public",
         table: "shop_roster",
-        filter: "shop_id=eq.b529479b-6fbd-4ded-9abd-b8a3c66326ba"
+        filter: `shop_id=eq.${activeShopId}`
       },
       () => reloadCalendar()
     )

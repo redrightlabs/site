@@ -767,9 +767,15 @@
     </div>
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
     window.OPERATOR_DATA_URL = "https://uwydiqltvchlmjvzwkal.functions.supabase.co/operator-dashboard?shopId=LATEST";
     window.ISLA_ACTION_URL = "https://uwydiqltvchlmjvzwkal.supabase.co/functions/v1/confirm-project-done";
+    const supabaseClient = window.supabase.createClient(
+      "https://uwydiqltvchlmjvzwkal.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eWRpcWx0dmNobG1qdnp3a2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODg3NDcsImV4cCI6MjA4Nzg2NDc0N30.lRDxjO8cBV8gf04MeP6ZPCAjPy4ckQA8Ums2rR-ocps"
+    );
     const ACTIVITY_LAST_VIEWED_KEY = "rr_operator_activity_last_viewed_at";
     const FALLBACK_OPERATOR_DATA = {
       shopName: "Black Harbor Tattoo",
@@ -868,28 +874,47 @@ function getActionsSinceLastLook(data) {
     let currentStatusAction = "";
    
 
-    function getAttentionItems(data) {
-  const attentionCount = Number(data?.impact?.attentionCount || 0);
-  const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
-  const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
+function getAttentionItems(data) {
+  const queueItems = Array.isArray(data?.completionAttentionItems)
+    ? data.completionAttentionItems
+    : [];
 
-  if (Array.isArray(data?.attentionItems) && data.attentionItems.length) {
-    return data.attentionItems.map((item) => {
-      const artistName = item.artistName || item.artist || "";
+  if (queueItems.length) {
+    return queueItems.map((item) => {
+      const completionStatus = String(item.completionStatus || "").trim();
+      const artistName = item.artistName || "";
+      const clientName = item.clientName || "Client";
+
+      let body = "Have Isla close it out?";
+      if (completionStatus === "blocked_missing_contact") {
+        body = "This closeout is blocked because the artist contact info is missing.";
+      } else if (completionStatus === "escalated") {
+        body = "This closeout has already been escalated and still needs a final outcome.";
+      } else if (completionStatus === "nudged_artist") {
+        body = "This closeout was nudged and is still waiting on a final outcome.";
+      }
+
       const title = artistName
-        ? `${artistName} has an appointment that hasn’t been closed out.`
-        : "An appointment hasn't been closed out yet.";
+        ? `${artistName} still has an unresolved closeout for ${clientName}.`
+        : `${clientName} still has an unresolved closeout.`;
 
       return {
+        appointmentId: item.appointmentId,
         artistName,
+        clientName,
+        completionStatus,
         title,
-        body: "Have Isla close it out?",
-        actionLabel: "Send to Isla"
+        body,
+        actionLabel: completionStatus === "blocked_missing_contact" ? "Needs contact" : "Send to Isla"
       };
     });
   }
 
-  if (attentionCount <= 0) {
+  const attentionCount = Number(data?.impact?.attentionCount || 0);
+  const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
+  const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
+
+  if (attentionCount <= 0 || isHandling) {
     return [];
   }
 
@@ -1041,7 +1066,10 @@ function wireHandleFlow() {
     function renderStatus(data) {
   const businessName = data.shopName || "Your Business";
   const logoUrl = data.logoUrl || data.shopLogoUrl || "";
-  const attentionCount = Number(data?.impact?.attentionCount || 0);
+  const queueAttentionCount = Array.isArray(data?.completionAttentionItems)
+    ? data.completionAttentionItems.length
+    : 0;
+  const attentionCount = queueAttentionCount || Number(data?.impact?.attentionCount || 0);
   const attentionItem = Array.isArray(data?.attention) ? data.attention[0] : null;
   const isHandling = attentionItem && attentionItem.title === "Isla is handling this";
   const actionsCount = Number(data?.impact?.lifecycleActions || 0);
@@ -1078,7 +1106,7 @@ function wireHandleFlow() {
   const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
 
   const logoMarkup = logoUrl
-    ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)} logo"></div>`
+    ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)}" logo></div>`
     : `<div class="business-logo-wrap business-logo-fallback">${escapeHtml(businessName.charAt(0))}</div>`;
 
   els.status.innerHTML = `
@@ -1215,7 +1243,47 @@ function wireHandleFlow() {
       });
 
       if (!response.ok) throw new Error(`Operator data fetch failed: ${response.status}`);
-      return response.json();
+
+      const data = await response.json();
+      const shopId = data?.shopId || null;
+
+      if (!shopId) {
+        return data;
+      }
+
+      const { data: queueRows, error: queueError } = await supabaseClient.rpc("get_completion_attention_queue");
+
+      if (queueError) {
+        console.error("Completion attention queue load failed:", queueError);
+        return data;
+      }
+
+      const completionAttentionItems = (queueRows || [])
+        .filter((row) => row.shop_id === shopId)
+        .map((row) => ({
+          appointmentId: row.appointment_id,
+          clientName: row.client_name,
+          artistName: row.artist_name,
+          appointmentStatus: row.appointment_status,
+          completionStatus: row.completion_status,
+          startTime: row.start_time,
+          endTime: row.end_time,
+          hereSignalPresent: row.here_signal_present,
+          founderAttentionRequired: row.founder_attention_required,
+          initialPromptSentAt: row.initial_prompt_sent_at,
+          nudgeSentAt: row.nudge_sent_at,
+          escalationSentAt: row.escalation_sent_at,
+          resolvedAt: row.resolved_at
+        }));
+
+      return {
+        ...data,
+        completionAttentionItems,
+        impact: {
+          ...(data.impact || {}),
+          attentionCount: String(completionAttentionItems.length || Number(data?.impact?.attentionCount || 0))
+        }
+      };
     }
 
     els.handleCancel.addEventListener("click", closeHandleFlow);
@@ -1249,6 +1317,8 @@ function wireHandleFlow() {
       shopId: currentOperatorData?.shopId || null,
       shopName: currentOperatorData?.shopName || "",
       actionType: "closeout",
+      appointmentId: currentHandleItem.appointmentId || null,
+      completionStatus: currentHandleItem.completionStatus || "",
       artistName: currentHandleItem.artistName || currentHandleItem.artist || "",
       title: currentHandleItem.title || "An appointment hasn't been closed out yet.",
       body: currentHandleItem.body || "Have Isla close it out?",
