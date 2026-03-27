@@ -141,27 +141,65 @@
       text-transform:uppercase;
     }
 
-    .beacon-dot{
-      width:10px;
-      height:10px;
+        .beacon-dot{
+      position:relative;
+      width:12px;
+      height:12px;
       border-radius:999px;
-      background:var(--accent);
+      background:transparent;
+      flex:0 0 auto;
     }
 
-    .beacon-dot.is-alert{
-      animation:beaconBlink 1.15s infinite;
-      box-shadow:0 0 14px rgba(255,77,77,.85);
+    .beacon-dot::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      background:radial-gradient(circle at 50% 50%, rgba(255,244,244,.98) 0%, rgba(255,112,112,.92) 26%, rgba(255,77,77,.82) 44%, rgba(123,12,12,.96) 100%);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.06) inset,
+        0 0 8px rgba(255,77,77,.22),
+        0 0 18px rgba(255,77,77,.14);
+      opacity:.88;
     }
 
-    .beacon-dot.is-calm{
+    .beacon-dot.is-alert::before{
+      animation:beaconBuoyPulse 2.4s ease-in-out infinite;
+    }
+
+    .beacon-dot.is-calm::before{
       opacity:.72;
-      box-shadow:0 0 8px rgba(255,77,77,.45);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.05) inset,
+        0 0 5px rgba(255,77,77,.16),
+        0 0 10px rgba(255,77,77,.08);
     }
 
-    @keyframes beaconBlink{
-      0%{ opacity:1; transform:scale(1); }
-      50%{ opacity:.28; transform:scale(.9); }
-      100%{ opacity:1; transform:scale(1); }
+    @keyframes beaconBuoyPulse{
+      0%{
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.06) inset,
+          0 0 6px rgba(255,77,77,.22),
+          0 0 12px rgba(255,77,77,.10);
+        transform:scale(1);
+        opacity:.96;
+      }
+      68%{
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.08) inset,
+          0 0 12px rgba(255,77,77,.46),
+          0 0 24px rgba(255,77,77,.22);
+        transform:scale(1.05);
+        opacity:1;
+      }
+      100%{
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.06) inset,
+          0 0 6px rgba(255,77,77,.22),
+          0 0 12px rgba(255,77,77,.10);
+        transform:scale(1);
+        opacity:.96;
+      }
     }
 
     .business-name{
@@ -1103,8 +1141,15 @@ function wireHandleFlow() {
   }
 
   const alertClass = attentionCount > 0 ? "is-alert" : "is-calm";
-  const beaconText = attentionCount > 0 ? "Needs attention" : "All clear";
-
+  const firstCompletionItem = Array.isArray(data?.completionAttentionItems) ? data.completionAttentionItems[0] : null;
+  const beaconText = attentionCount > 0
+    ? (firstCompletionItem?.completionStatus === "escalated"
+        ? "Escalated"
+        : firstCompletionItem?.completionStatus === "blocked_missing_contact"
+          ? "Blocked"
+          : "Needs attention")
+    : "All clear";
+    
   const logoMarkup = logoUrl
     ? `<div class="business-logo-wrap"><img class="business-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName)}" logo></div>`
     : `<div class="business-logo-wrap business-logo-fallback">${escapeHtml(businessName.charAt(0))}</div>`;

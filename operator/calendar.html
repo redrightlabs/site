@@ -512,6 +512,77 @@ body{
   font-size:11px;
   white-space:nowrap;
 }
+.appt-type-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  flex:1 1 auto;
+}
+
+.rr-buoy{
+  position:relative;
+  flex:0 0 auto;
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  opacity:0;
+  transform:scale(.92);
+  transition:opacity .18s ease, transform .18s ease;
+}
+
+.rr-buoy::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:999px;
+  background:radial-gradient(circle at 50% 50%, rgba(255,244,244,.96) 0%, rgba(255,112,112,.92) 26%, rgba(255,77,77,.78) 44%, rgba(123,12,12,.94) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06) inset,
+    0 0 8px rgba(255,77,77,.22),
+    0 0 18px rgba(255,77,77,.14);
+}
+
+.rr-buoy.is-visible{
+  opacity:1;
+  transform:scale(1);
+}
+
+.rr-buoy.is-escalated::before{
+  animation:rrBuoyPulse 2.4s ease-in-out infinite;
+}
+
+.rr-buoy.is-blocked::before{
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 0 5px rgba(255,77,77,.14),
+    0 0 10px rgba(255,77,77,.08);
+  opacity:.88;
+}
+
+@keyframes rrBuoyPulse{
+  0%{
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06) inset,
+      0 0 6px rgba(255,77,77,.22),
+      0 0 12px rgba(255,77,77,.10);
+    transform:scale(1);
+  }
+  68%{
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.08) inset,
+      0 0 12px rgba(255,77,77,.46),
+      0 0 24px rgba(255,77,77,.22);
+    transform:scale(1.04);
+  }
+  100%{
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06) inset,
+      0 0 6px rgba(255,77,77,.22),
+      0 0 12px rgba(255,77,77,.10);
+    transform:scale(1);
+  }
+}
 .appt,
 .isla{
   transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
@@ -890,7 +961,20 @@ function mapLifecycleStatusLabel(status, isBlocked){
       return "Queued";
   }
 }
-
+function mapCompletionStatusLabel(status){
+  switch ((status || "").toLowerCase()) {
+    case "awaiting_artist_completion":
+      return "Awaiting DONE";
+    case "nudged_artist":
+      return "Nudged";
+    case "escalated":
+      return "Escalated";
+    case "blocked_missing_contact":
+      return "Missing contact";
+    default:
+      return "Needs attention";
+  }
+}
 function getBusinessName(){
   return CALENDAR_STATE.businessProfile?.name || "";
 }
@@ -1600,7 +1684,7 @@ function buildTimeline(){
 
     const timelineItems = [];
 
-        renderedAppointments.forEach((item) => {
+           renderedAppointments.forEach((item) => {
       timelineItems.push({
         kind: "appointment",
         time: item.time,
@@ -1611,6 +1695,11 @@ function buildTimeline(){
         status: item.status,
         completionStatus: item.completionStatus,
         hereSignalPresent: item.hereSignalPresent,
+        buoyState: item.completionStatus === "escalated"
+          ? "escalated"
+          : item.completionStatus === "blocked_missing_contact"
+            ? "blocked"
+            : "",
         ghost: currentLens === "isla",
         isProviderView: currentLens === "artist"
       });
@@ -1684,9 +1773,12 @@ function buildTimeline(){
             const islaGhostClass = item.ghost ? " appt-ghost" : "";
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             return `
-                            <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
+                <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
                   <div class="appt-client">${item.client}</div>
-                  <div class="appt-type">${item.type ? '· ' + item.type : ''}${item.completionStatus ? ' · ' + mapCompletionStatusLabel(item.completionStatus) : ''}${item.hereSignalPresent ? ' · HERE' : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                  <div class="appt-type-row">
+                    <span class="rr-buoy ${item.buoyState ? `is-visible is-${item.buoyState}` : ''}" aria-hidden="true"></span>
+                    <div class="appt-type">${item.type ? '· ' + item.type : ''}${item.completionStatus ? ' · ' + mapCompletionStatusLabel(item.completionStatus) : ''}${item.hereSignalPresent ? ' · HERE' : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
+                  </div>
                   ${item.isProviderView ? '' : `<div class="appt-artist">${item.artist}</div>`}
                 </div>
               `;
