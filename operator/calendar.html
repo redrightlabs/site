@@ -14,9 +14,10 @@
   --line:rgba(255,255,255,.08);
   --accent:#ff4d4d;
   --radius:18px;
-  --sans:system-ui,-apple-system;
+  --sans:"Cormorant Garamond", Garamond, Georgia, serif;
   --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
-  --hero: "Cormorant Garamond", Garamond, Georgia, serif;
+  --hero:"Cormorant Garamond", Garamond, Georgia, serif;
+  --project-sticky-offset: 198px;
 }
 
 body{
@@ -653,6 +654,824 @@ body{
   font-size:11px;
   white-space:nowrap;
 }
+/* =========================
+   PROJECT DRAWER
+========================= */
+.project-drawer-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(5,6,8,.52);
+  backdrop-filter:blur(8px);
+  z-index:70;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+}
+
+.project-drawer-overlay.is-open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+  .project-drawer{
+    position:fixed;
+    top:0;
+    right:0;
+    width:min(100vw, 520px);
+  height:100vh;
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255,77,77,.08), transparent 42%),
+    linear-gradient(180deg, rgba(17,19,23,.98), rgba(13,15,19,.99));
+  border-left:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    -22px 0 56px rgba(0,0,0,.48),
+    0 0 32px rgba(255,77,77,.06),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  transform:translateX(100%);
+  transition:transform .22s ease;
+  display:flex;
+  flex-direction:column;
+}
+
+.project-drawer-overlay.is-open .project-drawer{
+  transform:translateX(0);
+}
+
+.project-drawer-head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 18px 7px;
+  background:linear-gradient(rgba(17,19,23,.98), rgba(13,15,19,.94));
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.project-drawer-topline{
+  margin:0 0 2px;
+  color:rgba(233,232,223,.42);
+  font-family:var(--sans);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+
+.project-drawer-title{
+  margin:0;
+  color:rgba(255,255,255,.96);
+  font-family:var(--hero);
+  font-size:17px;
+  font-weight:700;
+  line-height:1.06;
+  letter-spacing:-.01em;
+}
+
+.project-drawer-title-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.project-drawer-artist{
+  flex:0 0 auto;
+  text-align:right;
+  color:rgba(233,232,223,.42);
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.01em;
+  line-height:1.1;
+  white-space:nowrap;
+}
+
+.project-drawer-close{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-size:18px;
+  cursor:pointer;
+}
+
+.project-drawer-close:hover{
+  background:rgba(255,255,255,.06);
+}
+
+.project-drawer-body{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:14px 18px 22px;
+  scrollbar-width:none;
+  position:relative;
+}
+
+.project-drawer-body::-webkit-scrollbar{
+  display:none;
+}
+
+.project-drawer-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+
+/* Removed duplicate project-drawer-topstack, project-context-shell, project-context-card, project-context-kicker, project-context-title, project-context-copy, project-pulse-row, project-pulse-chip, project-pulse-chip.is-healthy, project-pulse-chip.is-warn, project-pulse-chip.is-calm, project-mini-grid, project-mini-card, project-mini-label, project-mini-value, project-nav, project-nav::-webkit-scrollbar, project-nav-btn, project-nav-btn.is-active, project-panel, project-panel.is-active, project-callout, project-callout.is-alert, project-callout-title, project-callout-copy */
+
+.project-context-hero{
+  display:grid;
+  grid-template-columns:78px 1fr;
+  gap:8px;
+  align-items:stretch;
+}
+
+.project-context-image{
+  min-height:76px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.065);
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255,77,77,.08), transparent 44%),
+    rgba(255,255,255,.03);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.project-context-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.project-context-image-empty{
+  padding:12px;
+  text-align:center;
+  color:rgba(233,232,223,.52);
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  line-height:1.4;
+}
+
+.project-state-strip{
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:6px;
+}
+
+.project-state-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 7px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.78);
+  font-family:var(--sans);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.project-state-chip.is-alert{
+  border-color:rgba(255,77,77,.18);
+  background:rgba(255,77,77,.10);
+  color:#ffe3e3;
+}
+
+.project-spotlight{
+  padding:6px 9px;
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.028);
+}
+
+.project-spotlight.is-alert{
+  border-color:rgba(255,77,77,.20);
+  background:rgba(255,77,77,.08);
+}
+
+.project-spotlight-title{
+  margin:0;
+  color:rgba(255,255,255,.95);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+}
+
+.project-spotlight-copy{
+  margin:2px 0 0;
+  color:rgba(233,232,223,.62);
+  font-size:10px;
+  line-height:1.28;
+}
+
+.project-drawer-topstack{
+  position:sticky;
+  top:0;
+  z-index:3;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:7px;
+  margin:0 -18px 8px;
+  padding:7px 18px 7px;
+  background:linear-gradient(rgba(13,15,19,.98), rgba(13,15,19,.94));
+  border-bottom:1px solid rgba(255,255,255,.05);
+  backdrop-filter:blur(14px);
+}
+
+.project-context-shell{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.project-context-card{
+  padding:8px 10px 8px;
+  border-radius:13px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255,77,77,.08), transparent 42%),
+    rgba(255,255,255,.032);
+  border:1px solid rgba(255,255,255,.065);
+  box-shadow:0 8px 20px rgba(0,0,0,.16);
+}
+
+.project-context-kicker{
+  margin:0 0 8px;
+  color:rgba(233,232,223,.52);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.project-context-title{
+  margin:0 0 2px;
+  color:rgba(255,255,255,.96);
+  font-family:var(--hero);
+  font-size:16px;
+  font-weight:700;
+  line-height:1.04;
+  letter-spacing:-.01em;
+  text-transform:none;
+}
+
+.project-context-copy{
+  margin:2px 0 0;
+  color:rgba(233,232,223,.74);
+  font-size:12px;
+  line-height:1.3;
+}
+
+.project-pulse-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.project-pulse-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  max-width:100%;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.92);
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.project-pulse-chip.is-healthy{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.92);
+}
+
+.project-pulse-chip.is-warn{
+  border-color:rgba(255,77,77,.20);
+  background:rgba(255,77,77,.10);
+  color:#ffe3e3;
+}
+
+.project-pulse-chip.is-calm{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:rgba(233,232,223,.84);
+}
+
+.project-mini-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:8px;
+}
+
+.project-mini-card{
+  padding:10px 11px;
+  border-radius:12px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.05);
+}
+
+.project-mini-label{
+  margin:0 0 5px;
+  color:rgba(233,232,223,.5);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.project-mini-value{
+  margin:0;
+  color:rgba(255,255,255,.94);
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.project-nav{
+  display:grid;
+  grid-template-columns:1.18fr .86fr .82fr .86fr .94fr .94fr;
+  gap:6px;
+  padding:2px 0 0;
+}
+
+.project-nav::-webkit-scrollbar{
+  display:none;
+}
+
+.project-nav-btn{
+  min-width:0;
+  padding:6px 5px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.05);
+  background:rgba(255,255,255,.02);
+  color:rgba(233,232,223,.62);
+  font-family:var(--sans);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  text-align:center;
+  cursor:pointer;
+}
+
+.project-nav-btn.is-active{
+  color:#fff;
+  background:rgba(255,77,77,.10);
+  border-color:rgba(255,77,77,.16);
+  box-shadow:0 0 0 1px rgba(255,77,77,.05) inset;
+}
+
+.project-subnav{
+  position:sticky;
+  top:var(--project-sticky-offset);
+  z-index:2;
+  display:flex;
+  gap:0;
+  margin:0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:#0d0f13;
+}
+.project-subnav::-webkit-scrollbar{
+  display:none;
+}
+
+.project-subnav-btn{
+  flex:1;
+  padding:10px 0 8px;
+  border:none;
+  border-bottom:2px solid transparent;
+  background:none;
+  color:rgba(233,232,223,.5);
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transform:translateZ(0);
+}
+
+.project-subnav-btn.is-active{
+  color:#fff;
+  border-bottom-color:rgba(255,77,77,.7);
+}
+
+.project-subpanel{
+  display:none;
+}
+
+.project-subpanel.is-active{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.project-proof-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.project-proof-row{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.022);
+  border:1px solid rgba(255,255,255,.055);
+}
+
+.project-proof-type{
+  margin:0;
+  color:rgba(255,255,255,.95);
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.2;
+  white-space:nowrap;
+}
+
+.project-proof-date{
+  min-width:0;
+  color:rgba(233,232,223,.62);
+  font-size:12px;
+  line-height:1.35;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.project-proof-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.82);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.project-proof-status.is-pending{
+  border-color:rgba(255,77,77,.18);
+  background:rgba(255,77,77,.06);
+  color:#ffe3e3;
+}
+
+.project-proof-status.is-completed,
+.project-proof-status.is-sent{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.82);
+}
+
+.project-proof-status.is-cancelled{
+  opacity:.6;
+}
+
+.project-panel{
+  display:none;
+}
+
+.project-panel.is-active{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+  align-content:start;
+}
+
+.project-callout{
+  padding:12px 13px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.028);
+}
+
+.project-callout.is-alert{
+  border-color:rgba(255,77,77,.18);
+  background:rgba(255,77,77,.06);
+}
+
+.project-callout-title{
+  margin:0;
+  color:rgba(255,255,255,.95);
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:700;
+}
+
+.project-callout-copy{
+  margin:6px 0 0;
+  color:rgba(233,232,223,.68);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.project-section{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-content:start;
+}
+
+.project-section-title{
+  margin:0 0 2px;
+  color:rgba(255,255,255,.94);
+  font-family:var(--sans);
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:-.01em;
+}
+
+.project-section-sub{
+  margin:0;
+  color:rgba(233,232,223,.58);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.project-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.project-row{
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.022);
+  border:1px solid rgba(255,255,255,.055);
+}
+
+.project-row-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.project-row-title{
+  margin:0;
+  color:rgba(255,255,255,.95);
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:700;
+  line-height:1.3;
+}
+
+.project-row-meta,
+.project-row-sub,
+.project-empty-copy{
+  margin:4px 0 0;
+  color:rgba(233,232,223,.58);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.project-tag-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+
+.project-tag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.035);
+  color:rgba(255,255,255,.84);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.project-tag.is-alert{
+  border-color:rgba(255,77,77,.22);
+  background:rgba(255,77,77,.10);
+  color:#ffe2e2;
+}
+
+.project-link-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.project-link-card{
+  display:block;
+  padding:11px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.92);
+  text-decoration:none;
+}
+
+.project-link-card:hover{
+  background:rgba(255,255,255,.05);
+}
+
+.project-link-title{
+  margin:0;
+  color:rgba(255,255,255,.95);
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:700;
+}
+
+.project-link-copy{
+  margin:4px 0 0;
+  color:rgba(233,232,223,.56);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.project-card{
+  padding:14px 14px 13px;
+  border-radius:16px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 14px 32px rgba(0,0,0,.22);
+}
+
+.project-card-label{
+  margin:0 0 6px;
+  color:rgba(233,232,223,.52);
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.project-card-value{
+  margin:0;
+  color:rgba(255,255,255,.94);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.35;
+}
+
+.project-input-area,
+.project-input-line{
+  width:100%;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.025);
+  color:rgba(255,255,255,.92);
+  font-family:var(--serif);
+  font-size:14px;
+  line-height:1.45;
+  padding:10px 12px;
+  box-sizing:border-box;
+  resize:vertical;
+}
+
+.project-input-area::placeholder,
+.project-input-line::placeholder{
+  color:rgba(233,232,223,.38);
+}
+
+.project-input-area:focus,
+.project-input-line:focus,
+.project-file-input:focus{
+  outline:none;
+  border-color:rgba(255,77,77,.22);
+  box-shadow:0 0 0 1px rgba(255,77,77,.08) inset;
+}
+
+.project-input-area{
+  min-height:72px;
+  height:72px;
+  overflow:hidden;
+}
+
+.project-input-line{
+  min-height:40px;
+  height:40px;
+  overflow:hidden;
+}
+
+.project-file-input{
+  width:100%;
+  color:rgba(233,232,223,.72);
+  font-family:var(--sans);
+  font-size:12px;
+}
+
+.project-upload-note{
+  margin:8px 0 0;
+  color:rgba(233,232,223,.48);
+  font-size:11px;
+  line-height:1.4;
+}
+
+.project-photo-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:8px;
+  margin-top:10px;
+}
+
+.project-photo-thumb{
+  position:relative;
+  overflow:hidden;
+  min-height:108px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
+}
+
+.project-photo-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.project-photo-meta{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:8px 9px;
+  background:linear-gradient(180deg, rgba(8,10,14,0), rgba(8,10,14,.88));
+  color:#fff;
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.project-status-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,77,77,.20);
+  background:rgba(255,77,77,.10);
+  color:#ffe3e3;
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.project-drawer-loading,
+.project-drawer-error{
+  padding:16px 0;
+  color:rgba(233,232,223,.72);
+  font-size:14px;
+}
+
+.project-drawer-error{
+  color:#ffd9d9;
+}
+
   .command-stack{
     display:flex;
     flex-direction:column;
@@ -669,6 +1488,21 @@ body{
   position:relative;
   justify-content:center;
   min-height:34px;
+}
+</style>
+<style>
+@media (max-width: 520px){
+  :root{
+    --project-sticky-offset: 184px;
+  }
+
+  .project-context-hero{
+    grid-template-columns:1fr;
+  }
+
+  .project-context-image{
+    min-height:88px;
+  }
 }
 </style>
 </head>
@@ -718,6 +1552,24 @@ body{
 
 <button id="back-to-top" class="back-top">↑</button>
 
+<div class="project-drawer-overlay" id="project-drawer-overlay" aria-hidden="true">
+  <aside class="project-drawer" role="dialog" aria-modal="true" aria-labelledby="project-drawer-title">
+    <div class="project-drawer-head">
+            <div>
+        <p class="project-drawer-topline">Project Folder</p>
+        <div class="project-drawer-title-row">
+          <h2 class="project-drawer-title" id="project-drawer-title">Loading project…</h2>
+          <div class="project-drawer-artist" id="project-drawer-artist"></div>
+        </div>
+      </div>
+      <button class="project-drawer-close" type="button" id="project-drawer-close" aria-label="Close project drawer">×</button>
+    </div>
+    <div class="project-drawer-body" id="project-drawer-body">
+      <div class="project-drawer-loading">Loading project…</div>
+    </div>
+  </aside>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const supabaseClient = window.supabase.createClient(
@@ -731,6 +1583,16 @@ const stripEl = document.getElementById("week-strip");
 const artistFilterRowEl = document.getElementById("artist-filter-row");
 const artistSelectEl = document.getElementById("artist-select");
 const topNavEl = document.querySelector(".top-nav");
+const projectDrawerOverlayEl = document.getElementById("project-drawer-overlay");
+const projectDrawerTitleEl = document.getElementById("project-drawer-title");
+const projectDrawerArtistEl = document.getElementById("project-drawer-artist");
+const projectDrawerBodyEl = document.getElementById("project-drawer-body");
+const projectDrawerCloseEl = document.getElementById("project-drawer-close");
+
+let activeProjectDrawerTab = "overview";
+let activeIslaSubtab = "messages";
+const projectWorkbookUploads = {};
+
 let today = new Date();
 let baseDate = new Date(today);
 const timelineStartDate = new Date(today);
@@ -808,8 +1670,15 @@ const LENS_LABELS = {
   }
 };
 
+
 function goOperatorHome(){
   window.location.href = "/operator/";
+}
+
+function getApiBase(){
+  const { protocol, hostname, port } = window.location;
+  if (port === "8787") return `${protocol}//${hostname}:8787`;
+  return `${protocol}//${hostname}:8787`;
 }
 
 
@@ -844,9 +1713,19 @@ if (!currentArtist || !rosterNames.includes(currentArtist)) {
 artistSelectEl.value = currentArtist;
 }
 
+
 function normalizeDateKey(value){
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toDateString();
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function normalizeTimeLabel(value){
@@ -974,6 +1853,798 @@ function mapCompletionStatusLabel(status){
     default:
       return "Needs attention";
   }
+}
+
+function formatDateTime(value){
+  if (!value) return "Unknown time";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown time";
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function humanizeLifecycleType(type){
+  switch ((type || "").toLowerCase()) {
+    case "done_check": return "Done check";
+    case "contact_card": return "Contact card";
+    case "carewatch_1": return "CareWatch 1";
+    case "carewatch_2": return "CareWatch 2";
+    case "carewatch_3": return "CareWatch 3";
+    case "portfolio_request": return "Portfolio request";
+    default:
+      return String(type || "Action")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (m) => m.toUpperCase());
+  }
+}
+
+function escapeAttr(value){
+  return escapeHtml(value).replace(/`/g, "&#96;");
+}
+function formatProjectTabLabel(tab){
+  switch (tab) {
+    case "overview": return "Workbook";
+    case "plan": return "Plan";
+    case "activity": return "Isla";
+    case "media": return "Media";
+    case "lifetime": return "Lifetime";
+    case "contact": return "Contact";
+    default: return tab;
+  }
+}
+
+function getProjectPulse(data){
+  const appointments = data?.appointments || [];
+  const completion = data?.completion || [];
+  const lifecycle = data?.lifecycle || [];
+  const detail = data?.folderDetail || null;
+
+  const blockingCompletion = completion.filter((row) => {
+    const status = String(row.status || "").toLowerCase();
+    return status === "blocked_missing_contact" || status === "escalated";
+  });
+
+  const sortedAppointments = appointments
+    .slice()
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+  const latestAppointment = sortedAppointments.length
+    ? sortedAppointments[sortedAppointments.length - 1]
+    : null;
+
+  const nextAppointment = sortedAppointments.find((row) => new Date(row.start_time).getTime() >= Date.now()) || latestAppointment || null;
+
+  const nextLifecycle = lifecycle
+    .filter((row) => String(row.status || "pending").toLowerCase() === "pending")
+    .sort((a, b) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime())[0] || null;
+
+  const completedAppointment = sortedAppointments
+    .slice()
+    .reverse()
+    .find((row) => String(row.status || "").toLowerCase() === "done") || null;
+
+  if (blockingCompletion.length) {
+    return {
+      tone: "alert",
+      stateLabel: "Needs intervention",
+      summary: detail?.service_summary || "Project",
+      subcopy: blockingCompletion.length === 1 ? "One checkpoint is stuck." : `${blockingCompletion.length} checkpoints are stuck.`,
+      spotlightTitle: "Intervention required",
+      spotlightCopy: "Something is blocked and Isla needs human help to continue cleanly.",
+      nextAction: "Unblock the completion path.",
+      currentPart: latestAppointment?.service_type || "No session breakdown yet",
+      nextAppointment,
+      nextLifecycle,
+      completedAppointment
+    };
+  }
+
+  if (completedAppointment && nextLifecycle) {
+    return {
+      tone: "calm",
+      stateLabel: "Aftercare active",
+      summary: detail?.service_summary || "Project",
+      subcopy: "The appointment happened. Isla is handling the follow-up.",
+      spotlightTitle: "Aftercare is in motion",
+      spotlightCopy: `Next touch: ${humanizeLifecycleType(nextLifecycle.type)}.`,
+      nextAction: `Next: ${humanizeLifecycleType(nextLifecycle.type)}.`,
+      currentPart: completedAppointment.service_type || "Completed session",
+      nextAppointment,
+      nextLifecycle,
+      completedAppointment
+    };
+  }
+
+  if (nextAppointment) {
+    return {
+      tone: "calm",
+      stateLabel: "On course",
+      summary: detail?.service_summary || "Project",
+      subcopy: "Project context is ready when you need it.",
+      spotlightTitle: "Current context",
+      spotlightCopy: `${nextAppointment.service_type || "Session"} · ${formatDateTime(nextAppointment.start_time)}`,
+      nextAction: nextLifecycle ? `Next: ${humanizeLifecycleType(nextLifecycle.type)}.` : "No urgent action.",
+      currentPart: nextAppointment.service_type || "No session breakdown yet",
+      nextAppointment,
+      nextLifecycle,
+      completedAppointment
+    };
+  }
+
+  return {
+    tone: "calm",
+    stateLabel: "Quiet",
+    summary: detail?.service_summary || "Project",
+    subcopy: "Nothing urgent is surfacing.",
+    spotlightTitle: "Quiet waters",
+    spotlightCopy: "This project looks calm right now.",
+    nextAction: "No intervention needed.",
+    currentPart: latestAppointment?.service_type || "No session breakdown yet",
+    nextAppointment: latestAppointment,
+    nextLifecycle,
+    completedAppointment
+  };
+}
+
+function getProjectHeroMedia(detail, media, pulse){
+  const portfolio = (media || []).find((item) => item.media_type === "portfolio" && !item.internal_only && (item.display_path || item.preview_path || item.storage_path));
+  const healing = (media || []).find((item) => item.media_type === "healing_issue" && (item.display_path || item.preview_path || item.storage_path));
+  const reference = (media || []).find((item) => item.media_type === "reference" && (item.display_path || item.preview_path || item.storage_path));
+
+  if (pulse?.completedAppointment && (portfolio || healing)) {
+    return portfolio || healing;
+  }
+
+  return reference || portfolio || healing || null;
+}
+
+function getMediaUrl(item){
+  if (!item) return "";
+  return item.display_path || item.preview_path || item.storage_path || "";
+}
+
+function renderProjectHeroImage(detail, media, pulse){
+  const heroMedia = getProjectHeroMedia(detail, media, pulse);
+  const mediaUrl = getMediaUrl(heroMedia);
+
+  if (mediaUrl) {
+    return `<div class="project-context-image"><img src="${escapeAttr(mediaUrl)}" alt="Project reference" /></div>`;
+  }
+
+  return `
+    <div class="project-context-image">
+      <div class="project-context-image-empty">No reference<br>or progress photo</div>
+    </div>
+  `;
+}
+
+function renderProjectStateStrip(project, detail, pulse){
+  const chips = [];
+  chips.push(`<span class="project-state-chip ${pulse.tone === "alert" ? "is-alert" : ""}">${escapeHtml(pulse.stateLabel)}</span>`);
+
+  if (pulse.currentPart) {
+    chips.push(`<span class="project-state-chip">${escapeHtml(pulse.currentPart)}</span>`);
+  }
+
+  if (detail?.lifecycle_state) {
+    chips.push(`<span class="project-state-chip">${escapeHtml(detail.lifecycle_state)}</span>`);
+  }
+
+  if (pulse.nextLifecycle?.type) {
+    chips.push(`<span class="project-state-chip">Next ${escapeHtml(humanizeLifecycleType(pulse.nextLifecycle.type))}</span>`);
+  }
+
+  return `<div class="project-state-strip">${chips.join("")}</div>`;
+}
+
+function getProjectPlanSummary(detail, appointments){
+  const sessionCount = appointments?.length || 0;
+  const latestAppointment = (appointments || [])
+    .slice()
+    .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())[0] || null;
+
+  const rawSummary = String(detail?.service_summary || "").trim();
+  const cleanSummary = rawSummary && rawSummary !== "Project folder linked to runtime project"
+  ? rawSummary
+  : "No project description yet.";
+
+  return {
+    summary: cleanSummary,
+    type: detail?.project_type || "Project",
+    stage: detail?.lifecycle_state || "Unknown",
+    currentPart: latestAppointment?.service_type || "No session breakdown yet",
+    expectedSessions: detail?.session_count_expected || sessionCount || null,
+    placement: detail?.placement_or_service_area || null,
+    size: detail?.size_or_scope || null,
+    style: detail?.style_or_category || null
+  };
+}
+
+
+function getWorkbookStorageKey(projectId){
+  return `rr_project_workbook_${projectId}`;
+}
+
+function loadWorkbookDraft(projectId){
+  try {
+    const raw = localStorage.getItem(getWorkbookStorageKey(projectId));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveWorkbookDraft(projectId, field, value){
+  const current = loadWorkbookDraft(projectId);
+  current[field] = value;
+  try {
+    localStorage.setItem(getWorkbookStorageKey(projectId), JSON.stringify(current));
+  } catch {}
+}
+
+function getSessionPlanStorageKey(appointmentId){
+  return `rr_session_plan_${appointmentId}`;
+}
+
+function loadSessionPlanDraft(appointmentId){
+  try {
+    return localStorage.getItem(getSessionPlanStorageKey(appointmentId)) || "";
+  } catch {
+    return "";
+  }
+}
+
+function saveSessionPlanDraft(appointmentId, value){
+  try {
+    localStorage.setItem(getSessionPlanStorageKey(appointmentId), value);
+  } catch {}
+}
+
+function getWorkbookUploads(projectId){
+  if (!projectWorkbookUploads[projectId]) projectWorkbookUploads[projectId] = [];
+  return projectWorkbookUploads[projectId];
+}
+
+function renderWorkbookUploads(projectId){
+  const uploads = getWorkbookUploads(projectId);
+  if (!uploads.length) {
+    return `<p class="project-empty-copy">No internal progress photos yet.</p>`;
+  }
+
+  return `
+    <div class="project-photo-grid">
+      ${uploads.map((item) => `
+        <button type="button" class="project-photo-thumb" onclick="openProjectImage('${escapeAttr(item.url)}')">
+          <img src="${escapeAttr(item.url)}" alt="Internal progress photo" />
+          <div class="project-photo-meta">${escapeHtml(item.name || 'Progress photo')}</div>
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function wireWorkbookInputs(projectId){
+  const notesEl = document.getElementById("project-workbook-notes");
+  const reminderEl = document.getElementById("project-workbook-reminder");
+  const filesEl = document.getElementById("project-workbook-files");
+  const photosEl = document.getElementById("project-workbook-photos");
+
+  if (notesEl) {
+    notesEl.addEventListener("input", (event) => {
+      saveWorkbookDraft(projectId, "notes", event.target.value);
+    });
+  }
+
+  if (reminderEl) {
+    reminderEl.addEventListener("input", (event) => {
+      saveWorkbookDraft(projectId, "reminder", event.target.value);
+    });
+  }
+
+  if (filesEl && photosEl) {
+    filesEl.addEventListener("change", (event) => {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      const uploads = getWorkbookUploads(projectId);
+      files.forEach((file) => {
+        uploads.unshift({
+          name: file.name,
+          url: URL.createObjectURL(file)
+        });
+      });
+
+      photosEl.innerHTML = renderWorkbookUploads(projectId);
+      event.target.value = "";
+    });
+  }
+}
+
+function renderSessionPlan(appointments){
+  if (!appointments?.length) {
+    return `<div class="project-card"><p class="project-empty-copy">No sessions are linked to this project yet.</p></div>`;
+  }
+
+  const sortedAppointments = appointments
+    .slice()
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+  return `
+    <div class="project-list">
+      ${sortedAppointments.map((appt, index) => {
+        const sessionNumber = index + 1;
+        const rawServiceType = String(appt.service_type || "").trim();
+        const isRedundantSessionLabel = /^session\s+\d+(?:\s*\/\s*\d+)?$/i.test(rawServiceType);
+        const workLabel = rawServiceType && !isRedundantSessionLabel
+          ? escapeHtml(rawServiceType)
+          : "";
+
+        return `
+          <div class="project-card">
+            <p class="project-card-label">Session ${sessionNumber}</p>
+            <p class="project-row-sub">${escapeHtml(formatDateTime(appt.start_time))} → ${escapeHtml(formatDateTime(appt.end_time))}</p>
+            ${workLabel ? `<p class="project-row-sub">${workLabel}</p>` : ""}
+            <textarea class="project-input-area project-session-plan-input" data-session-plan-id="${escapeAttr(appt.id)}" placeholder="Outline, shading, color pass, touchups, reference reminders...">${escapeHtml(loadSessionPlanDraft(appt.id))}</textarea>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function wireSessionPlanInputs(){
+  projectDrawerBodyEl.querySelectorAll(".project-session-plan-input").forEach((el) => {
+    el.addEventListener("input", (event) => {
+      const appointmentId = event.target.dataset.sessionPlanId;
+      if (!appointmentId) return;
+      saveSessionPlanDraft(appointmentId, event.target.value);
+    });
+  });
+}
+
+function autoSizeProjectInputs(scope = document){
+  scope.querySelectorAll('.project-input-area, .project-input-line').forEach((el) => {
+    const resize = () => {
+      el.style.height = 'auto';
+      el.style.height = `${Math.max(el.scrollHeight, el.classList.contains('project-input-line') ? 40 : 72)}px`;
+    };
+
+    resize();
+
+    if (!el.dataset.autosizeBound) {
+      el.addEventListener('input', resize);
+      el.dataset.autosizeBound = 'true';
+    }
+  });
+}
+
+function setProjectDrawerTab(tab){
+  activeProjectDrawerTab = tab;
+  if (tab !== "activity") {
+    activeIslaSubtab = "messages";
+  }
+
+  projectDrawerBodyEl.querySelectorAll(".project-nav-btn").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.projectTab === tab);
+  });
+
+  projectDrawerBodyEl.querySelectorAll(".project-panel").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.projectPanel === tab);
+  });
+}
+
+function setIslaSubtab(tab){
+  activeIslaSubtab = tab;
+
+  projectDrawerBodyEl.querySelectorAll(".project-subnav-btn").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.projectSubtab === tab);
+  });
+
+  projectDrawerBodyEl.querySelectorAll(".project-subpanel").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.projectSubpanel === tab);
+  });
+}
+
+
+
+function renderDrawerSessions(appointments, completion){
+  if (!appointments?.length) {
+    return `<div class="project-card"><p class="project-empty-copy">No sessions are linked to this project yet.</p></div>`;
+  }
+
+  const completionMap = new Map((completion || []).map((row) => [row.appointment_id, row]));
+  const sortedAppointments = appointments
+    .slice()
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+  return `
+    <div class="project-list">
+      ${sortedAppointments.map((appt, index) => {
+        const control = completionMap.get(appt.id);
+        const tags = [];
+        if (appt.status) tags.push(`<span class="project-tag">${escapeHtml(appt.status)}</span>`);
+        if (control?.status) {
+          tags.push(`<span class="project-tag ${control.status === "blocked_missing_contact" || control.status === "escalated" ? "is-alert" : ""}">${escapeHtml(mapCompletionStatusLabel(control.status))}</span>`);
+        }
+        if (control?.here_signal_present) tags.push(`<span class="project-tag">HERE</span>`);
+
+        return `
+          <div class="project-row">
+            <div class="project-row-top">
+              <p class="project-row-title">${escapeHtml(appt.service_type || `Session ${index + 1}`)}</p>
+              <span class="project-status-chip">${escapeHtml(appt.status || "scheduled")}</span>
+            </div>
+            <p class="project-row-meta">${escapeHtml(formatDateTime(appt.start_time))} → ${escapeHtml(formatDateTime(appt.end_time))}</p>
+            <p class="project-row-sub">Client: ${escapeHtml(appt.client_name || "Unknown")} · Artist: ${escapeHtml(appt.artist_name || "Unknown")}</p>
+            ${tags.length ? `<div class="project-tag-row">${tags.join("")}</div>` : ""}
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderDrawerLifecycle(lifecycle){
+  if (!lifecycle?.length) {
+    return `<div class="project-card"><p class="project-empty-copy">No scheduled Isla actions are linked to this project yet.</p></div>`;
+  }
+
+  const hasNumberedCarewatch = lifecycle.some((item) =>
+    /^carewatch_[123]$/i.test(String(item.type || ""))
+  );
+
+  const filteredLifecycle = lifecycle.filter((item) => {
+    const rawType = String(item.type || "").toLowerCase();
+    if (hasNumberedCarewatch && rawType === "carewatch") return false;
+    return true;
+  });
+
+  const sortedLifecycle = filteredLifecycle
+    .slice()
+    .sort((a, b) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime());
+
+  return `
+    <div class="project-proof-list">
+      ${sortedLifecycle.map((item) => {
+        const status = String(item.status || "pending").toLowerCase();
+        const statusLabel = status === "completed"
+          ? "Completed"
+          : status === "sent"
+            ? "Sent"
+            : status === "cancelled"
+              ? "Cancelled"
+              : "Pending";
+
+        return `
+          <div class="project-proof-row">
+            <p class="project-proof-type">${escapeHtml(humanizeLifecycleType(item.type))}</p>
+            <p class="project-proof-date">${escapeHtml(formatDateTime(item.due_at))}</p>
+            <span class="project-proof-status is-${escapeAttr(status)}">${escapeHtml(statusLabel)}</span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderDrawerMedia(folderDetail, media){
+  const grouped = {
+    reference: [],
+    healing_issue: [],
+    portfolio: [],
+    internal: []
+  };
+
+  (media || []).forEach((item) => {
+    const key = item.media_type || "internal";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+
+  function renderMediaGroup(label, items, emptyCopy){
+    if (!items?.length) {
+      return `
+        <div class="project-card">
+          <p class="project-card-label">${label}</p>
+          <p class="project-empty-copy">${emptyCopy}</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="project-card">
+        <p class="project-card-label">${label}</p>
+        <div class="project-list">
+          ${items.map((item) => `
+            <div class="project-row">
+              <p class="project-row-title">${escapeHtml(item.media_id || item.media_type || "Media")}</p>
+              <p class="project-row-meta">${escapeHtml(item.media_source || "unknown source")} · ${escapeHtml(item.media_status || "unknown status")}</p>
+              <p class="project-row-sub">${escapeHtml(item.storage_bucket || "no bucket")} / ${escapeHtml(item.storage_path || "no path")}</p>
+              <div class="project-tag-row">
+                ${item.portfolio_eligible ? `<span class="project-tag">Portfolio eligible</span>` : ""}
+                ${item.display_eligible ? `<span class="project-tag">Display eligible</span>` : ""}
+                ${item.consult_eligible ? `<span class="project-tag">Consult eligible</span>` : ""}
+                ${item.internal_only ? `<span class="project-tag is-alert">Internal only</span>` : ""}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  const links = [];
+  if (folderDetail?.reference_folder_link) {
+    links.push(`
+      <a class="project-link-card" href="${escapeAttr(folderDetail.reference_folder_link)}" target="_blank" rel="noopener noreferrer">
+        <p class="project-link-title">Reference folder</p>
+        <p class="project-link-copy">Artist-side inspiration and prep context before the appointment.</p>
+      </a>
+    `);
+  }
+  if (folderDetail?.project_folder_link) {
+    links.push(`
+      <a class="project-link-card" href="${escapeAttr(folderDetail.project_folder_link)}" target="_blank" rel="noopener noreferrer">
+        <p class="project-link-title">Project folder</p>
+        <p class="project-link-copy">Master project folder for notes, media, and operating context.</p>
+      </a>
+    `);
+  }
+  if (folderDetail?.outcome_media_link) {
+    links.push(`
+      <a class="project-link-card" href="${escapeAttr(folderDetail.outcome_media_link)}" target="_blank" rel="noopener noreferrer">
+        <p class="project-link-title">Outcome media</p>
+        <p class="project-link-copy">Post-session and healed-result media destination.</p>
+      </a>
+    `);
+  }
+
+  return `
+    <div class="project-section">
+      <div class="project-card">
+        <p class="project-card-label">Portfolio consent</p>
+    <p class="project-row-sub">Public or showcase use requires explicit consent.</p> 
+     </div>
+      ${links.length ? `<div class="project-link-list">${links.join("")}</div>` : `<div class="project-card"><p class="project-empty-copy">No linked folders yet.</p></div>`}
+      ${renderMediaGroup("Reference photos", grouped.reference, "No reference photos yet.")}
+      ${renderMediaGroup("Healing / escalation photos", grouped.healing_issue, "No healing photos yet.")}
+      ${renderMediaGroup("Portfolio photos", grouped.portfolio, "No portfolio photos yet.")}
+      ${renderMediaGroup("Internal media", grouped.internal, "No internal media yet.")}
+    </div>
+  `;
+}
+
+function renderDrawerEvents(events){
+  if (!events?.length) {
+    return `<div class="project-card"><p class="project-empty-copy">No client-facing Isla activity has been recorded for this project yet.</p></div>`;
+  }
+
+  const sortedEvents = events
+    .slice()
+    .sort((a, b) => new Date(b.sent_at || b.created_at || b.occurred_at || 0).getTime() - new Date(a.sent_at || a.created_at || a.occurred_at || 0).getTime());
+
+  return `
+    <div class="project-list">
+      ${sortedEvents.map((item) => {
+        const direction = String(item.direction || item.message_direction || "outbound").toLowerCase();
+        const channel = String(item.channel || item.message_channel || item.event_source || "sms").toUpperCase();
+        const sentAt = item.sent_at || item.created_at || item.occurred_at || null;
+        const status = String(item.status || item.delivery_status || item.event_status || "sent");
+
+        const title = item.template_name
+          || item.message_type
+          || item.event_type
+          || (direction === "inbound" ? "Client message" : "Isla message");
+
+        const body = item.message_body
+          || item.body
+          || item.text
+          || item.message_text
+          || item.preview_text
+          || item.event_detail
+          || item.detail
+          || "No message preview available.";
+
+        const metaParts = [];
+        if (channel) metaParts.push(channel);
+        if (sentAt) metaParts.push(formatDateTime(sentAt));
+        if (status) metaParts.push(status);
+
+        return `
+          <div class="project-row">
+            <div class="project-row-top">
+              <p class="project-row-title">${escapeHtml(title)}</p>
+              <span class="project-status-chip">${escapeHtml(direction === "inbound" ? "Inbound" : "Sent")}</span>
+            </div>
+            <p class="project-row-meta">${escapeHtml(metaParts.join(" · "))}</p>
+            <p class="project-row-sub">${escapeHtml(body)}</p>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderProjectDrawer(data, projectId){
+  const project = data?.project || {};
+  const detail = data?.folderDetail || null;
+  const appointments = data?.appointments || [];
+  const completion = data?.completion || [];
+  const lifecycle = data?.lifecycle || [];
+  const media = data?.media || [];
+  const events = data?.messages || data?.events || [];
+
+  const pulse = getProjectPulse(data);
+  const plan = getProjectPlanSummary(detail, appointments);
+
+  const detailTags = [];
+  if (detail?.project_type) detailTags.push(`<span class="project-tag">${escapeHtml(detail.project_type)}</span>`);
+  if (detail?.lifecycle_state) detailTags.push(`<span class="project-tag">Lifecycle: ${escapeHtml(detail.lifecycle_state)}</span>`);
+  if (detail?.booking_state) detailTags.push(`<span class="project-tag">Booking: ${escapeHtml(detail.booking_state)}</span>`);
+  if (detail?.care_state) detailTags.push(`<span class="project-tag">Care: ${escapeHtml(detail.care_state)}</span>`);
+  if (detail?.review_state) detailTags.push(`<span class="project-tag">Review: ${escapeHtml(detail.review_state)}</span>`);
+  if (detail?.portfolio_state) detailTags.push(`<span class="project-tag">Portfolio: ${escapeHtml(detail.portfolio_state)}</span>`);
+
+  const tabs = ["overview","plan","activity","media","lifetime","contact"];
+  const workbookDraft = loadWorkbookDraft(projectId);
+
+const projectName = project.client_name || "Project";
+const artistLabel = project.artist_name || detail?.artist_name || "";
+projectDrawerTitleEl.textContent = projectName;
+if (projectDrawerArtistEl) {
+  projectDrawerArtistEl.textContent = artistLabel;
+}
+  projectDrawerBodyEl.innerHTML = `
+    <div class="project-drawer-topstack">
+      <section class="project-context-shell">
+        <div class="project-context-hero">
+          ${renderProjectHeroImage(detail, media, pulse)}
+
+          <div class="project-context-card">
+<h3 class="project-context-title">${escapeHtml(String(plan.type || "Project").replace(/^consult$/i, "Consultation"))}</h3>
+
+<p class="project-context-copy">
+  ${pulse.nextAppointment 
+    ? `Appointment · ${escapeHtml(formatDateTime(pulse.nextAppointment.start_time))}` 
+    : "No appointment scheduled"}
+</p>
+
+<p class="project-context-copy">
+  ${escapeHtml(plan.summary || "No project description yet.")}
+</p>
+            <div class="project-state-strip"></div>
+          </div>
+        </div>
+
+        <div class="project-spotlight ${pulse.tone === "alert" ? "is-alert" : ""}">
+          <p class="project-spotlight-title">${escapeHtml(pulse.spotlightTitle)}</p>
+          <p class="project-spotlight-copy">${escapeHtml(pulse.spotlightCopy)}</p>
+          ${pulse.tone === "alert" ? `<p class="project-spotlight-copy"><strong>${escapeHtml(pulse.nextAction)}</strong></p>` : ""}
+        </div>
+      </section>
+
+      <nav class="project-nav" aria-label="Project sections">
+        ${tabs.map((tab) => `
+          <button type="button" class="project-nav-btn ${tab === activeProjectDrawerTab ? "is-active" : ""}" data-project-tab="${tab}">${formatProjectTabLabel(tab)}</button>
+        `).join("")}
+      </nav>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "overview" ? "is-active" : ""}" data-project-panel="overview">
+      <section class="project-section">
+        <h3 class="project-section-title">Workbook</h3>
+        <p class="project-section-sub">Working notes, internal progress, and next-session continuity.</p>
+
+        <div class="project-card">
+          <p class="project-card-label">Project summary</p>
+          <p class="project-card-value">${escapeHtml(plan.summary || "Project summary not attached yet.")}</p>
+          <p class="project-row-sub">${escapeHtml(plan.placement || "Placement not attached")}${(plan.style || plan.size) ? ` · ${escapeHtml(plan.style || plan.size)}` : ""}</p>
+        </div>
+
+        <div class="project-card">
+          <p class="project-card-label">Artist notes</p>
+          <textarea class="project-input-area" id="project-workbook-notes" placeholder="Add internal notes for yourself or the next artist touch...">${escapeHtml(workbookDraft.notes || "")}</textarea>
+        </div>
+
+        <div class="project-card">
+          <p class="project-card-label">Internal progress photos</p>
+          <input class="project-file-input" id="project-workbook-files" type="file" accept="image/*" multiple />
+          <p class="project-upload-note">Internal-only progress photos for continuity. These are not client-facing.</p>
+          <div id="project-workbook-photos">${renderWorkbookUploads(projectId)}</div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-card-label">Next-session reminder</p>
+          <textarea class="project-input-line" id="project-workbook-reminder" placeholder="What should be remembered next time?">${escapeHtml(workbookDraft.reminder || "")}</textarea>
+        </div>
+      </section>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "activity" ? "is-active" : ""}" data-project-panel="activity">
+      <section class="project-section">
+        <div class="project-subnav" aria-label="Isla sections">
+          <button type="button" class="project-subnav-btn ${activeIslaSubtab === "messages" ? "is-active" : ""}" data-project-subtab="messages">Messages</button>
+          <button type="button" class="project-subnav-btn ${activeIslaSubtab === "upcoming" ? "is-active" : ""}" data-project-subtab="upcoming">Scheduled Actions</button>
+        </div>
+
+        <div class="project-subpanel ${activeIslaSubtab === "messages" ? "is-active" : ""}" data-project-subpanel="messages">
+          <div class="project-section">
+            <h3 class="project-section-title">Isla Messages</h3>
+            <p class="project-section-sub">Messages Isla has already sent.</p>
+            ${renderDrawerEvents(events)}
+          </div>
+        </div>
+
+               <div class="project-subpanel ${activeIslaSubtab === "upcoming" ? "is-active" : ""}" data-project-subpanel="upcoming">
+          <div class="project-section">
+            ${renderDrawerLifecycle(lifecycle)}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "media" ? "is-active" : ""}" data-project-panel="media">
+      <section class="project-section">
+        <h3 class="project-section-title">Media</h3>
+        <p class="project-section-sub">Reference, healing, portfolio, and internal media.</p> 
+       ${renderDrawerMedia(detail, media)}
+      </section>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "lifetime" ? "is-active" : ""}" data-project-panel="lifetime">
+      <section class="project-section">
+        <h3 class="project-section-title">Lifetime</h3>
+        <p class="project-section-sub">Client history with this shop.</p>
+        <div class="project-card">
+          <p class="project-card-label">Lifetime history</p>
+          <p class="project-empty-copy">No lifetime history is attached yet.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "contact" ? "is-active" : ""}" data-project-panel="contact">
+      <section class="project-section">
+        <h3 class="project-section-title">Contact</h3>
+        <p class="project-section-sub">Client details.</p> 
+       <div class="project-card">
+          <p class="project-card-label">Client</p>
+          <p class="project-card-value">${escapeHtml(detail?.client_name || project.client_name || "Unknown")}</p>
+          <p class="project-row-sub">Phone: ${escapeHtml(detail?.client_phone || "Not attached yet")}</p>
+          <p class="project-row-sub">Email: ${escapeHtml(detail?.client_email || "Not attached yet")}</p>
+        </div>
+        <div class="project-card">
+          <p class="project-card-label">Studio history</p>
+        <p class="project-row-sub">Studio-only history.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="project-panel ${activeProjectDrawerTab === "plan" ? "is-active" : ""}" data-project-panel="plan">
+      <section class="project-section">
+        <h3 class="project-section-title">Plan</h3>
+<p class="project-section-sub">Real session-by-session planning notes for this project.</p>
+        ${renderSessionPlan(appointments)}
+      </section>
+    </div>
+  `;
+
+  projectDrawerBodyEl.querySelectorAll(".project-nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setProjectDrawerTab(btn.dataset.projectTab);
+    });
+  });
+  projectDrawerBodyEl.querySelectorAll(".project-subnav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setIslaSubtab(btn.dataset.projectSubtab);
+    });
+  });
+  wireWorkbookInputs(projectId);
+  wireSessionPlanInputs();
+  autoSizeProjectInputs(projectDrawerBodyEl);
 }
 function getBusinessName(){
   return CALENDAR_STATE.businessProfile?.name || "";
@@ -1108,11 +2779,12 @@ async function loadCalendarData(){
         client: a.client_name,
         artist: a.artist_name,
         type: a.service_type || "Appointment",
-        status: a.status || "scheduled",
+               status: a.status || "scheduled",
         completionStatus: attention?.completion_status || "",
         hereSignalPresent: !!attention?.here_signal_present,
+        projectId: a.project_id,
         projectUrl: `/operator/projects.html?project=${a.project_id}`
-      };
+     };
     });
 
     CALENDAR_STATE.lifecycleEvents = (lifecycleRaw || []).map((e) => {
@@ -1687,7 +3359,8 @@ function buildTimeline(){
            renderedAppointments.forEach((item) => {
       timelineItems.push({
         kind: "appointment",
-        time: item.time,
+               time: item.time,
+        projectId: item.projectId,
         projectUrl: item.projectUrl,
         artist: item.artist,
         client: item.client,
@@ -1773,8 +3446,8 @@ function buildTimeline(){
             const islaGhostClass = item.ghost ? " appt-ghost" : "";
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             return `
-                <div class="appt${islaGhostClass}${stateClass}" data-project-url="${item.projectUrl}">
-                  <div class="appt-client">${item.client}</div>
+              <div class="appt${islaGhostClass}${stateClass}" data-project-id="${item.projectId || ""}" data-project-url="${item.projectUrl}">
+                   <div class="appt-client">${item.client}</div>
                   <div class="appt-type-row">
                     <span class="rr-buoy ${item.buoyState ? `is-visible is-${item.buoyState}` : ''}" aria-hidden="true"></span>
                     <div class="appt-type">${item.type ? '· ' + item.type : ''}${item.completionStatus ? ' · ' + mapCompletionStatusLabel(item.completionStatus) : ''}${item.hereSignalPresent ? ' · HERE' : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
@@ -1924,9 +3597,20 @@ function setArtist(artist) {
 }
 
 function wireProjectLinks() {
-  const items = document.querySelectorAll(".appt[data-project-url], .isla[data-project-url]");
+  const appointmentItems = document.querySelectorAll(".appt[data-project-id]");
+  const lifecycleItems = document.querySelectorAll(".isla[data-project-url]");
 
-  items.forEach((item) => {
+  appointmentItems.forEach((item) => {
+    item.style.cursor = "pointer";
+    item.addEventListener("click", () => {
+      const projectId = item.getAttribute("data-project-id");
+      if (projectId) {
+        openProjectDrawer(projectId);
+      }
+    });
+  });
+
+  lifecycleItems.forEach((item) => {
     item.style.cursor = "pointer";
     item.addEventListener("click", () => {
       const url = item.getAttribute("data-project-url");
@@ -1935,6 +3619,37 @@ function wireProjectLinks() {
       }
     });
   });
+}
+
+function closeProjectDrawer(){
+  if (!projectDrawerOverlayEl) return;
+  projectDrawerOverlayEl.classList.remove("is-open");
+  projectDrawerOverlayEl.setAttribute("aria-hidden", "true");
+}
+
+async function openProjectDrawer(projectId){
+  if (!projectDrawerOverlayEl || !projectDrawerTitleEl || !projectDrawerBodyEl) return;
+
+  activeProjectDrawerTab = "overview";
+  projectDrawerOverlayEl.classList.add("is-open");
+  projectDrawerOverlayEl.setAttribute("aria-hidden", "false");
+  projectDrawerTitleEl.textContent = "Loading project…";
+  projectDrawerBodyEl.innerHTML = `<div class="project-drawer-loading">Loading project…</div>`;
+
+  try {
+    const response = await fetch(`${getApiBase()}/api/project-folder?id=${encodeURIComponent(projectId)}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || `Project folder load failed: ${response.status}`);
+    }
+
+    renderProjectDrawer(data, projectId);
+  } catch (error) {
+    console.error("Project drawer load failed:", error);
+    projectDrawerTitleEl.textContent = "Project";
+    projectDrawerBodyEl.innerHTML = `<div class="project-drawer-error">Could not load this project right now.</div>`;
+  }
 }
 /* =========================
    NAVIGATION
@@ -2014,7 +3729,23 @@ if(backTopBtn){
     backTopBtn.classList.toggle("is-visible", window.scrollY > 520);
   });
 }
+if (projectDrawerCloseEl) {
+  projectDrawerCloseEl.addEventListener("click", closeProjectDrawer);
+}
 
+if (projectDrawerOverlayEl) {
+  projectDrawerOverlayEl.addEventListener("click", (event) => {
+    if (event.target === projectDrawerOverlayEl) {
+      closeProjectDrawer();
+    }
+  });
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeProjectDrawer();
+  }
+});
 // Bootstrapper: load data, then build UI
 // subscribeToRealtime();
 // Bootstrapper: load data, then build UI
@@ -2088,6 +3819,9 @@ async function reloadCalendar(){
   buildTimeline();
   snapToDate(previousBaseDate, { updateStrip: true, focus: false });
 }
+
+
+
 </script>
 </body>
 </html>

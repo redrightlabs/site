@@ -288,10 +288,6 @@ app.post("/api/dental/desk/schedule_followup", (req, res) => {
   return jsonOk(res, { ok: true, outcome: "accepted" });
 });
 
-// ===== Hard rule: no HTML error pages for API =====
-app.use("/api", (req, res) => {
-  jsonOk(res, { ok: false, reason: "not_found" });
-});
 
 app.post("/twilio", async (req, res) => {
   console.log("📩 Twilio hit:", req.body);
@@ -506,6 +502,240 @@ app.post("/test/send-completion-prompts", async (req, res) => {
     console.error("🔥 /test/send-completion-prompts failed:", err);
     return res.status(500).json({ ok: false, error: err?.message || "unknown error" });
   }
+});
+
+app.get('/api/project', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
+  const { id } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Missing project id' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        id,
+        status,
+        client_id,
+        primary_artist_id
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    // Fetch client name
+    let client_name = "Unknown";
+    if (data.client_id) {
+      const { data: client } = await supabase
+        .from('clients')
+        .select('name')
+        .eq('id', data.client_id)
+        .maybeSingle();
+
+      if (client?.name) client_name = client.name;
+    }
+
+    // Fetch artist name
+    let artist_name = "Unknown";
+    if (data.primary_artist_id) {
+      const { data: artist } = await supabase
+        .from('artists')
+        .select('artist_name')
+        .eq('id', data.primary_artist_id)
+        .maybeSingle();
+
+      if (artist?.artist_name) artist_name = artist.artist_name;
+    }
+
+    res.json({
+      id: data.id,
+      status: data.status,
+      client_name,
+      artist_name
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load project' });
+  }
+});
+
+app.get('/api/project-folder', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
+
+  const { id } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Missing project id' });
+  }
+
+  try {
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select(`
+        id,
+        shop_id,
+        status,
+        client_id,
+        primary_artist_id
+      `)
+      .eq('id', id)
+      .single();
+
+    if (projectError) throw projectError;
+
+    let client_name = 'Unknown';
+    if (project.client_id) {
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id, name')
+        .eq('id', project.client_id)
+        .maybeSingle();
+
+      if (client?.name) client_name = client.name;
+    }
+
+    let artist_name = 'Unknown';
+    if (project.primary_artist_id) {
+      const { data: artist } = await supabase
+        .from('artists')
+        .select('id, artist_name')
+        .eq('id', project.primary_artist_id)
+        .maybeSingle();
+
+      if (artist?.artist_name) artist_name = artist.artist_name;
+    }
+
+    const { data: appointmentsData, error: appointmentsError } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        client_name,
+        artist_name,
+        start_time,
+        end_time,
+        service_type,
+        status
+      `)
+      .eq('project_id', project.id)
+      .order('start_time', { ascending: true });
+
+    if (appointmentsError) throw appointmentsError;
+
+    const appointmentIds = (appointmentsData || []).map((a) => a.id).filter(Boolean);
+
+    let completionData = [];
+    if (appointmentIds.length) {
+      const { data, error } = await supabase
+        .from('completion_control')
+        .select(`
+          appointment_id,
+          status,
+          initial_prompt_sent_at,
+          nudge_sent_at,
+          escalation_sent_at,
+          resolved_at,
+          here_signal_present,
+          founder_attention_required,
+          escalation_contact_name,
+          escalation_contact_phone,
+          escalation_contact_role
+        `)
+        .in('appointment_id', appointmentIds);
+
+      if (error) throw error;
+      completionData = data || [];
+    }
+
+    const { data: lifecycleData, error: lifecycleError } = await supabase
+      .from('lifecycle_events')
+      .select(`
+        id,
+        appointment_id,
+        type,
+        due_at,
+        status,
+        is_blocked,
+        created_at
+      `)
+      .eq('project_id', project.id)
+      .order('due_at', { ascending: true });
+
+    if (lifecycleError) throw lifecycleError;
+
+    const { data: folderRow, error: folderRowError } = await supabase
+      .from('project_folders')
+      .select('id, project_folder_id, project_id')
+      .eq('project_id', project.id)
+      .maybeSingle();
+
+    if (folderRowError) throw folderRowError;
+
+    let folderDetail = null;
+    if (folderRow?.project_id) {
+      const { data: detailRow, error: detailError } = await supabase
+        .from('v_project_detail')
+        .select('*')
+        .eq('id', folderRow.id)
+        .maybeSingle();
+
+      if (detailError) throw detailError;
+      folderDetail = detailRow || folderRow;
+    }
+
+    let media = [];
+    if (folderDetail?.project_folder_id) {
+      const { data, error } = await supabase
+        .from('v_project_media')
+        .select('*')
+        .eq('project_folder_id', folderDetail.project_folder_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      media = data || [];
+    }
+
+    let events = [];
+    if (folderDetail?.id) {
+      const { data, error } = await supabase
+        .from('project_events')
+        .select('*')
+        .eq('project_folder_id', folderDetail.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      events = data || [];
+    }
+
+    return res.json({
+      project: {
+        id: project.id,
+        shop_id: project.shop_id,
+        status: project.status,
+        client_name,
+        artist_name
+      },
+      folderDetail,
+      appointments: appointmentsData || [],
+      completion: completionData,
+      lifecycle: lifecycleData || [],
+      media,
+      events
+    });
+  } catch (err) {
+    console.error('project-folder load failed', err);
+    return res.status(500).json({ error: 'Failed to load project folder' });
+  }
+});
+
+// ===== Hard rule: no HTML error pages for API =====
+app.use("/api", (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
+  jsonOk(res, { ok: false, reason: "not_found" });
 });
 
 const PORT = 8787;

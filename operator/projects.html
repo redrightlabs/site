@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Project · RedRight</title>
+
+  <style>
+    body{
+      margin:0;
+      background:#07080b;
+      color:#efe8df;
+      font-family:system-ui;
+      padding:20px;
+    }
+
+    .title{
+      font-size:20px;
+      margin-bottom:10px;
+    }
+
+    .card{
+      padding:16px;
+      border-radius:12px;
+      background:#111;
+      border:1px solid rgba(255,255,255,.08);
+    }
+  </style>
+</head>
+<body>
+
+<div class="title">Project</div>
+
+<div class="card" id="project-card">
+  Loading project...
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const projectId = params.get("project");
+
+async function loadProject(){
+  const res = await fetch(`/api/project?id=${projectId}`);
+  const data = await res.json();
+
+  document.getElementById("project-card").innerHTML = `
+    <div><strong>Client:</strong> ${data.client_name}</div>
+    <div><strong>Artist:</strong> ${data.artist_name}</div>
+    <div><strong>Status:</strong> ${data.status}</div>
+  `;
+}
+
+loadProject();
+</script>
+
+</body>
+</html>
