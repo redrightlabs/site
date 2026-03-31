@@ -248,6 +248,7 @@ Deno.serve(async (req: Request) => {
       sessionCount: 1,
       healingDays: 21,
       sessionHours: 4,
+      projectType: safeProjectType,
     });
 
        const scheduleWriteback = await applyScheduleToProjectFolder(projectFolderId, schedule);

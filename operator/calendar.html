@@ -17,7 +17,8 @@
   --sans:"Cormorant Garamond", Garamond, Georgia, serif;
   --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Garamond, Georgia, serif;
   --hero:"Cormorant Garamond", Garamond, Georgia, serif;
-  --project-sticky-offset: 198px;
+   --drawer-header-height: 72px;
+  --drawer-topstack-height: 184px;
 }
 
 body{
@@ -705,6 +706,7 @@ body{
   align-items:flex-start;
   justify-content:space-between;
   gap:12px;
+  height:72px;
   padding:10px 18px 7px;
   background:linear-gradient(rgba(17,19,23,.98), rgba(13,15,19,.94));
   border-bottom:1px solid rgba(255,255,255,.06);
@@ -782,7 +784,10 @@ body{
   grid-template-columns:1fr;
   gap:12px;
 }
-
+.project-drawer-body{
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
 /* Removed duplicate project-drawer-topstack, project-context-shell, project-context-card, project-context-kicker, project-context-title, project-context-copy, project-pulse-row, project-pulse-chip, project-pulse-chip.is-healthy, project-pulse-chip.is-warn, project-pulse-chip.is-calm, project-mini-grid, project-mini-card, project-mini-label, project-mini-value, project-nav, project-nav::-webkit-scrollbar, project-nav-btn, project-nav-btn.is-active, project-panel, project-panel.is-active, project-callout, project-callout.is-alert, project-callout-title, project-callout-copy */
 
 .project-context-hero{
@@ -791,7 +796,9 @@ body{
   gap:8px;
   align-items:stretch;
 }
-
+.project-context-shell{
+  min-height:110px;
+}
 .project-context-image{
   min-height:76px;
   border-radius:13px;
@@ -881,19 +888,7 @@ body{
   line-height:1.28;
 }
 
-.project-drawer-topstack{
-  position:sticky;
-  top:0;
-  z-index:3;
-  display:grid;
-  grid-template-columns:1fr;
-  gap:7px;
-  margin:0 -18px 8px;
-  padding:7px 18px 7px;
-  background:linear-gradient(rgba(13,15,19,.98), rgba(13,15,19,.94));
-  border-bottom:1px solid rgba(255,255,255,.05);
-  backdrop-filter:blur(14px);
-}
+
 
 .project-context-shell{
   display:grid;
@@ -1050,18 +1045,27 @@ body{
 
 .project-subnav{
   position:sticky;
-  top:var(--project-sticky-offset);
-  z-index:2;
+  top: var(--drawer-topstack-height);
+  z-index:3;
   display:flex;
   gap:0;
   margin:0;
   border-bottom:1px solid rgba(255,255,255,.06);
   background:#0d0f13;
 }
+.project-subnav.is-hidden{
+  display:none;
+}
 .project-subnav::-webkit-scrollbar{
   display:none;
 }
-
+.project-drawer-topstack{
+  position:sticky;
+  top:0;
+  z-index:4;
+  padding-bottom:8px;
+  background:linear-gradient(rgba(13,15,19,.98), rgba(13,15,19,.94));
+}
 .project-subnav-btn{
   flex:1;
   padding:10px 0 8px;
@@ -1493,7 +1497,7 @@ body{
 <style>
 @media (max-width: 520px){
   :root{
-    --project-sticky-offset: 184px;
+    --drawer-topstack-height: 214px;
   }
 
   .project-context-hero{
@@ -1591,6 +1595,7 @@ const projectDrawerCloseEl = document.getElementById("project-drawer-close");
 
 let activeProjectDrawerTab = "overview";
 let activeIslaSubtab = "messages";
+let activeProjectAppointmentId = null;
 const projectWorkbookUploads = {};
 
 let today = new Date();
@@ -1610,7 +1615,7 @@ function getCurrentVertical(){
 }
 
 const DATA_ENDPOINT = "/operator/data/calendar.json";
-const DEFAULT_SHOP_ID = "b529479b-6fbd-4ded-9abd-b8a3c66326ba";
+const DEFAULT_SHOP_ID = null;
 let activeShopId = null;
 let activeAppointmentIds = new Set();
 let calendarChannel = null;
@@ -1640,7 +1645,7 @@ function getResolvedShopId(){
     if (storedShopId) return storedShopId;
   } catch {}
 
-  return DEFAULT_SHOP_ID;
+  return null;
 }
 
 function setActiveShopId(shopId){
@@ -1762,6 +1767,28 @@ function normalizeAppointment(record){
 }
 
 function normalizeLifecycleEvent(record){
+  if (record.type === "consultation") {
+    return {
+      id: record.id,
+      date: normalizeDateKey(record.date || record.dueDate || record.when),
+      time: normalizeTimeLabel(record.time || record.dueTime || record.startTime || "12:00 PM"),
+      type: "Consult",
+      client: record.client || record.clientName || "Client",
+      artist: record.artist || record.artistName || record.provider || record.providerName || "Provider",
+      projectContext: "Consult",
+      detail: "Consult session",
+      projectUrl: record.projectUrl || (record.projectId ? `/operator/projects.html?project=${record.projectId}` : "")
+    };
+  }
+
+  // Consultation projects should not show full post-session automation.
+  if (record.projectStage === "consult") {
+    const allowed = ["here", "done_check", "followup", "consultation"];
+    if (!allowed.includes(record.type)) {
+      return null;
+    }
+  }
+
   const dateKey = normalizeDateKey(record.date || record.dueDate || record.when);
   if (!dateKey) return null;
 
@@ -1781,7 +1808,7 @@ function normalizeLifecycleEvent(record){
 function mapLifecycleDetail(type){
   switch ((type || "").toLowerCase()) {
     case "prep":
-      return "Preparation reminder";
+      return "Appointment reminder";
     case "here":
       return "Arrival check-in";
     case "done_check":
@@ -1811,7 +1838,7 @@ function mapLifecycleDetail(type){
 
 function mapLifecycleTypeLabel(type){
   switch(type){
-    case "prep": return "Prep";
+    case "prep": return "Reminder";
     case "here": return "Arrival";
     case "done_check": return "Done?";
     case "aftercare": return "Aftercare";
@@ -1881,7 +1908,17 @@ function humanizeLifecycleType(type){
         .replace(/\b\w/g, (m) => m.toUpperCase());
   }
 }
+function cleanServiceLabel(value, fallback = "Session"){
+  const raw = String(value || "").trim();
+  if (!raw) return fallback;
 
+  if (/^multi[_\s-]?session$/i.test(raw)) return "Project";
+  if (/^single[_\s-]?session$/i.test(raw)) return "Session";
+  if (/^session\s+\d+(?:\s*\/\s*\d+)?$/i.test(raw)) return fallback;
+  if (/^consult(?:ation)?$/i.test(raw)) return "Consultation";
+
+  return raw;
+}
 function escapeAttr(value){
   return escapeHtml(value).replace(/`/g, "&#96;");
 }
@@ -1931,13 +1968,13 @@ function getProjectPulse(data){
     return {
       tone: "alert",
       stateLabel: "Needs intervention",
-      summary: detail?.service_summary || "Project",
+      summary: detail?.service_summary || "Client project",
       subcopy: blockingCompletion.length === 1 ? "One checkpoint is stuck." : `${blockingCompletion.length} checkpoints are stuck.`,
       spotlightTitle: "Intervention required",
       spotlightCopy: "Something is blocked and Isla needs human help to continue cleanly.",
       nextAction: "Unblock the completion path.",
-      currentPart: latestAppointment?.service_type || "No session breakdown yet",
-      nextAppointment,
+      currentPart: cleanServiceLabel(latestAppointment?.service_type, detail?.service_summary || "Project"), 
+     nextAppointment,
       nextLifecycle,
       completedAppointment
     };
@@ -1947,12 +1984,12 @@ function getProjectPulse(data){
     return {
       tone: "calm",
       stateLabel: "Aftercare active",
-      summary: detail?.service_summary || "Project",
+      summary: detail?.service_summary || "Client project",
       subcopy: "The appointment happened. Isla is handling the follow-up.",
       spotlightTitle: "Aftercare is in motion",
       spotlightCopy: `Next touch: ${humanizeLifecycleType(nextLifecycle.type)}.`,
       nextAction: `Next: ${humanizeLifecycleType(nextLifecycle.type)}.`,
-      currentPart: completedAppointment.service_type || "Completed session",
+      currentPart: cleanServiceLabel(completedAppointment.service_type, detail?.service_summary || "Completed session"),
       nextAppointment,
       nextLifecycle,
       completedAppointment
@@ -1963,13 +2000,13 @@ function getProjectPulse(data){
     return {
       tone: "calm",
       stateLabel: "On course",
-      summary: detail?.service_summary || "Project",
+      summary: detail?.service_summary || "Client project",
       subcopy: "Project context is ready when you need it.",
       spotlightTitle: "Current context",
-      spotlightCopy: `${nextAppointment.service_type || "Session"} · ${formatDateTime(nextAppointment.start_time)}`,
+      spotlightCopy: `${detail?.service_summary || nextAppointment.service_type || "Upcoming session"} · ${formatDateTime(nextAppointment.start_time)}`,
       nextAction: nextLifecycle ? `Next: ${humanizeLifecycleType(nextLifecycle.type)}.` : "No urgent action.",
-      currentPart: nextAppointment.service_type || "No session breakdown yet",
-      nextAppointment,
+      currentPart: cleanServiceLabel(nextAppointment.service_type, detail?.service_summary || "Project"), 
+     nextAppointment,
       nextLifecycle,
       completedAppointment
     };
@@ -1978,12 +2015,12 @@ function getProjectPulse(data){
   return {
     tone: "calm",
     stateLabel: "Quiet",
-    summary: detail?.service_summary || "Project",
+    summary: detail?.service_summary || "Client project",
     subcopy: "Nothing urgent is surfacing.",
     spotlightTitle: "Quiet waters",
     spotlightCopy: "This project looks calm right now.",
     nextAction: "No intervention needed.",
-    currentPart: latestAppointment?.service_type || "No session breakdown yet",
+    currentPart: cleanServiceLabel(latestAppointment?.service_type, detail?.service_summary || "Project"),
     nextAppointment: latestAppointment,
     nextLifecycle,
     completedAppointment
@@ -2027,7 +2064,7 @@ function renderProjectStateStrip(project, detail, pulse){
   chips.push(`<span class="project-state-chip ${pulse.tone === "alert" ? "is-alert" : ""}">${escapeHtml(pulse.stateLabel)}</span>`);
 
   if (pulse.currentPart) {
-    chips.push(`<span class="project-state-chip">${escapeHtml(pulse.currentPart)}</span>`);
+    chips.push(`<span class="project-state-chip">${escapeHtml(cleanServiceLabel(pulse.currentPart, "Project"))}</span>`);
   }
 
   if (detail?.lifecycle_state) {
@@ -2056,7 +2093,7 @@ function getProjectPlanSummary(detail, appointments){
     summary: cleanSummary,
     type: detail?.project_type || "Project",
     stage: detail?.lifecycle_state || "Unknown",
-    currentPart: latestAppointment?.service_type || "No session breakdown yet",
+    currentPart: cleanServiceLabel(latestAppointment?.service_type, cleanSummary || "Project"),
     expectedSessions: detail?.session_count_expected || sessionCount || null,
     placement: detail?.placement_or_service_area || null,
     size: detail?.size_or_scope || null,
@@ -2064,6 +2101,199 @@ function getProjectPlanSummary(detail, appointments){
   };
 }
 
+function getDerivedFolderDetail(data){
+  const project = data?.project || {};
+  const appointments = data?.appointments || [];
+  const lifecycle = data?.lifecycle || [];
+  const media = data?.media || [];
+
+  const sortedAppointments = appointments
+    .slice()
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+  const firstAppointment = sortedAppointments[0] || null;
+  const lastAppointment = sortedAppointments[sortedAppointments.length - 1] || null;
+  const nextAppointment = sortedAppointments.find((row) => new Date(row.start_time).getTime() >= Date.now()) || firstAppointment || null;
+
+  const referenceMedia = media.find((item) => item.media_type === "reference");
+  const portfolioMedia = media.find((item) => item.media_type === "portfolio");
+  const hasMedia = !!(referenceMedia || portfolioMedia || media.length);
+
+  const firstServiceLabel = String(sortedAppointments[0]?.service_type || "").trim();
+  const cleanFirstServiceLabel = /^session\s+\d+(?:\s*\/\s*\d+)?$/i.test(firstServiceLabel)
+    ? ""
+    : firstServiceLabel;
+
+ const serviceSummary =
+  project.service_summary ||
+  project.description ||
+  project.project_summary ||
+  (sortedAppointments.length
+    ? `${sortedAppointments[0].service_type || "Appointment"}`
+    : "Details will be added soon.");
+
+  const placement = project.placement_or_service_area
+    || project.placement
+    || project.service_area
+    || null;
+
+  const scope = project.size_or_scope
+    || project.scope
+    || project.size
+    || null;
+
+  const style = project.style_or_category
+    || project.style
+    || project.category
+    || null;
+
+  let lifecycleState = "Active";
+  if (lastAppointment && String(lastAppointment.status || "").toLowerCase() === "done") {
+    lifecycleState = "Healing";
+  } else if (nextAppointment) {
+    lifecycleState = "Scheduled";
+  }
+
+  const pendingLifecycle = lifecycle
+    .filter((row) => String(row.status || "pending").toLowerCase() === "pending")
+    .sort((a, b) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime());
+
+  let careState = "None";
+  const nextCare = pendingLifecycle.find((row) => /aftercare|carewatch/i.test(String(row.type || "")));
+  if (nextCare) {
+    const nextType = String(nextCare.type || "").toLowerCase();
+    if (nextType === "aftercare") careState = "Aftercare queued";
+    else if (nextType === "carewatch_1") careState = "CareWatch 1 queued";
+    else if (nextType === "carewatch_2") careState = "CareWatch 2 queued";
+    else if (nextType === "carewatch_3") careState = "CareWatch 3 queued";
+  }
+
+  const reviewState = lifecycle.some((row) => String(row.type || "").toLowerCase() === "review")
+    ? "Eligible"
+    : "NotEligible";
+
+  const portfolioState = hasMedia ? "InProgress" : "NotEligible";
+
+    return {
+    project_type: cleanServiceLabel(cleanFirstServiceLabel || project.project_type || "Project", "Project"),
+    client_name: project.client_name || firstAppointment?.client_name || "Unknown",
+    client_phone: project.client_phone || firstAppointment?.client_phone || null,
+    client_email: project.client_email || firstAppointment?.client_email || null,
+    artist_name: project.artist_name || firstAppointment?.artist_name || null,
+    service_summary: serviceSummary,
+    placement_or_service_area: placement,
+    size_or_scope: scope,
+    style_or_category: style,
+    session_count_expected: /consult/i.test(`${project.project_type || ""} ${serviceSummary || ""}`)
+        ? null
+        : (project.session_count_expected || sortedAppointments.length || null),
+      lifecycle_state: lifecycleState,
+    booking_state: nextAppointment ? "Scheduled" : "None",
+    care_state: careState,
+    review_state: reviewState,
+    portfolio_state: portfolioState,
+    project_folder_link: project.project_folder_link || project.projectUrl || null,
+    reference_folder_link: project.reference_folder_link || null,
+    outcome_media_link: project.outcome_media_link || null,
+    notes_relevant_for_provider: project.notes_relevant_for_provider || null,
+    notes_internal: project.notes_internal || null,
+    next_required_action: pendingLifecycle[0]
+      ? `Next: ${humanizeLifecycleType(pendingLifecycle[0].type)}`
+      : null,
+    source: "derived_runtime",
+    created_at: project.created_at || firstAppointment?.start_time || null,
+    updated_at: project.updated_at || lastAppointment?.end_time || null
+  };
+}
+
+function buildProjectDrawerPayloadFromState(projectId){
+  const appointments = (CALENDAR_STATE.appointments || [])
+    .filter((row) => String(row.projectId) === String(projectId))
+    .map((row) => ({
+      id: row.id,
+      project_id: row.projectId,
+      client_name: row.client,
+      artist_name: row.artist,
+      service_type: row.type,
+      status: row.status,
+      start_time: row.start_time || null,
+      end_time: row.end_time || null,
+      client_phone: row.client_phone || null,
+      client_email: row.client_email || null,
+      projectUrl: row.projectUrl || null
+    }));
+
+  const lifecycle = (CALENDAR_STATE.lifecycleEvents || [])
+    .filter((row) => String(row.projectId) === String(projectId))
+    .map((row) => ({
+      id: row.id,
+      project_id: row.projectId,
+      appointment_id: row.appointmentId || null,
+      type: row.rawType || row.type,
+      due_at: row.due_at || null,
+      status: row.status,
+      is_blocked: !!row.isBlocked,
+      created_at: row.created_at || null,
+      projectUrl: row.projectUrl || null
+    }));
+
+  const stateProject = (CALENDAR_STATE.projects || []).find((row) => String(row.id) === String(projectId));
+  const firstAppointment = appointments[0] || null;
+  const firstLifecycle = lifecycle[0] || null;
+
+  if (!stateProject && !appointments.length && !lifecycle.length) {
+    return null;
+  }
+
+  const project = stateProject || {
+    id: projectId,
+    client_name: firstAppointment?.client_name || "Unknown",
+    artist_name: firstAppointment?.artist_name || "",
+    projectUrl: firstAppointment?.projectUrl || firstLifecycle?.projectUrl || `/operator/projects.html?project=${projectId}`
+  };
+
+  return {
+    project,
+    appointments,
+    lifecycle,
+    completion: (CALENDAR_STATE.completionAttention || [])
+      .filter((row) => String(row.projectId || "") === String(projectId))
+      .map((row) => ({
+        appointment_id: row.appointmentId,
+        status: row.completionStatus,
+        here_signal_present: !!row.hereSignalPresent
+      })),
+    media: [],
+    messages: [],
+    events: []
+  };
+}
+
+function getProjectDrawerApiUrl(projectId){
+  const base = getApiBase();
+  return `${base}/api/project-folder?id=${encodeURIComponent(projectId)}`;
+}
+
+async function loadProjectDrawerData(projectId){
+  const endpoint = getProjectDrawerApiUrl(projectId);
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    return await response.json();
+  } catch (error) {
+    console.warn("Project drawer API failed → using fallback", error);
+
+    const fallback = buildProjectDrawerPayloadFromState(projectId);
+    if (fallback) return fallback;
+
+    throw error;
+  }
+}
 
 function getWorkbookStorageKey(projectId){
   return `rr_project_workbook_${projectId}`;
@@ -2179,9 +2409,10 @@ function renderSessionPlan(appointments){
         const sessionNumber = index + 1;
         const rawServiceType = String(appt.service_type || "").trim();
         const isRedundantSessionLabel = /^session\s+\d+(?:\s*\/\s*\d+)?$/i.test(rawServiceType);
-        const workLabel = rawServiceType && !isRedundantSessionLabel
-          ? escapeHtml(rawServiceType)
-          : "";
+        const cleanLabel = cleanServiceLabel(rawServiceType, "");
+        const workLabel = cleanLabel && cleanLabel !== "Session"
+        ? escapeHtml(cleanLabel)
+        : "";
 
         return `
           <div class="project-card">
@@ -2234,6 +2465,10 @@ function setProjectDrawerTab(tab){
 
   projectDrawerBodyEl.querySelectorAll(".project-panel").forEach((panel) => {
     panel.classList.toggle("is-active", panel.dataset.projectPanel === tab);
+  });
+
+  projectDrawerBodyEl.querySelectorAll(".project-subnav").forEach((subnav) => {
+    subnav.classList.toggle("is-hidden", tab !== "activity");
   });
 }
 
@@ -2288,18 +2523,34 @@ function renderDrawerSessions(appointments, completion){
   `;
 }
 
-function renderDrawerLifecycle(lifecycle){
+function renderDrawerLifecycle(detail, lifecycle){
   if (!lifecycle?.length) {
     return `<div class="project-card"><p class="project-empty-copy">No scheduled Isla actions are linked to this project yet.</p></div>`;
   }
+
+  const isConsultView = /consult/i.test(`${detail?.project_type || ""} ${detail?.service_summary || ""}`);
+  const allowedConsultTypes = new Set(["prep", "here", "done_check", "followup", "consultation"]);
 
   const hasNumberedCarewatch = lifecycle.some((item) =>
     /^carewatch_[123]$/i.test(String(item.type || ""))
   );
 
+  const seenSingleProjectActions = new Set();
+
   const filteredLifecycle = lifecycle.filter((item) => {
     const rawType = String(item.type || "").toLowerCase();
+
+    if (isConsultView && !allowedConsultTypes.has(rawType)) {
+      return false;
+    }
+
     if (hasNumberedCarewatch && rawType === "carewatch") return false;
+
+    if (rawType === "contact_card") {
+      if (seenSingleProjectActions.has("contact_card")) return false;
+      seenSingleProjectActions.add("contact_card");
+    }
+
     return true;
   });
 
@@ -2471,7 +2722,7 @@ function renderDrawerEvents(events){
 
 function renderProjectDrawer(data, projectId){
   const project = data?.project || {};
-  const detail = data?.folderDetail || null;
+  const detail = data?.folderDetail || getDerivedFolderDetail(data);
   const appointments = data?.appointments || [];
   const completion = data?.completion || [];
   const lifecycle = data?.lifecycle || [];
@@ -2482,22 +2733,35 @@ function renderProjectDrawer(data, projectId){
   const plan = getProjectPlanSummary(detail, appointments);
 
   const detailTags = [];
-  if (detail?.project_type) detailTags.push(`<span class="project-tag">${escapeHtml(detail.project_type)}</span>`);
-  if (detail?.lifecycle_state) detailTags.push(`<span class="project-tag">Lifecycle: ${escapeHtml(detail.lifecycle_state)}</span>`);
-  if (detail?.booking_state) detailTags.push(`<span class="project-tag">Booking: ${escapeHtml(detail.booking_state)}</span>`);
-  if (detail?.care_state) detailTags.push(`<span class="project-tag">Care: ${escapeHtml(detail.care_state)}</span>`);
-  if (detail?.review_state) detailTags.push(`<span class="project-tag">Review: ${escapeHtml(detail.review_state)}</span>`);
-  if (detail?.portfolio_state) detailTags.push(`<span class="project-tag">Portfolio: ${escapeHtml(detail.portfolio_state)}</span>`);
-
+if (detail?.project_type) detailTags.push(`<span class="project-tag">${escapeHtml(detail.project_type)}</span>`);
+if (detail?.lifecycle_state) detailTags.push(`<span class="project-tag">${escapeHtml(detail.lifecycle_state)}</span>`);
+if (detail?.booking_state) detailTags.push(`<span class="project-tag">${escapeHtml(detail.booking_state)}</span>`);
+if (detail?.care_state) detailTags.push(`<span class="project-tag">${escapeHtml(detail.care_state)}</span>`);
+if (detail?.review_state) detailTags.push(`<span class="project-tag">${escapeHtml(detail.review_state)}</span>`);
+if (detail?.portfolio_state) detailTags.push(`<span class="project-tag">${escapeHtml(detail.portfolio_state)}</span>`);
   const tabs = ["overview","plan","activity","media","lifetime","contact"];
   const workbookDraft = loadWorkbookDraft(projectId);
+const selectedAppointment = (appointments || []).find(
+  (appt) => String(appt.id) === String(activeProjectAppointmentId)
+) || pulse.nextAppointment || appointments[0] || null;
 
-const projectName = project.client_name || "Project";
-const artistLabel = project.artist_name || detail?.artist_name || "";
-projectDrawerTitleEl.textContent = projectName;
-if (projectDrawerArtistEl) {
-  projectDrawerArtistEl.textContent = artistLabel;
-}
+const isConsultProjectView = /consult/i.test(`${detail?.project_type || ""} ${detail?.service_summary || ""}`);
+
+  // Inserted lines for heroTitle and heroSummary
+  const heroTitle = cleanServiceLabel(
+  selectedAppointment?.service_type || detail?.service_summary || project.service_type || "Appointment",
+  "Appointment"
+);
+  const heroSummary = plan.summary && plan.summary !== heroTitle ? plan.summary : "";
+
+  const projectName = project.client_name || detail?.client_name || "Project";
+  const artistLabel = project.artist_name || detail?.artist_name || "";
+  projectDrawerTitleEl.textContent = projectName;
+  if (projectDrawerArtistEl) {
+    projectDrawerArtistEl.textContent = artistLabel;
+  }
+
+
   projectDrawerBodyEl.innerHTML = `
     <div class="project-drawer-topstack">
       <section class="project-context-shell">
@@ -2505,25 +2769,26 @@ if (projectDrawerArtistEl) {
           ${renderProjectHeroImage(detail, media, pulse)}
 
           <div class="project-context-card">
-<h3 class="project-context-title">${escapeHtml(String(plan.type || "Project").replace(/^consult$/i, "Consultation"))}</h3>
-
+<h3 class="project-context-title">${escapeHtml(heroTitle)}</h3>
 <p class="project-context-copy">
-  ${pulse.nextAppointment 
-    ? `Appointment · ${escapeHtml(formatDateTime(pulse.nextAppointment.start_time))}` 
-    : "No appointment scheduled"}
+  ${selectedAppointment
+  ? `Appointment · ${escapeHtml(formatDateTime(selectedAppointment.start_time))}`
+  : "No appointment scheduled"}
 </p>
-
-<p class="project-context-copy">
-  ${escapeHtml(plan.summary || "No project description yet.")}
-</p>
-            <div class="project-state-strip"></div>
+${heroSummary ? `
+<p class="project-context-copy">${escapeHtml(heroSummary)}</p>
+` : ""}
           </div>
         </div>
 
-        <div class="project-spotlight ${pulse.tone === "alert" ? "is-alert" : ""}">
-          <p class="project-spotlight-title">${escapeHtml(pulse.spotlightTitle)}</p>
-          <p class="project-spotlight-copy">${escapeHtml(pulse.spotlightCopy)}</p>
-          ${pulse.tone === "alert" ? `<p class="project-spotlight-copy"><strong>${escapeHtml(pulse.nextAction)}</strong></p>` : ""}
+       <div class="project-spotlight ${pulse.tone === "alert" ? "is-alert" : ""}">
+        <p class="project-spotlight-title">Current context</p>
+        <p class="project-spotlight-copy">
+            ${selectedAppointment
+                ? `${escapeHtml(cleanServiceLabel(selectedAppointment.service_type, "Appointment"))} · ${escapeHtml(formatDateTime(selectedAppointment.start_time))}`
+                : escapeHtml(pulse.spotlightCopy)}
+            </p>
+            ${pulse.tone === "alert" ? `<p class="project-spotlight-copy"><strong>${escapeHtml(pulse.nextAction)}</strong></p>` : ""}
         </div>
       </section>
 
@@ -2532,6 +2797,10 @@ if (projectDrawerArtistEl) {
           <button type="button" class="project-nav-btn ${tab === activeProjectDrawerTab ? "is-active" : ""}" data-project-tab="${tab}">${formatProjectTabLabel(tab)}</button>
         `).join("")}
       </nav>
+      <div class="project-subnav ${activeProjectDrawerTab === "activity" ? "" : "is-hidden"}" aria-label="Isla sections">
+        <button type="button" class="project-subnav-btn ${activeIslaSubtab === "messages" ? "is-active" : ""}" data-project-subtab="messages">Messages</button>
+        <button type="button" class="project-subnav-btn ${activeIslaSubtab === "upcoming" ? "is-active" : ""}" data-project-subtab="upcoming">Scheduled Actions</button>
+      </div>
     </div>
 
     <div class="project-panel ${activeProjectDrawerTab === "overview" ? "is-active" : ""}" data-project-panel="overview">
@@ -2542,7 +2811,7 @@ if (projectDrawerArtistEl) {
         <div class="project-card">
           <p class="project-card-label">Project summary</p>
           <p class="project-card-value">${escapeHtml(plan.summary || "Project summary not attached yet.")}</p>
-          <p class="project-row-sub">${escapeHtml(plan.placement || "Placement not attached")}${(plan.style || plan.size) ? ` · ${escapeHtml(plan.style || plan.size)}` : ""}</p>
+        <p class="project-row-sub">${escapeHtml(plan.placement || "Placement not attached")}${(plan.style || plan.size) ? ` · ${escapeHtml(plan.style || plan.size)}` : ""}${/consult/i.test(`${detail?.project_type || ""} ${detail?.service_summary || ""}`) ? ` · Session count to be confirmed after consult` : plan.expectedSessions ? ` · ${escapeHtml(String(plan.expectedSessions))} sessions expected` : ""}</p>
         </div>
 
         <div class="project-card">
@@ -2566,10 +2835,7 @@ if (projectDrawerArtistEl) {
 
     <div class="project-panel ${activeProjectDrawerTab === "activity" ? "is-active" : ""}" data-project-panel="activity">
       <section class="project-section">
-        <div class="project-subnav" aria-label="Isla sections">
-          <button type="button" class="project-subnav-btn ${activeIslaSubtab === "messages" ? "is-active" : ""}" data-project-subtab="messages">Messages</button>
-          <button type="button" class="project-subnav-btn ${activeIslaSubtab === "upcoming" ? "is-active" : ""}" data-project-subtab="upcoming">Scheduled Actions</button>
-        </div>
+       
 
         <div class="project-subpanel ${activeIslaSubtab === "messages" ? "is-active" : ""}" data-project-subpanel="messages">
           <div class="project-section">
@@ -2581,7 +2847,7 @@ if (projectDrawerArtistEl) {
 
                <div class="project-subpanel ${activeIslaSubtab === "upcoming" ? "is-active" : ""}" data-project-subpanel="upcoming">
           <div class="project-section">
-            ${renderDrawerLifecycle(lifecycle)}
+            ${renderDrawerLifecycle(detail, lifecycle)}
           </div>
         </div>
       </section>
@@ -2595,16 +2861,16 @@ if (projectDrawerArtistEl) {
       </section>
     </div>
 
-    <div class="project-panel ${activeProjectDrawerTab === "lifetime" ? "is-active" : ""}" data-project-panel="lifetime">
-      <section class="project-section">
-        <h3 class="project-section-title">Lifetime</h3>
-        <p class="project-section-sub">Client history with this shop.</p>
-        <div class="project-card">
-          <p class="project-card-label">Lifetime history</p>
-          <p class="project-empty-copy">No lifetime history is attached yet.</p>
-        </div>
-      </section>
+   <div class="project-panel ${activeProjectDrawerTab === "lifetime" ? "is-active" : ""}" data-project-panel="lifetime">
+  <section class="project-section">
+    <h3 class="project-section-title">Lifetime</h3>
+    <p class="project-section-sub">Private history with this shop only.</p>
+    <div class="project-card">
+      <p class="project-card-label">Shop history</p>
+      <p class="project-empty-copy">No private client history is attached yet.</p>
     </div>
+  </section>
+</div>
 
     <div class="project-panel ${activeProjectDrawerTab === "contact" ? "is-active" : ""}" data-project-panel="contact">
       <section class="project-section">
@@ -2613,12 +2879,8 @@ if (projectDrawerArtistEl) {
        <div class="project-card">
           <p class="project-card-label">Client</p>
           <p class="project-card-value">${escapeHtml(detail?.client_name || project.client_name || "Unknown")}</p>
-          <p class="project-row-sub">Phone: ${escapeHtml(detail?.client_phone || "Not attached yet")}</p>
-          <p class="project-row-sub">Email: ${escapeHtml(detail?.client_email || "Not attached yet")}</p>
-        </div>
-        <div class="project-card">
-          <p class="project-card-label">Studio history</p>
-        <p class="project-row-sub">Studio-only history.</p>
+          <p class="project-row-sub">Phone: ${escapeHtml(detail?.client_phone || project.client_phone || "Not attached yet")}</p>
+          <p class="project-row-sub">Email: ${escapeHtml(detail?.client_email || project.client_email || "Not attached yet")}</p>
         </div>
       </section>
     </div>
@@ -2665,7 +2927,7 @@ function getAppointmentsForDate(date){
   if (CALENDAR_STATE.loaded) {
     return CALENDAR_STATE.appointments.filter((item) => item.date === dayKey);
   }
-  return getFallbackShopAppointmentsForDate(date);
+  return [];
 }
 
 function getLifecycleEventsForDate(date){
@@ -2673,7 +2935,7 @@ function getLifecycleEventsForDate(date){
   if (CALENDAR_STATE.loaded) {
     return CALENDAR_STATE.lifecycleEvents.filter((item) => item.date === dayKey);
   }
-  return getFallbackIslaActionsForDate(date);
+  return [];
 }
 
 function getInitialBaseDate(){
@@ -2683,6 +2945,21 @@ function getInitialBaseDate(){
 async function loadCalendarData(){
   try {
     const shopId = getResolvedShopId();
+    if (!shopId) {
+  console.warn("No active shop id found for calendar.");
+  CALENDAR_STATE.loaded = false;
+  CALENDAR_STATE.appointments = [];
+  CALENDAR_STATE.lifecycleEvents = [];
+  CALENDAR_STATE.roster = [];
+  CALENDAR_STATE.projects = [];
+  CALENDAR_STATE.businessProfile = {
+    name: "No shop selected",
+    vertical: BUSINESS_PROFILE.vertical,
+    timezone: null
+  };
+  return;
+}
+
     setActiveShopId(shopId);
 
     // 1. Shop identity
@@ -2771,48 +3048,57 @@ async function loadCalendarData(){
     );
 
     CALENDAR_STATE.appointments = (appointmentsRaw || []).map((a) => {
-      const attention = completionAttentionMap.get(a.id);
-      return {
-        id: a.id,
-        date: new Date(a.start_time).toDateString(),
-        time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
-        client: a.client_name,
-        artist: a.artist_name,
-        type: a.service_type || "Appointment",
-               status: a.status || "scheduled",
-        completionStatus: attention?.completion_status || "",
-        hereSignalPresent: !!attention?.here_signal_present,
-        projectId: a.project_id,
-        projectUrl: `/operator/projects.html?project=${a.project_id}`
-     };
-    });
+  const attention = completionAttentionMap.get(a.id);
+  return {
+    id: a.id,
+    date: new Date(a.start_time).toDateString(),
+    time: normalizeTimeLabel(new Date(a.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })),
+    client: a.client_name,
+    artist: a.artist_name,
+    type: a.service_type || "Appointment",
+    status: a.status || "scheduled",
+    completionStatus: attention?.completion_status || "",
+    hereSignalPresent: !!attention?.here_signal_present,
+    projectId: a.project_id,
+    projectUrl: `/operator/projects.html?project=${a.project_id}`,
+    start_time: a.start_time,
+    end_time: a.end_time,
+    client_phone: clientMap.get(projectMap.get(a.project_id)?.client_id)?.phone || null,
+    client_email: clientMap.get(projectMap.get(a.project_id)?.client_id)?.email || null
+  };
+});
 
     CALENDAR_STATE.lifecycleEvents = (lifecycleRaw || []).map((e) => {
-      const project = projectMap.get(e.project_id);
-      const appointment = appointmentMap.get(e.appointment_id);
-      const client = project ? clientMap.get(project.client_id) : null;
-      const artist = project ? rosterMap.get(project.primary_artist_id) : null;
+  const project = projectMap.get(e.project_id);
+  const appointment = appointmentMap.get(e.appointment_id);
+  const client = project ? clientMap.get(project.client_id) : null;
+  const artist = project ? rosterMap.get(project.primary_artist_id) : null;
 
-      return {
-        id: e.id,
-        date: new Date(e.due_at).toDateString(),
-        time: normalizeTimeLabel(
-          new Date(e.due_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-        ),
-        type: mapLifecycleTypeLabel(e.type),
-        rawType: e.type,
-        client: client?.name || appointment?.client_name || "Client",
-        artist: artist?.name || appointment?.artist_name || "",
-        projectContext: appointment?.service_type || (project?.vertical ? `${project.vertical} project` : "Project"),
-        detail: mapLifecycleDetail(e.type),
-        projectUrl: `/operator/projects.html?project=${e.project_id}`,
-        status: e.status || "pending",
-        isBlocked: !!e.is_blocked
-      };
-    });
+  return {
+    id: e.id,
+    date: new Date(e.due_at).toDateString(),
+    time: normalizeTimeLabel(
+      new Date(e.due_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    ),
+    type: mapLifecycleTypeLabel(e.type),
+    rawType: e.type,
+    client: client?.name || appointment?.client_name || "Client",
+    artist: artist?.name || appointment?.artist_name || "",
+    projectContext: appointment?.service_type || (project?.vertical ? `${project.vertical} project` : "Project"),
+    detail: mapLifecycleDetail(e.type),
+    projectUrl: `/operator/projects.html?project=${e.project_id}`,
+    projectId: e.project_id,
+    appointmentId: e.appointment_id,
+    due_at: e.due_at,
+    created_at: e.created_at,
+    status: e.status || "pending",
+    isBlocked: !!e.is_blocked
+  };
+});
 
 CALENDAR_STATE.completionAttention = (completionAttentionRaw || []).map((row) => ({
   appointmentId: row.appointment_id,
+  projectId: row.project_id || appointmentMap.get(row.appointment_id)?.project_id || null,
   shopId: row.shop_id,
   clientName: row.client_name,
   artistName: row.artist_name,
@@ -3446,8 +3732,8 @@ function buildTimeline(){
             const islaGhostClass = item.ghost ? " appt-ghost" : "";
             const stateClass = `${isPast ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}${isNext ? ' is-next' : ''}`;
             return `
-              <div class="appt${islaGhostClass}${stateClass}" data-project-id="${item.projectId || ""}" data-project-url="${item.projectUrl}">
-                   <div class="appt-client">${item.client}</div>
+                    <div class="appt${islaGhostClass}${stateClass}" data-project-id="${item.projectId || ""}" data-appointment-id="${item.id || ""}" data-project-url="${item.projectUrl}">
+                       <div class="appt-client">${item.client}</div>
                   <div class="appt-type-row">
                     <span class="rr-buoy ${item.buoyState ? `is-visible is-${item.buoyState}` : ''}" aria-hidden="true"></span>
                     <div class="appt-type">${item.type ? '· ' + item.type : ''}${item.completionStatus ? ' · ' + mapCompletionStatusLabel(item.completionStatus) : ''}${item.hereSignalPresent ? ' · HERE' : ''}${isCurrent ? '<span class="current-chip">Now</span>' : ''}${isNext ? '<span class="next-chip">Next</span>' : ''}</div>
@@ -3601,14 +3887,15 @@ function wireProjectLinks() {
   const lifecycleItems = document.querySelectorAll(".isla[data-project-url]");
 
   appointmentItems.forEach((item) => {
-    item.style.cursor = "pointer";
-    item.addEventListener("click", () => {
-      const projectId = item.getAttribute("data-project-id");
-      if (projectId) {
-        openProjectDrawer(projectId);
-      }
-    });
+  item.style.cursor = "pointer";
+  item.addEventListener("click", () => {
+    const projectId = item.getAttribute("data-project-id");
+    const appointmentId = item.getAttribute("data-appointment-id");
+    if (projectId) {
+      openProjectDrawer(projectId, appointmentId);
+    }
   });
+});
 
   lifecycleItems.forEach((item) => {
     item.style.cursor = "pointer";
@@ -3625,29 +3912,28 @@ function closeProjectDrawer(){
   if (!projectDrawerOverlayEl) return;
   projectDrawerOverlayEl.classList.remove("is-open");
   projectDrawerOverlayEl.setAttribute("aria-hidden", "true");
+  activeProjectAppointmentId = null;
 }
 
-async function openProjectDrawer(projectId){
-  if (!projectDrawerOverlayEl || !projectDrawerTitleEl || !projectDrawerBodyEl) return;
+    async function openProjectDrawer(projectId, appointmentId = null){
+      if (!projectDrawerOverlayEl || !projectDrawerTitleEl || !projectDrawerBodyEl) return;
 
   activeProjectDrawerTab = "overview";
+  activeProjectAppointmentId = appointmentId || null;
   projectDrawerOverlayEl.classList.add("is-open");
   projectDrawerOverlayEl.setAttribute("aria-hidden", "false");
-  projectDrawerTitleEl.textContent = "Loading project…";
+
+  const stateAppointment = (CALENDAR_STATE.appointments || []).find((row) => String(row.projectId) === String(projectId));
+projectDrawerTitleEl.textContent = stateAppointment?.client || "Loading project…";
+
   projectDrawerBodyEl.innerHTML = `<div class="project-drawer-loading">Loading project…</div>`;
 
   try {
-    const response = await fetch(`${getApiBase()}/api/project-folder?id=${encodeURIComponent(projectId)}`);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error || `Project folder load failed: ${response.status}`);
-    }
-
+    const data = await loadProjectDrawerData(projectId);
     renderProjectDrawer(data, projectId);
+    requestAnimationFrame(() => autoSizeProjectInputs(projectDrawerBodyEl));
   } catch (error) {
     console.error("Project drawer load failed:", error);
-    projectDrawerTitleEl.textContent = "Project";
     projectDrawerBodyEl.innerHTML = `<div class="project-drawer-error">Could not load this project right now.</div>`;
   }
 }

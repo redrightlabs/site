@@ -6,7 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
+function isConsultLike(value: unknown): boolean {
+  return /consult/.test(String(value || "").toLowerCase());
+}
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -62,28 +64,76 @@ serve(async (req) => {
         throw new Error(`Unsupported requestedOutcome for closeout_outcome: ${requestedOutcome}`);
       }
 
-      const { error } = await supabase.rpc(rpcName, rpcArgs);
+           const { error } = await supabase.rpc(rpcName, rpcArgs);
 
       if (error) {
         throw new Error(`${rpcName} failed: ${error.message}`);
       }
 
-      console.log("OPERATOR CLOSEOUT RESOLVED", {
+      let queuedArtistFollowup: { id: string; created_at: string } | null = null;
+
+      if (requestedOutcome === "done" && appointmentId) {
+        const { data: appointmentRow, error: appointmentError } = await supabase
+          .from("appointments")
+          .select("id, project_id, service_type, artist_name, client_name")
+          .eq("id", appointmentId)
+          .maybeSingle();
+
+        if (appointmentError) {
+          throw new Error(`appointment lookup failed: ${appointmentError.message}`);
+        }
+
+        const consultLike =
+          isConsultLike(appointmentRow?.service_type) ||
+          isConsultLike(title) ||
+          isConsultLike(message);
+
+        if (consultLike) {
+          const followupTitle = "Consult complete — confirm project plan";
+          const followupMessage = `Consult is done for ${appointmentRow?.client_name || "this client"}. Please reply with: 1) how many sessions you want booked, 2) how long each session should be, and 3) the minimum healing time you want between sessions.`;
+
+          const { data: queuedFollowup, error: followupError } = await supabase
+            .from("isla_actions")
+            .insert({
+              shop_id: shopId,
+              shop_name: shopName,
+              action_type: "consult_plan_request",
+              artist_name: appointmentRow?.artist_name || artistName,
+              title: followupTitle,
+              message: followupMessage,
+              source: `${source}:consult-followup`,
+              status: "queued",
+              created_at: new Date().toISOString(),
+            })
+            .select("id, created_at")
+            .single();
+
+          if (followupError) {
+            throw new Error(`consult followup insert failed: ${followupError.message}`);
+          }
+
+          queuedArtistFollowup = queuedFollowup;
+        }
+      }
+
+            console.log("OPERATOR CLOSEOUT RESOLVED", {
         shopId,
         shopName,
         appointmentId,
         requestedOutcome,
         completionStatus,
         artistName,
+        queuedArtistFollowup,
         source,
       });
 
-      return new Response(
+           return new Response(
         JSON.stringify({
           success: true,
           appointmentId,
           requestedOutcome,
           status: requestedOutcome,
+          queuedArtistFollowup,
         }),
         {
           headers: {

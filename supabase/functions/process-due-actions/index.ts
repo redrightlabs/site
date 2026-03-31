@@ -3,7 +3,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+
 const supabaseUrl = "https://uwydiqltvchlmjvzwkal.supabase.co";
+
+function hasText(value: unknown): boolean {
+  return String(value || "").trim().length > 0;
+}
+
+function includesConsult(value: unknown): boolean {
+  return /consult/.test(String(value || "").toLowerCase());
+}
+
+function isConsultProject(project: any): boolean {
+  return [
+    project?.project_type,
+    project?.service_type,
+    project?.service_summary,
+    project?.size_or_scope,
+    project?.style_or_category,
+    project?.next_required_action,
+    project?.intake_status,
+    project?.booking_state,
+    project?.lifecycle_state,
+  ].some(includesConsult);
+}
+
+function shouldProcessLifecycleAction(project: any, action: LifecycleActionKey): boolean {
+  if (isConsultProject(project)) {
+    return false;
+  }
+
+  if (action === "contact_card" && hasText(project?.contact_card_sent_at)) {
+    return false;
+  }
+
+  return true;
+}
 
 function getServiceRoleKey() {
   const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
@@ -15,6 +50,7 @@ async function getDueLifecycleProjects() {
   const serviceRoleKey = getServiceRoleKey();
 
   const query = `${supabaseUrl}/rest/v1/project_folders?or=(
+    and(prep_planned_at.not.is.null,prep_planned_at.lte.now(),prep_sent_at.is.null),
     and(aftercare_planned_at.not.is.null,aftercare_planned_at.lte.now(),aftercare_sent_at.is.null),
     and(contact_card_planned_at.not.is.null,contact_card_planned_at.lte.now(),contact_card_sent_at.is.null),
     and(cw1_planned_at.not.is.null,cw1_planned_at.lte.now(),cw1_sent_at.is.null),
@@ -344,32 +380,84 @@ Deno.serve(async (req: Request) => {
 
     const processed: any[] = [];
 
-    for (const project of dueProjects) {
-      const now = new Date();
+for (const project of dueProjects) {
+  const now = new Date();
 
-      let aftercareTriggered = false;
-      let contactCardTriggered = false;
+  let aftercareTriggered = false;
+  let contactCardTriggered = false;
+
+  let prepTriggered = false;
+
+  if (
+    project.prep_planned_at &&
+    !project.prep_sent_at &&
+    new Date(project.prep_planned_at) <= now
+  ) {
+    const prepMessage = isConsultProject(project)
+      ? `Hey ${getClientName(project)}, just a quick heads up for tomorrow. Looking forward to seeing you. If you need directions, need to reschedule, or have any questions before your consult, just let me know.`
+      : `Hey ${getClientName(project)}, just a reminder for tomorrow. If you need anything before your appointment, just reply here.`;
+
+    const sendResult = await sendLifecycleAction({
+      action: "prep",
+      project,
+      message: prepMessage,
+    });
+
+    if (!sendResult.ok) {
+      throw new Error(`Prep send failed for ${project.project_folder_id}`);
+    }
+
+    const serviceRoleKey = getServiceRoleKey();
+    const res = await fetch(`${supabaseUrl}/rest/v1/project_folders?id=eq.${project.id}`, {
+      method: "PATCH",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        prep_sent_at: new Date().toISOString(),
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to mark prep sent: ${text}`);
+    }
+
+    prepTriggered = true;
+
+    processed.push({
+      id: project.id,
+      project_folder_id: project.project_folder_id,
+      prep_sent: true,
+      consult_mode: isConsultProject(project),
+    });
+  }
+
+  if (
+    shouldProcessLifecycleAction(project, "aftercare") &&
+    project.aftercare_planned_at &&
+    !project.aftercare_sent_at &&
+    new Date(project.aftercare_planned_at) <= now
+  ) {
+    const sendResult = await sendLifecycleAction({
+      action: "aftercare",
+      project,
+      message: buildLifecycleMessage("aftercare", project),
+    });
+
+    if (!sendResult.ok) {
+      throw new Error(`Aftercare send failed for ${project.project_folder_id}`);
+    }
+
+    await markAftercareSent(project.id);
+    aftercareTriggered = true;
+  }
 
       if (
-        project.aftercare_planned_at &&
-        !project.aftercare_sent_at &&
-        new Date(project.aftercare_planned_at) <= now
-      ) {
-        const sendResult = await sendLifecycleAction({
-          action: "aftercare",
-          project,
-          message: buildLifecycleMessage("aftercare", project),
-        });
-
-        if (!sendResult.ok) {
-          throw new Error(`Aftercare send failed for ${project.project_folder_id}`);
-        }
-
-        await markAftercareSent(project.id);
-        aftercareTriggered = true;
-      }
-
-      if (
+        shouldProcessLifecycleAction(project, "contact_card") &&
         project.contact_card_planned_at &&
         !project.contact_card_sent_at &&
         new Date(project.contact_card_planned_at) <= now
@@ -398,6 +486,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (
+        shouldProcessLifecycleAction(project, "cw1") &&
         project.cw1_planned_at &&
         !project.cw1_sent_at &&
         new Date(project.cw1_planned_at) <= now
@@ -422,6 +511,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (
+        shouldProcessLifecycleAction(project, "cw2") &&
         project.cw2_planned_at &&
         !project.cw2_sent_at &&
         new Date(project.cw2_planned_at) <= now
@@ -446,6 +536,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (
+        shouldProcessLifecycleAction(project, "cw3") &&
         project.cw3_planned_at &&
         !project.cw3_sent_at &&
         new Date(project.cw3_planned_at) <= now
@@ -470,6 +561,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (
+        shouldProcessLifecycleAction(project, "review") &&
         project.review_planned_at &&
         !project.review_requested_at &&
         new Date(project.review_planned_at) <= now
@@ -494,6 +586,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (
+        shouldProcessLifecycleAction(project, "portfolio") &&
         project.portfolio_request_planned_at &&
         !project.photo_requested_at &&
         new Date(project.portfolio_request_planned_at) <= now
